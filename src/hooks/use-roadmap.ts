@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { roadmapTemplates, RoadmapTemplate, RoadmapStep } from '@/data/roadmapTemplates';
@@ -210,16 +209,16 @@ Only include the JSON array in your response, nothing else.
     }
   }, [userRoadmap, apiKey, callGemini, toast]);
 
-  // New function to save a custom roadmap
+  // Fixed function to save a custom roadmap
   const saveCustomRoadmap = useCallback(async (customRoadmap: GeneratedRoadmap): Promise<void> => {
     setLoadingRoadmap(true);
     
     try {
       // Convert the generated roadmap to the UserRoadmap format
+      // Note: Make sure we only use properties that exist in the UserRoadmap type
       const newRoadmap: UserRoadmap = {
         id: `custom-${Date.now()}`,
         title: customRoadmap.title,
-        description: "Custom AI-generated career roadmap",
         category: "custom",
         icon: "sparkles",
         steps: customRoadmap.steps.map(step => ({

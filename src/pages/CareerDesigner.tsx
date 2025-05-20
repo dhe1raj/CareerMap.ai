@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useGemini } from "@/lib/gemini";
+import { ArrowRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const educationLevels = [
   "High School",
@@ -18,6 +21,20 @@ const educationLevels = [
   "Bachelor's Degree",
   "Master's Degree",
   "Ph.D. or Doctorate"
+];
+
+// Add degree/course options
+const degreeOptions = [
+  "Computer Science",
+  "Business Administration",
+  "Engineering",
+  "Design",
+  "Marketing",
+  "Psychology",
+  "Education",
+  "Liberal Arts",
+  "Healthcare",
+  "Other"
 ];
 
 const skillSets = [
@@ -66,7 +83,6 @@ const timeInvestments = [
   "40+ hours/week"
 ];
 
-// Add a new field for current location/country
 const countries = [
   "United States",
   "United Kingdom",
@@ -85,12 +101,13 @@ export default function CareerDesigner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     education: "",
+    degree: "", // New field for degree/course
     strongestSkill: "",
     fieldsOfInterest: "",
     workPreference: "",
     incomeRange: "",
     timeInvestment: "",
-    location: "" // New field for location/country
+    location: ""
   });
   
   const navigate = useNavigate();
@@ -136,7 +153,8 @@ export default function CareerDesigner() {
         .from("profiles")
         .update({
           education: formData.education,
-          location: formData.location
+          location: formData.location,
+          degree: formData.degree // Save the degree field
         })
         .eq("id", user.id);
       
@@ -144,28 +162,48 @@ export default function CareerDesigner() {
       const prompt = `User wants to become a professional in ${formData.fieldsOfInterest} with the following profile:
       
       - Current education level: ${formData.education}
+      - Degree/Course: ${formData.degree}
       - Strongest skill: ${formData.strongestSkill}
       - Work preference: ${formData.workPreference}
       - Income expectation: ${formData.incomeRange}
       - Time able to invest in development: ${formData.timeInvestment}
       - Current location/country: ${formData.location}
       
-      Suggest a detailed roadmap including:
+      Provide a detailed career roadmap including:
       1. Relevant certifications tailored to their background
       2. Must-have skills for this field
       3. Tools and technologies to learn
       4. Job platforms specific to their location/country
+      5. Average salary range for entry, mid, and senior levels
+      6. Typical work-life balance in this field (stress levels, working hours)
+      7. Growth potential and career progression paths
+      8. Company types that would be a good match
       
       Format the response as JSON with the following structure:
       {
         "title": "Career Path Title",
+        "overview": "Brief overview of this career path",
+        "salary": {
+          "entry": "Entry level salary range",
+          "mid": "Mid level salary range",
+          "senior": "Senior level salary range"
+        },
+        "workLifeBalance": {
+          "stress": "Low/Medium/High",
+          "workHours": "Typical hours per week",
+          "flexibility": "Description of flexibility"
+        },
+        "growthPotential": "Description of growth opportunities",
         "steps": [
           {
             "title": "Step Title",
             "description": "Short description of this step",
-            "items": ["Item 1", "Item 2", "Item 3"]
+            "items": ["Item 1", "Item 2", "Item 3"],
+            "timeframe": "Estimated time to complete"
           }
-        ]
+        ],
+        "recommendedCompanies": ["Company 1", "Company 2", "Company 3"],
+        "jobPlatforms": ["Platform 1", "Platform 2", "Platform 3"]
       }`;
       
       // Call Gemini API in the background, but don't wait for it
@@ -207,6 +245,12 @@ export default function CareerDesigner() {
       description: "What's your current education level?",
       field: "education",
       options: educationLevels,
+    },
+    {
+      title: "Degree or Course",
+      description: "What degree or course are you pursuing/completed?",
+      field: "degree",
+      options: degreeOptions,
     },
     {
       title: "Location",
@@ -259,12 +303,12 @@ export default function CareerDesigner() {
           </p>
         </div>
 
-        <Card className="mb-8">
-          <CardHeader>
+        <Card className="mb-8 border-t-4 border-t-primary shadow-lg">
+          <CardHeader className="bg-muted/50">
             <CardTitle>{currentQuestion.title}</CardTitle>
             <CardDescription>{currentQuestion.description}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-4">
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor={currentQuestion.field}>{currentQuestion.title}</Label>
@@ -286,7 +330,7 @@ export default function CareerDesigner() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between pt-4 border-t bg-muted/30">
             <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
               Previous
             </Button>
@@ -296,11 +340,12 @@ export default function CareerDesigner() {
                 onClick={handleNext}
                 disabled={!formData[currentQuestion.field as keyof typeof formData]}
               >
-                Next
+                Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
               <Button 
                 onClick={handleSubmit} 
+                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-500"
                 disabled={isSubmitting || !formData[currentQuestion.field as keyof typeof formData]}
               >
                 {isSubmitting ? "Analyzing..." : "Submit"}
@@ -309,9 +354,9 @@ export default function CareerDesigner() {
           </CardFooter>
         </Card>
 
-        <div className="w-full bg-muted h-2 rounded-full">
+        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
           <div
-            className="h-2 bg-primary rounded-full transition-all duration-300"
+            className="h-2 bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>

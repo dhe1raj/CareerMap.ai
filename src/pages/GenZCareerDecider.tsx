@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -7,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowRight, Upload, FileText } from "lucide-react";
+import { Loader2, ArrowRight, Upload, FileText, BookOpen, DollarSign, Briefcase, BookMarked, GraduationCap, Clock, BarChart3 } from "lucide-react";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useGemini } from "@/lib/gemini";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 // Questions and options data
 const collegeOptions = [
@@ -121,6 +122,7 @@ export default function GenZCareerDecider() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<string | null>(null);
+  const [parsedResults, setParsedResults] = useState<any>(null);
   
   // Handler to update form data
   const handleChange = (field: string, value: string | string[]) => {
@@ -175,12 +177,57 @@ export default function GenZCareerDecider() {
     }));
   };
   
+  // Attempt to parse the Gemini results into structured data
+  const tryParseResults = (text: string) => {
+    try {
+      // Look for career roles
+      const careerRoles = extractSection(text, "career roles", "why it suits");
+      const whySuits = extractSection(text, "why it suits", "skills");
+      const skillsToAdd = extractSection(text, "skills", "companies");
+      const companies = extractSection(text, "companies", "roadmap");
+      const roadmap = extractSection(text, "roadmap", "");
+      
+      return {
+        careerRoles,
+        whySuits,
+        skillsToAdd,
+        companies,
+        roadmap
+      };
+    } catch (e) {
+      console.error("Failed to parse results:", e);
+      return null;
+    }
+  };
+  
+  // Helper function to extract a section from text
+  const extractSection = (text: string, startMarker: string, endMarker: string): string[] => {
+    try {
+      const lowerText = text.toLowerCase();
+      const startIdx = lowerText.indexOf(startMarker);
+      
+      if (startIdx === -1) return [];
+      
+      let endIdx = lowerText.length;
+      if (endMarker && lowerText.indexOf(endMarker) > startIdx) {
+        endIdx = lowerText.indexOf(endMarker, startIdx);
+      }
+      
+      const section = text.substring(startIdx, endIdx).trim();
+      
+      // Extract bullet points
+      const bulletPoints = section.split(/\n-|\n•|\n\*/).slice(1).map(item => item.trim()).filter(Boolean);
+      return bulletPoints.length > 0 ? bulletPoints : [section];
+    } catch (e) {
+      return [];
+    }
+  };
+  
   // Submit form and get AI suggestions
   const handleSubmit = async () => {
     setIsLoading(true);
     
     try {
-      // Prepare data for Gemini
       const collegeLabel = collegeOptions.find(o => o.value === formData.college)?.label || formData.college;
       const placementLabel = placementOptions.find(o => o.value === formData.placement)?.label || formData.placement;
       const gamePlanLabel = gamePlanOptions.find(o => o.value === formData.gamePlan)?.label || formData.gamePlan;
@@ -216,7 +263,15 @@ User profile:
 - Preferred location: ${countryLabel}
 ${formData.resumeText ? `- Resume content: ${formData.resumeText}` : ''}
 
-Format your response in clear sections with emojis and bullet points. Be brutally honest but encouraging.`;
+Format your response with clear section headings like "CAREER ROLES:", "WHY IT SUITS YOU:", "SKILLS TO ADD:", "COMPANIES & INTERNSHIPS:", "ROADMAP:" followed by bullet points with emojis. Be brutally honest but encouraging.
+
+Also include specific details about:
+- Salary ranges for each role in the preferred location
+- Work-life balance and stress levels
+- Growth potential
+- Required education and certification paths
+- Remote work possibilities
+- Top 3-5 companies hiring for these roles in the specified location`;
 
       // Call Gemini API
       const response = await callGemini(prompt, apiKey);
@@ -224,13 +279,18 @@ Format your response in clear sections with emojis and bullet points. Be brutall
       if (response) {
         setResults(response);
         
+        // Try to parse structured data from the response
+        const parsed = tryParseResults(response);
+        if (parsed) {
+          setParsedResults(parsed);
+        }
+        
         toast({
           title: "Career paths generated! 🚀",
           description: "Check out your personalized career suggestions below.",
         });
         
         // Save results to localStorage for now
-        // In a real app, you'd save this to the database
         localStorage.setItem("genZ_career_results", response);
       } else {
         toast({
@@ -285,20 +345,32 @@ Format your response in clear sections with emojis and bullet points. Be brutall
     setResults(null);
     setCurrentSection(1);
   };
+
+  // Function to get a random gradient for career role cards
+  const getRandomGradient = (index: number) => {
+    const gradients = [
+      "from-purple-500 to-indigo-500",
+      "from-blue-500 to-teal-400",
+      "from-pink-500 to-purple-500",
+      "from-amber-500 to-red-500",
+      "from-green-500 to-emerald-500"
+    ];
+    return gradients[index % gradients.length];
+  };
   
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-3xl mx-auto">
+      <div className="space-y-6 max-w-4xl mx-auto">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gen Z Career Role Decider</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Gen Z Career Role Decider</h1>
+          <p className="text-muted-foreground">
             Be real with us, and we'll match you with career paths that actually vibe with you
           </p>
         </div>
         
         {!results ? (
-          <Card>
-            <CardHeader>
+          <Card className="border-t-4 border-t-primary shadow-md">
+            <CardHeader className="bg-muted/30">
               <CardTitle>
                 {currentSection === 1 && "Real Talk (College & Plans)"}
                 {currentSection === 2 && "Hype & Hustle Check"}
@@ -313,7 +385,7 @@ Format your response in clear sections with emojis and bullet points. Be brutall
               </CardDescription>
             </CardHeader>
             
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pt-6">
               {/* Section 1: Real Talk */}
               {currentSection === 1 && (
                 <>
@@ -495,6 +567,7 @@ Format your response in clear sections with emojis and bullet points. Be brutall
                         rows={8}
                         value={formData.resumeText}
                         onChange={handleResumeTextChange}
+                        className="border-dashed"
                       />
                       <p className="text-xs text-muted-foreground">
                         This helps us provide more accurate career suggestions based on your existing skills.
@@ -505,7 +578,7 @@ Format your response in clear sections with emojis and bullet points. Be brutall
                       <Button
                         onClick={handleSubmit}
                         disabled={isLoading}
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-500"
                       >
                         {isLoading ? (
                           <>
@@ -524,7 +597,7 @@ Format your response in clear sections with emojis and bullet points. Be brutall
               )}
             </CardContent>
             
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-between bg-muted/20 border-t">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
@@ -552,40 +625,182 @@ Format your response in clear sections with emojis and bullet points. Be brutall
             </CardFooter>
           </Card>
         ) : (
-          // Results Display
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Gen Z Career Analysis</CardTitle>
-              <CardDescription>
-                Based on your input, here are career paths that match your vibe
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none whitespace-pre-wrap">
-                {results.split('\n').map((line, index) => (
-                  <div key={index}>
-                    {line.length > 0 ? line : <br />}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
+          // Results Display with improved styling
+          <div>
+            <Tabs defaultValue="overview" className="mb-8">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Career Paths</TabsTrigger>
+                <TabsTrigger value="skills">Skills to Add</TabsTrigger>
+                <TabsTrigger value="companies">Companies</TabsTrigger>
+                <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="overview" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader className="bg-muted/30">
+                    <CardTitle className="flex items-center">
+                      <GraduationCap className="mr-2 h-5 w-5 text-primary" />
+                      Your Gen Z Career Analysis
+                    </CardTitle>
+                    <CardDescription>
+                      Career paths that match your vibe and skills
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {parsedResults?.careerRoles?.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {parsedResults.careerRoles.map((role: string, index: number) => (
+                          <div 
+                            key={index}
+                            className={`p-5 rounded-lg text-white bg-gradient-to-br ${getRandomGradient(index)}`}
+                          >
+                            <h3 className="font-bold text-lg mb-2">{role.split(':')[0]}</h3>
+                            <p>{role.split(':').slice(1).join(':')}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Why These Careers Suit You</h3>
+                        <div className="prose max-w-none">
+                          {parsedResults?.whySuits?.map((reason: string, idx: number) => (
+                            <div key={idx} className="flex items-start gap-2 mb-2">
+                              <div className="mt-1 text-primary">•</div>
+                              <p>{reason}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-muted/30">
+                    <CardTitle>Full AI Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="prose prose-sm max-w-none bg-muted/10 p-4 rounded-md border border-dashed overflow-auto max-h-[600px]">
+                      {results.split('\n').map((line, index) => {
+                        // Add special styling to headings
+                        if (line.toUpperCase() === line && line.length > 0) {
+                          return <h3 key={index} className="text-primary font-bold mt-4">{line}</h3>;
+                        }
+                        // Highlight emoji sections
+                        if (line.match(/^[•\-*]|\p{Emoji}/u)) {
+                          return (
+                            <div key={index} className="flex items-start gap-2 ml-2">
+                              <span>{line.startsWith('-') ? '•' : line.charAt(0)}</span>
+                              <p>{line.substring(1)}</p>
+                            </div>
+                          );
+                        }
+                        return line.length > 0 ? <p key={index} className="mb-1">{line}</p> : <br key={index} />;
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="skills" className="mt-4">
+                <Card>
+                  <CardHeader className="bg-muted/30">
+                    <CardTitle className="flex items-center">
+                      <BookOpen className="mr-2 h-5 w-5 text-blue-500" />
+                      Skills You Need to Add
+                    </CardTitle>
+                    <CardDescription>
+                      Tools and technologies to learn for your career path
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(parsedResults?.skillsToAdd || []).map((skill: string, index: number) => (
+                        <div key={index} className="p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors duration-200">
+                          <p>{skill}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="companies" className="mt-4">
+                <Card>
+                  <CardHeader className="bg-muted/30">
+                    <CardTitle className="flex items-center">
+                      <Briefcase className="mr-2 h-5 w-5 text-purple-500" />
+                      Recommended Companies
+                    </CardTitle>
+                    <CardDescription>
+                      Places where you could thrive based on your profile
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(parsedResults?.companies || []).map((company: string, index: number) => (
+                        <div key={index} className="p-4 border rounded-lg flex items-center space-x-3">
+                          <div className="bg-primary/10 p-2 rounded-full">
+                            <Briefcase className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{company.split(':')[0]}</p>
+                            <p className="text-sm text-muted-foreground">{company.split(':').slice(1).join(':')}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="roadmap" className="mt-4">
+                <Card>
+                  <CardHeader className="bg-muted/30">
+                    <CardTitle className="flex items-center">
+                      <BarChart3 className="mr-2 h-5 w-5 text-amber-500" />
+                      6-12 Month Roadmap
+                    </CardTitle>
+                    <CardDescription>
+                      Your realistic path forward in this career
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="relative border-l-2 border-primary/30 pl-6 space-y-6 ml-2">
+                      {(parsedResults?.roadmap || []).map((step: string, index: number) => (
+                        <div key={index} className="relative">
+                          <div className="absolute -left-9 top-1 w-5 h-5 rounded-full bg-primary z-10"></div>
+                          <div className="p-4 border rounded-lg">
+                            <p>{step}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+            
+            <div className="flex justify-between">
               <Button variant="outline" onClick={handleReset}>
                 Start Over
               </Button>
-              <Button onClick={() => navigate("/dashboard")}>
+              <Button 
+                onClick={() => navigate("/dashboard")}
+                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-500"
+              >
                 Return to Dashboard
               </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </div>
         )}
         
         {/* Progress Bar */}
         {!results && (
           <div className="mt-4">
-            <div className="w-full bg-muted h-2 rounded-full">
+            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
               <div
-                className="h-2 bg-primary rounded-full transition-all duration-300"
+                className="h-2 bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-300"
                 style={{ width: `${(currentSection / 4) * 100}%` }}
               />
             </div>

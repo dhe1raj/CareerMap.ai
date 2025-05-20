@@ -98,12 +98,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
+        className: "bg-white/10 backdrop-blur-md border border-white/20 text-white",
       });
     } catch (error: any) {
       toast({
         title: "Sign in failed",
         description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
+        className: "bg-red-500/10 backdrop-blur-md border border-red-500/20 text-white",
       });
       throw error;
     }
@@ -128,12 +130,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Account created",
         description: "You have successfully created an account.",
+        className: "bg-white/10 backdrop-blur-md border border-white/20 text-white",
       });
     } catch (error: any) {
       toast({
         title: "Sign up failed",
         description: error.message || "Please check your information and try again.",
         variant: "destructive",
+        className: "bg-red-500/10 backdrop-blur-md border border-red-500/20 text-white",
       });
       throw error;
     }
@@ -167,6 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Google sign in failed",
         description: error.message || "Please try again later.",
         variant: "destructive",
+        className: "bg-red-500/10 backdrop-blur-md border border-red-500/20 text-white",
       });
       throw error;
     }
@@ -183,12 +188,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Signed out",
         description: "You have been signed out successfully.",
+        className: "bg-white/10 backdrop-blur-md border border-white/20 text-white",
       });
     } catch (error: any) {
       toast({
         title: "Error signing out",
         description: error.message || "An error occurred while signing out.",
         variant: "destructive",
+        className: "bg-red-500/10 backdrop-blur-md border border-red-500/20 text-white",
       });
     }
   };

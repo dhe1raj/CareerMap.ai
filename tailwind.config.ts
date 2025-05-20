@@ -73,8 +73,20 @@ export default {
 					600: "#724dc9", // Deep purple
 					700: "#5a3b9f", // Rich purple
 					800: "#3d2875", // Dark purple
-					900: "#20174c"  // Very dark purple/blue
+					900: "#20174c",  // Very dark purple/blue
+					950: "#1a1033"   // Darkest background purple
+				},
+				cyber: {
+					purple: "#a855f7",
+					glow: "#c084fc",
+					dark: "#1a1a2e",
+					deeper: "#0f0f1b",
+					midnight: "#080818"
 				}
+			},
+			fontFamily: {
+				'poppins': ['Poppins', 'sans-serif'],
+				'space': ['"Space Grotesk"', 'sans-serif']
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -99,34 +111,47 @@ export default {
 					}
 				},
 				'fade-in': {
-					from: { opacity: '0' },
-					to: { opacity: '1' }
+					from: { opacity: '0', transform: 'translateY(10px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
 				},
 				'slide-in': {
-					from: { transform: 'translateY(10px)', opacity: '0' },
+					from: { transform: 'translateY(20px)', opacity: '0' },
 					to: { transform: 'translateY(0)', opacity: '1' }
 				},
 				'pulse-glow': {
 					'0%, 100%': { 
-						boxShadow: '0 0 10px rgba(161, 123, 245, 0.7), 0 0 20px rgba(155, 135, 245, 0.4)' 
+						boxShadow: '0 0 10px rgba(168, 85, 247, 0.5), 0 0 20px rgba(192, 132, 252, 0.3)' 
 					},
 					'50%': { 
-						boxShadow: '0 0 15px rgba(161, 123, 245, 0.9), 0 0 25px rgba(155, 135, 245, 0.6)' 
+						boxShadow: '0 0 15px rgba(168, 85, 247, 0.7), 0 0 25px rgba(192, 132, 252, 0.5)' 
 					}
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0px)' },
 					'50%': { transform: 'translateY(-15px)' }
+				},
+				'glow-pulse': {
+					'0%, 100%': { 
+						textShadow: '0 0 8px rgba(168, 85, 247, 0.7), 0 0 12px rgba(168, 85, 247, 0.5)' 
+					},
+					'50%': { 
+						textShadow: '0 0 12px rgba(168, 85, 247, 0.9), 0 0 20px rgba(168, 85, 247, 0.7)' 
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.4s ease-in-out',
-				'slide-in': 'slide-in 0.5s ease-out',
+				'fade-in': 'fade-in 0.5s ease-in-out',
+				'slide-in': 'slide-in 0.7s ease-out',
 				'pulse-glow': 'pulse-glow 3s infinite',
-				'float': 'float 6s ease-in-out infinite'
-			}
+				'float': 'float 6s ease-in-out infinite',
+				'glow-pulse': 'glow-pulse 2s infinite'
+			},
+			backdropFilter: {
+				'none': 'none',
+				'blur': 'blur(15px)',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

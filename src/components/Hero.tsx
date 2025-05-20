@@ -22,7 +22,7 @@ export default function Hero() {
               <img 
                 src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
                 alt="CareerForge Logo" 
-                className="relative h-48 z-10" 
+                className="relative h-56 z-10 animate-subtle-float" 
               />
             </div>
           </motion.div>

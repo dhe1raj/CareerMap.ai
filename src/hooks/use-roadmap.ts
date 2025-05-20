@@ -6,6 +6,8 @@ import { GeneratedRoadmap } from '@/components/career/CareerDesignWizard';
 
 export interface UserRoadmap extends RoadmapTemplate {
   lastUpdated: string;
+  category?: string; // Added optional category property
+  icon?: string; // Added optional icon property
 }
 
 interface UseRoadmapReturn {

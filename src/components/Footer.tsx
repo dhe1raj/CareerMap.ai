@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 export default function Footer() {
@@ -7,7 +6,14 @@ export default function Footer() {
       <div className="container py-10 md:py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-gradient">CareerPath</h3>
+            <div className="flex items-center mb-4">
+              <img 
+                src="/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png" 
+                alt="CareerForge Logo" 
+                className="h-6 mr-2" 
+              />
+              <h3 className="text-lg font-semibold text-gradient">CareerForge</h3>
+            </div>
             <p className="text-sm text-muted-foreground max-w-xs">
               AI-powered career planning and roadmap generator for your professional journey.
             </p>
@@ -75,7 +81,7 @@ export default function Footer() {
         </div>
         <div className="mt-10 pt-8 border-t flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} CareerPath. All rights reserved.
+            © {new Date().getFullYear()} CareerForge. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">

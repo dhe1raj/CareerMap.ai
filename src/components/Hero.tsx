@@ -10,6 +10,13 @@ export default function Hero() {
     <div className="relative overflow-hidden bg-background py-24 sm:py-32">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png" 
+              alt="CareerForge Logo" 
+              className="h-20" 
+            />
+          </div>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
             Design Your Perfect Career Path
           </h1>

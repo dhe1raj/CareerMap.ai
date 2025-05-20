@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -44,19 +43,12 @@ export default function Navbar() {
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center">
           <Link to="/" className="flex items-center space-x-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6 text-primary"
-            >
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-            </svg>
-            <span className="text-xl font-bold">CareerPath</span>
+            <img 
+              src="/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png" 
+              alt="CareerForge Logo" 
+              className="h-8" 
+            />
+            <span className="text-xl font-bold">CareerForge</span>
           </Link>
         </div>
 
@@ -149,7 +141,7 @@ export default function Navbar() {
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
-              <SheetTitle>CareerPath</SheetTitle>
+              <SheetTitle>CareerForge</SheetTitle>
               <SheetDescription>
                 Navigate to different sections of the app.
               </SheetDescription>

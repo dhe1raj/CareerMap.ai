@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -20,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
 // Questions and options data

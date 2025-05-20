@@ -3,10 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { GeminiProvider } from "@/context/GeminiContext";
 import AuthGuard from "@/components/AuthGuard";
+import { useEffect } from "react";
 
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -27,6 +28,34 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import GenZCareerDecider from "./pages/GenZCareerDecider";
 
+// Create a custom hook to remove any unwanted popups that might be appearing
+const useRemovePopups = () => {
+  useEffect(() => {
+    // Check for and remove any recurring popups that might be present
+    const removePopups = () => {
+      const popupElements = document.querySelectorAll('.popup-notification, .ai-thinking-popup, [id*="popup"], [class*="popup"]');
+      popupElements.forEach(element => {
+        if (element.textContent?.includes('AI is thinking') || element.textContent?.includes('retrying')) {
+          element.remove();
+          console.log('Removed recurring popup');
+        }
+      });
+    };
+    
+    // Run immediately and then set on an interval
+    removePopups();
+    const interval = setInterval(removePopups, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+};
+
+// Component to use the hook
+const PopupRemover = () => {
+  useRemovePopups();
+  return null;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -37,6 +66,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PopupRemover />
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Index />} />

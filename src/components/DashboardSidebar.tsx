@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -41,7 +42,7 @@ export default function DashboardSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/dashboard">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +63,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/career-designer">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -84,7 +85,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/genz-career-decider">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +108,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/career-chat">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +129,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/resume-analysis">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +153,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/settings">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -181,7 +182,7 @@ export default function DashboardSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/about">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -203,7 +204,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/features">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -223,7 +224,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/privacy">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -245,7 +246,7 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/terms">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

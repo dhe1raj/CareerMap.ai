@@ -86,7 +86,7 @@ export default function Testimonials() {
               variants={item}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}
             >
-              <Card className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)] h-full overflow-hidden relative group">
+              <Card className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2),0_0_10px_rgba(168,85,247,0.2)] h-full overflow-hidden relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-400/0 to-brand-500/0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"></div>
                 <CardContent className="pt-6">
                   <div className="flex mb-4">

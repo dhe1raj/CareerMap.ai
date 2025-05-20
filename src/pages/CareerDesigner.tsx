@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,11 +8,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useGemini } from "@/lib/gemini";
-import { ArrowRight } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowRight, ArrowLeft, Upload, Sparkles, School, Briefcase, Globe, Clock, Code } from "lucide-react";
+import { motion } from "framer-motion";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
 const educationLevels = [
   "High School",
@@ -22,7 +26,6 @@ const educationLevels = [
   "Ph.D. or Doctorate"
 ];
 
-// Add degree/course options
 const degreeOptions = [
   "Computer Science",
   "Business Administration",
@@ -95,18 +98,40 @@ const countries = [
   "Other"
 ];
 
+const collegeTypes = [
+  "Tier 1 (Elite)",
+  "Tier 2 (National)",
+  "Tier 3 (Regional)",
+  "Community College",
+  "Technical Institute",
+  "No College"
+];
+
+const learningStyles = [
+  "Visual",
+  "Auditory",
+  "Reading/Writing",
+  "Kinesthetic (Hands-on)",
+  "Mixed/Flexible"
+];
+
 export default function CareerDesigner() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedResume, setUploadedResume] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     education: "",
-    degree: "", // New field for degree/course
+    degree: "",
     strongestSkill: "",
     fieldsOfInterest: "",
     workPreference: "",
     incomeRange: "",
     timeInvestment: "",
-    location: ""
+    location: "",
+    collegeType: "",
+    learningStyle: ""
   });
   
   const navigate = useNavigate();
@@ -134,6 +159,32 @@ export default function CareerDesigner() {
     });
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadedResume(file);
+      
+      // Read file content if it's a text file
+      if (file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setResumeText(event.target.result as string);
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        // For non-text files, just acknowledge the upload
+        setResumeText("Resume uploaded. We'll process the file for additional insights.");
+      }
+      
+      toast({
+        title: "Resume uploaded",
+        description: "Your resume has been successfully uploaded",
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       toast({
@@ -153,32 +204,37 @@ export default function CareerDesigner() {
         .update({
           education: formData.education,
           location: formData.location,
-          degree: formData.degree // Save the degree field
+          degree: formData.degree
         })
         .eq("id", user.id);
       
-      // Generate career roadmap with Gemini - more conversational prompt
-      const prompt = `You're a friendly career mentor helping a friend plan their next career move. They have this background:
+      // Enhanced prompt for Gemini that includes all new fields
+      const prompt = `You're a career mentor helping create a personalized roadmap. Here's the background:
       
       - Education: ${formData.education}
-      - Studied: ${formData.degree}
+      - Field of study: ${formData.degree}
       - Strongest skill: ${formData.strongestSkill}
-      - Looking for: ${formData.workPreference} work
-      - Hoping to earn: ${formData.incomeRange}
-      - Can invest: ${formData.timeInvestment} in development
-      - Based in: ${formData.location}
+      - Field of interest: ${formData.fieldsOfInterest}
+      - Work preference: ${formData.workPreference}
+      - Target income: ${formData.incomeRange}
+      - Time commitment: ${formData.timeInvestment}
+      - Location: ${formData.location}
+      - College type: ${formData.collegeType}
+      - Learning style: ${formData.learningStyle}
+      ${resumeText ? `- Resume details: ${resumeText}` : ''}
       
-      Create a personalized, encouraging career roadmap that feels like advice from a supportive mentor. Include:
+      Generate a personalized career roadmap with:
       
-      1. A few relevant certifications they should consider
-      2. 3-5 key skills to develop (be specific about tools/technologies)
-      3. Where they should look for jobs in their location
-      4. Realistic salary expectations at different career stages
-      5. What to expect for work-life balance 
-      6. Growth opportunities they can look forward to
-      7. Types of companies where they'd likely thrive
+      1. Suggested Career Path (role + brief reason why this fits them)
+      2. Skill Roadmap (chronological skill-building plan)
+      3. Online Courses/Certifications with specific platforms
+      4. Tools to Learn (with priority order)
+      5. Internship/Job Hunting Tips tailored to their background
+      6. Community Recommendations (online forums, groups, meetups)
+      7. Estimated Timeframe to reach job-ready level
+      8. An encouraging message at the end
       
-      Format as JSON with this structure (keep descriptions concise and conversational):
+      Format as JSON with this structure:
       
       {
         "title": "Career Path Title",
@@ -202,18 +258,15 @@ export default function CareerDesigner() {
             "timeframe": "Realistic timeline"
           }
         ],
-        "recommendedCompanies": ["Company type 1", "Company type 2"],
-        "jobPlatforms": ["Specific platform 1", "Specific platform 2"]
+        "recommendedCommunities": ["Community 1", "Community 2"],
+        "jobPlatforms": ["Platform 1", "Platform 2"]
       }`;
       
-      // Call Gemini API in the background, but don't wait for it
-      // This allows us to navigate the user to the matches page while the API call is processing
+      // Call Gemini API
       callGemini(prompt, apiKey)
         .then(response => {
           if (response) {
             try {
-              // Store the JSON response in localStorage for now
-              // In a real app, you would store this in the database
               localStorage.setItem('careerRoadmap', response);
             } catch (error) {
               console.error("Error processing Gemini response:", error);
@@ -241,52 +294,80 @@ export default function CareerDesigner() {
 
   const steps = [
     {
-      title: "Education Level",
-      description: "What's your current education level?",
+      title: "Education Background",
+      description: "Let's start with your educational foundation",
       field: "education",
       options: educationLevels,
+      icon: <School className="h-6 w-6 text-brand-400" />
     },
     {
-      title: "Degree or Course",
+      title: "Field of Study",
       description: "What degree or course are you pursuing/completed?",
       field: "degree",
       options: degreeOptions,
+      icon: <School className="h-6 w-6 text-brand-400" />
+    },
+    {
+      title: "College Type",
+      description: "What type of institution did you attend?",
+      field: "collegeType",
+      options: collegeTypes,
+      icon: <School className="h-6 w-6 text-brand-400" />
+    },
+    {
+      title: "Learning Style",
+      description: "How do you learn most effectively?",
+      field: "learningStyle",
+      options: learningStyles,
+      icon: <Sparkles className="h-6 w-6 text-brand-400" />
     },
     {
       title: "Location",
-      description: "Where are you currently located?",
+      description: "Where are you currently based?",
       field: "location",
       options: countries,
+      icon: <Globe className="h-6 w-6 text-brand-400" />
     },
     {
       title: "Strongest Skill",
       description: "What skill do you consider your strongest?",
       field: "strongestSkill",
       options: skillSets,
+      icon: <Code className="h-6 w-6 text-brand-400" />
     },
     {
       title: "Field of Interest",
       description: "Which field interests you the most?",
-      field: "fieldsOfInterest",
+      field: "fieldsOfInterest", 
       options: fields,
+      icon: <Briefcase className="h-6 w-6 text-brand-400" />
     },
     {
       title: "Work Preference",
       description: "Do you prefer remote or on-site work?",
       field: "workPreference",
       options: workPreferences,
+      icon: <Briefcase className="h-6 w-6 text-brand-400" />
     },
     {
       title: "Expected Income",
       description: "What's your expected income range?",
       field: "incomeRange",
       options: incomeRanges,
+      icon: <Briefcase className="h-6 w-6 text-brand-400" />
     },
     {
       title: "Time Investment",
       description: "How much time can you invest weekly in your career development?",
       field: "timeInvestment",
       options: timeInvestments,
+      icon: <Clock className="h-6 w-6 text-brand-400" />
+    },
+    {
+      title: "Resume Upload",
+      description: "Upload your resume for more personalized recommendations",
+      field: "resume",
+      icon: <Upload className="h-6 w-6 text-brand-400" />
     },
   ];
 
@@ -295,75 +376,180 @@ export default function CareerDesigner() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Design Your Career</h1>
-          <p className="text-muted-foreground">
-            Answer these questions to help us find your ideal career match
-          </p>
-        </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-4xl mx-auto px-4 py-8"
+      >
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-8 text-center"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-brand-400 to-purple-400 neon-purple-text">Design Your Career 🚀</h1>
+          <p className="text-xl text-white/70 mt-2">Your personalized career path starts here</p>
+        </motion.div>
 
-        <Card className="mb-8 border-t-4 border-t-primary shadow-lg">
-          <CardHeader className="bg-muted/50">
-            <CardTitle>{currentQuestion.title}</CardTitle>
-            <CardDescription>{currentQuestion.description}</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor={currentQuestion.field}>{currentQuestion.title}</Label>
-                <Select
-                  value={formData[currentQuestion.field as keyof typeof formData] || ""}
-                  onValueChange={(value) => handleSelectChange(currentQuestion.field, value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={`Select your ${currentQuestion.title.toLowerCase()}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currentQuestion.options.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+        >
+          <Card className="border-t-4 border-t-primary shadow-lg backdrop-blur-xl bg-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(168,85,247,0.2)]">
+            <CardHeader className="bg-gradient-to-r from-brand-900/50 to-cyber-dark/50 rounded-t-xl border-b border-white/10">
+              <div className="flex items-center">
+                {currentQuestion.icon}
+                <div className="ml-3">
+                  <CardTitle className="text-2xl font-bold text-white">{currentQuestion.title}</CardTitle>
+                  <CardDescription className="text-white/80 text-lg">{currentQuestion.description}</CardDescription>
+                </div>
               </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between pt-4 border-t bg-muted/30">
-            <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
-              Previous
-            </Button>
+            </CardHeader>
             
-            {currentStep < steps.length - 1 ? (
+            <CardContent className="pt-8 pb-6">
+              {currentQuestion.field === "resume" ? (
+                <div className="space-y-6">
+                  <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center hover:border-brand-400/50 transition-all cursor-pointer" 
+                       onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-12 w-12 mx-auto text-brand-400 mb-4" />
+                    <h3 className="text-xl font-medium text-white mb-2">Upload Your Resume</h3>
+                    <p className="text-white/70">
+                      {uploadedResume 
+                        ? `${uploadedResume.name} uploaded successfully` 
+                        : "Drag and drop your resume here, or click to browse"}
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  
+                  {uploadedResume && (
+                    <div className="p-4 rounded-lg bg-brand-400/10 border border-brand-400/30">
+                      <p className="text-white/90 flex items-center">
+                        <Check className="h-5 w-5 mr-2 text-green-400" />
+                        Resume uploaded successfully
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid w-full items-center gap-2.5">
+                    <Label htmlFor={currentQuestion.field} className="text-xl font-medium text-white">
+                      {currentQuestion.title}
+                    </Label>
+                    <Select
+                      value={formData[currentQuestion.field as keyof typeof formData] || ""}
+                      onValueChange={(value) => handleSelectChange(currentQuestion.field, value)}
+                    >
+                      <SelectTrigger className="w-full h-14 text-lg glass-input">
+                        <SelectValue 
+                          placeholder={`Select your ${currentQuestion.title.toLowerCase()}`} 
+                          className="text-white/70"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-brand-900/90 backdrop-blur-xl border border-white/20 text-white">
+                        {currentQuestion.options.map((option) => (
+                          <SelectItem 
+                            key={option} 
+                            value={option}
+                            className="text-white hover:bg-brand-400/30 focus:bg-brand-400/30"
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            
+            <CardFooter className="flex justify-between pt-6 pb-6 border-t border-white/10 bg-gradient-to-r from-brand-900/40 to-cyber-dark/40">
               <Button 
-                onClick={handleNext}
-                disabled={!formData[currentQuestion.field as keyof typeof formData]}
+                variant="outline" 
+                onClick={handlePrevious} 
+                disabled={currentStep === 0}
+                className="flex items-center gap-2"
               >
-                Next <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
+                Previous
               </Button>
-            ) : (
-              <Button 
-                onClick={handleSubmit} 
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-500"
-                disabled={isSubmitting || !formData[currentQuestion.field as keyof typeof formData]}
-              >
-                {isSubmitting ? "Analyzing..." : "Submit"}
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
+              
+              {currentStep < steps.length - 1 ? (
+                <Button 
+                  onClick={handleNext}
+                  disabled={currentQuestion.field !== "resume" && !formData[currentQuestion.field as keyof typeof formData]}
+                  className="bg-gradient-to-r from-brand-400 to-purple-600 hover:from-brand-400/90 hover:to-purple-600/90 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                >
+                  Next
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSubmit} 
+                  className="bg-gradient-to-r from-brand-400 to-purple-600 hover:from-brand-400/90 hover:to-purple-600/90 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="mr-2">Analyzing...</span>
+                      <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+                    </>
+                  ) : (
+                    <>
+                      <span>Generate My Career Path</span>
+                      <Sparkles className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+        </motion.div>
 
-        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-          <div
-            className="h-2 bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="mt-8">
+          <div className="w-full bg-white/10 h-3 rounded-full overflow-hidden">
+            <motion.div
+              className="h-3 bg-gradient-to-r from-brand-400 to-purple-500 rounded-full"
+              style={{ width: `${progress}%` }}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-white/60">
+            <p>Step {currentStep + 1} of {steps.length}</p>
+            <p>{Math.round(progress)}% complete</p>
+          </div>
         </div>
-        <p className="text-center text-sm text-muted-foreground mt-2">
-          Question {currentStep + 1} of {steps.length}
-        </p>
-      </div>
+      </motion.div>
     </DashboardLayout>
+  );
+}
+
+// Missing import
+function Check(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }

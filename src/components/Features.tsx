@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const features = [
   {
-    title: "AI-Guided Career Matching",
-    description: "Our advanced AI analyzes your skills, preferences, and goals to find your perfect career match in tech, business, design, and more.",
+    title: "Career Designer",
+    description: "Answer simple questions about your skills, preferences, and goals to discover your perfect career match.",
     icon: (
       <div className="rounded-full bg-primary/10 p-2 w-12 h-12 flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
@@ -15,8 +15,20 @@ const features = [
     ),
   },
   {
-    title: "Personalized Roadmaps",
-    description: "Get a step-by-step customized plan detailing the skills, courses, projects, and certifications you need to reach your career goals.",
+    title: "AI Mentor",
+    description: "Chat with our AI career assistant to get personalized advice about career transitions, skill improvements, and more.",
+    icon: (
+      <div className="rounded-full bg-primary/10 p-2 w-12 h-12 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+          <path d="M14 19c3.771 0 5.657 0 6.828-1.172C22 16.657 22 14.771 22 11c0-3.771 0-5.657-1.172-6.828C19.657 3 17.771 3 14 3h-4C6.229 3 4.343 3 3.172 4.172 2 5.343 2 7.229 2 11c0 3.771 0 5.657 1.172 6.828.653.654 1.528.943 2.828 1.07" />
+          <path d="M14 19c-1.236 0-2.598.5-3.841 1.145-1.998 1.037-2.997 1.556-3.489 1.225-.492-.33-.399-1.355-.212-3.404L6.5 17.5" />
+        </svg>
+      </div>
+    ),
+  },
+  {
+    title: "Role Explorer",
+    description: "Explore detailed information about various career roles including required skills, average salaries, and job demand trends.",
     icon: (
       <div className="rounded-full bg-primary/10 p-2 w-12 h-12 flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
@@ -29,20 +41,8 @@ const features = [
     ),
   },
   {
-    title: "Career Chat Assistant",
-    description: "Chat with our AI assistant to get instant advice about career transitions, skill improvements, interview preparation, and more.",
-    icon: (
-      <div className="rounded-full bg-primary/10 p-2 w-12 h-12 flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-          <path d="M14 19c3.771 0 5.657 0 6.828-1.172C22 16.657 22 14.771 22 11c0-3.771 0-5.657-1.172-6.828C19.657 3 17.771 3 14 3h-4C6.229 3 4.343 3 3.172 4.172 2 5.343 2 7.229 2 11c0 3.771 0 5.657 1.172 6.828.653.654 1.528.943 2.828 1.07" />
-          <path d="M14 19c-1.236 0-2.598.5-3.841 1.145-1.998 1.037-2.997 1.556-3.489 1.225-.492-.33-.399-1.355-.212-3.404L6.5 17.5" />
-        </svg>
-      </div>
-    ),
-  },
-  {
-    title: "Progress Tracking",
-    description: "Track your progress and milestone achievements as you advance through your career path, keeping you motivated and on target.",
+    title: "Personalized Roadmaps",
+    description: "Get a step-by-step customized plan detailing the skills, courses, projects, and certifications you need to reach your career goals.",
     icon: (
       <div className="rounded-full bg-primary/10 p-2 w-12 h-12 flex items-center justify-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">

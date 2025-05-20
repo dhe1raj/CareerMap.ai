@@ -10,7 +10,10 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import CareerDesigner from "./pages/CareerDesigner";
 import CareerMatches from "./pages/CareerMatches";
+import RoleDetails from "./pages/RoleDetails";
+import Roadmap from "./pages/Roadmap";
 import CareerChat from "./pages/CareerChat";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,7 +31,10 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/career-designer" element={<CareerDesigner />} />
           <Route path="/career-matches" element={<CareerMatches />} />
+          <Route path="/role/:id" element={<RoleDetails />} />
+          <Route path="/roadmap/:id" element={<Roadmap />} />
           <Route path="/career-chat" element={<CareerChat />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -5,6 +6,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import { useUserData } from "@/hooks/use-user-data";
+import { CareerProgress } from "@/components/dashboard/CareerProgress";
+import { ResumeAnalysis } from "@/components/dashboard/ResumeAnalysis";
+import { CareerChat } from "@/components/dashboard/CareerChat";
+import { ChevronRight, BookMarked, FileText, Briefcase } from "lucide-react";
 
 // Check if this is the first login
 const isFirstLogin = () => {
@@ -20,9 +26,23 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(isFirstLogin());
+  const { userData, isLoading, fetchUserData, saveField } = useUserData();
+  
+  // Fetch user data on mount
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
   
   const handleOnboardingComplete = (profile) => {
     setShowOnboarding(false);
+    
+    // Save profile data
+    saveField('profile.fullName', profile.roleStatus || '');
+    saveField('profile.email', user?.email || '');
+    
+    // Update career progress
+    saveField('career.progress', 30); // Starting progress after completing onboarding
+    
     // Navigate to career designer with the profile
     navigate('/career-designer', { state: { profile } });
   };
@@ -34,7 +54,7 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground mt-2">
-              Welcome back, {user?.email || 'User'}
+              Welcome back, {userData.profile.fullName || user?.email || 'User'}
             </p>
           </div>
           
@@ -43,145 +63,124 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Dashboard content */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="glass-morphism card-hover">
-            <CardHeader>
-              <CardTitle>Design Your Career</CardTitle>
-              <CardDescription>
-                Get personalized career guidance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/70">
-                Answer a few questions about your skills and goals to get AI-powered career recommendations.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => navigate("/career-designer")}
-                className="w-full"
-              >
-                Get Started
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card className="glass-morphism card-hover">
-            <CardHeader>
-              <CardTitle>Career Matches</CardTitle>
-              <CardDescription>
-                Explore roles that match your profile
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/70">
-                Discover career paths and roles that align with your skills, interests, and experience.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => navigate("/career-matches")}
-                className="w-full"
-                variant="outline"
-              >
-                View Matches
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card className="glass-morphism card-hover">
-            <CardHeader>
-              <CardTitle>Resume Analysis</CardTitle>
-              <CardDescription>
-                Get feedback on your resume
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/70">
-                Upload your resume to receive AI-powered feedback and suggestions for improvement.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => navigate("/resume-analysis")}
-                className="w-full"
-                variant="outline"
-              >
-                Analyze Resume
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card className="glass-morphism card-hover">
-            <CardHeader>
-              <CardTitle>Career Roadmap</CardTitle>
-              <CardDescription>
-                Your personalized learning path
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/70">
-                Follow a step-by-step roadmap to achieve your career goals with curated resources.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => navigate("/roadmap")}
-                className="w-full"
-                variant="outline"
-              >
-                View Roadmap
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card className="glass-morphism card-hover">
-            <CardHeader>
-              <CardTitle>Career Chat</CardTitle>
-              <CardDescription>
-                Get answers to your career questions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/70">
-                Chat with our AI career coach to get personalized advice and answers to your questions.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => navigate("/career-chat")}
-                className="w-full"
-                variant="outline"
-              >
-                Start Chatting
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card className="glass-morphism card-hover">
-            <CardHeader>
-              <CardTitle>Gen Z Career Decider</CardTitle>
-              <CardDescription>
-                Find your perfect career match
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-white/70">
-                Take a quick quiz to discover careers that match your personality, interests, and values.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => navigate("/genz-career-decider")}
-                className="w-full"
-                variant="outline"
-              >
-                Take Quiz
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="glass-morphism animate-pulse">
+                <CardHeader>
+                  <div className="h-6 bg-white/10 rounded w-1/2"></div>
+                  <div className="h-4 bg-white/10 rounded w-2/3"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-24 bg-white/5 rounded"></div>
+                </CardContent>
+                <CardFooter>
+                  <div className="h-10 bg-white/10 rounded w-full"></div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Career Progress Card */}
+            <div className="md:col-span-2 lg:col-span-2">
+              <CareerProgress 
+                userData={userData} 
+                onUpdateField={saveField}
+              />
+            </div>
+            
+            {/* Resume Analysis Card */}
+            <ResumeAnalysis 
+              userData={userData} 
+              onUpdateField={saveField}
+            />
+            
+            {/* Career Chat Card */}
+            <CareerChat 
+              userData={userData} 
+              onUpdateField={saveField}
+            />
+            
+            {/* Career Roadmap Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Career Roadmap</CardTitle>
+                <CardDescription>
+                  Your personalized learning path
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Follow a step-by-step roadmap to achieve your career goals with curated resources.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/roadmap")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <BookMarked className="mr-2 h-4 w-4" />
+                  View Roadmap
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Career Matches Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Career Matches</CardTitle>
+                <CardDescription>
+                  Explore roles that match your profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Discover career paths and roles that align with your skills, interests, and experience.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/career-matches")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  View Matches
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Resume Analysis Full Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Resume Analysis</CardTitle>
+                <CardDescription>
+                  Get detailed feedback on your resume
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Get comprehensive AI-powered feedback and suggestions to improve your resume and stand out to employers.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/resume-analysis")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Full Analysis
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
       </div>
       
       {/* Onboarding Wizard */}
@@ -189,6 +188,10 @@ export default function Dashboard() {
         isOpen={showOnboarding}
         onComplete={handleOnboardingComplete}
         onCancel={() => setShowOnboarding(false)}
+        initialProfile={userData ? {
+          roleStatus: userData.profile.fullName,
+          email: userData.profile.email,
+        } : {}}
       />
     </DashboardLayout>
   );

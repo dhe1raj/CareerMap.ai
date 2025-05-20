@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Features from "./pages/Features";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/features" element={<Features />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

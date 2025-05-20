@@ -26,16 +26,19 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import DashboardLayoutEnhanced from "./components/DashboardLayoutEnhanced";
 import AuthGuard from "./components/AuthGuard";
+import { RootErrorBoundary } from "./components/RootErrorBoundary";
 
 function App() {
   return (
-    <AuthProvider>
-      <GeminiProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </GeminiProvider>
-    </AuthProvider>
+    <RootErrorBoundary>
+      <AuthProvider>
+        <GeminiProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </GeminiProvider>
+      </AuthProvider>
+    </RootErrorBoundary>
   );
 }
 

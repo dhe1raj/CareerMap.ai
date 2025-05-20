@@ -17,6 +17,20 @@ const preloadLogo = () => {
 // Execute preload
 preloadLogo();
 
+// Configuration for page loading timeout detection
+const PAGE_LOAD_TIMEOUT = 2000; // 2 seconds timeout
+let componentLoadTimeout: number;
+
+// Monitor component loading times
+window.addEventListener('load', () => {
+  console.log('Page fully loaded');
+  clearTimeout(componentLoadTimeout);
+});
+
+componentLoadTimeout = window.setTimeout(() => {
+  console.error('Page took longer than 2 seconds to load - possible component render issue');
+}, PAGE_LOAD_TIMEOUT);
+
 // Add console log for debugging
 console.log('Application starting...');
 console.log('Initializing providers and routing...');

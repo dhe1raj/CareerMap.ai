@@ -11,7 +11,6 @@ import {
   MessageSquare,
   Settings,
   User,
-  Route,
   Sparkles,
 } from "lucide-react";
 
@@ -29,7 +28,7 @@ export default function DashboardSidebarEnhanced() {
     }
   };
 
-  // Navigation items with corrected route for Career Designer
+  // Navigation items with proper routes
   const navItems = [
     { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
     { name: "Career Chat", icon: <MessageSquare size={20} />, path: "/career-chat" },
@@ -39,7 +38,6 @@ export default function DashboardSidebarEnhanced() {
     { name: "Roadmap", icon: <BookOpen size={20} />, path: "/roadmap" },
     { name: "Profile Settings", icon: <User size={20} />, path: "/profile-settings" },
     { name: "Account Settings", icon: <Settings size={20} />, path: "/account-settings" },
-    { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
   ];
 
   return (
@@ -49,6 +47,8 @@ export default function DashboardSidebarEnhanced() {
           src="/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png" 
           alt="CareerMap Logo"
           className="h-8"
+          onClick={() => navigate("/")}
+          style={{ cursor: "pointer" }}
         />
       </div>
       

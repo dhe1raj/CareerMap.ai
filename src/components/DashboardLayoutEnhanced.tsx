@@ -1,14 +1,20 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import DashboardSidebarEnhanced from "./DashboardSidebarEnhanced";
 import { Toaster } from "./ui/toaster";
+import { toast } from "@/hooks/use-toast";
+import { useLocation } from "react-router-dom";
 
 interface DashboardLayoutEnhancedProps {
   children: ReactNode;
 }
 
 export default function DashboardLayoutEnhanced({ children }: DashboardLayoutEnhancedProps) {
-  console.log("Rendering DashboardLayoutEnhanced");
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log("Rendering DashboardLayoutEnhanced for path:", location.pathname);
+  }, [location.pathname]);
   
   return (
     <div className="min-h-screen flex">

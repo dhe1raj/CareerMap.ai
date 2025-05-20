@@ -19,6 +19,10 @@ import AccountSettings from "./pages/AccountSettings";
 import CareerDesigner from "./pages/CareerDesigner";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import Features from "./pages/Features";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 function App() {
   return (
@@ -41,6 +45,10 @@ function AppContent() {
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
       <Route path="/" element={<Index />} />
+      <Route path="/features" element={<Features />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       
       {/* Protected routes - only accessible if the user is logged in */}
       <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />

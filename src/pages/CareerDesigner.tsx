@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -11,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useGemini } from "@/lib/gemini";
-import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
 
 const educationLevels = [
   "High School",
@@ -125,15 +123,6 @@ export default function CareerDesigner() {
       toast({
         title: "Authentication required",
         description: "Please log in to save your career preferences.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please set your Gemini API key to generate career matches",
         variant: "destructive"
       });
       return;
@@ -270,10 +259,6 @@ export default function CareerDesigner() {
           </p>
         </div>
 
-        {!apiKey && (
-          <GeminiApiKeyInput />
-        )}
-
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>{currentQuestion.title}</CardTitle>
@@ -316,7 +301,7 @@ export default function CareerDesigner() {
             ) : (
               <Button 
                 onClick={handleSubmit} 
-                disabled={isSubmitting || !formData[currentQuestion.field as keyof typeof formData] || !apiKey}
+                disabled={isSubmitting || !formData[currentQuestion.field as keyof typeof formData]}
               >
                 {isSubmitting ? "Analyzing..." : "Submit"}
               </Button>

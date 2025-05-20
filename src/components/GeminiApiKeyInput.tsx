@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Check } from "lucide-react";
 
 export default function GeminiApiKeyInput() {
   const { apiKey, modelName, setApiKey, setModelName } = useGeminiContext();
   const [inputApiKey, setInputApiKey] = useState(apiKey || "");
-  const [isEditingKey, setIsEditingKey] = useState(!apiKey);
+  const [isEditingKey, setIsEditingKey] = useState(false);
   const { toast } = useToast();
 
   const handleSaveApiKey = () => {
@@ -40,7 +42,28 @@ export default function GeminiApiKeyInput() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isEditingKey ? (
+        {!isEditingKey ? (
+          <div className="space-y-4">
+            <Alert className="bg-green-50 border-green-200">
+              <Check className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-green-700">
+                Gemini API key is already configured and ready to use
+              </AlertDescription>
+            </Alert>
+            
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-medium">API Key</p>
+                <p className="text-sm text-muted-foreground">
+                  •••••••••••••••••••••••{apiKey ? apiKey.slice(-4) : ""}
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => setIsEditingKey(true)}>
+                Change
+              </Button>
+            </div>
+          </div>
+        ) : (
           <div className="space-y-2">
             <label htmlFor="api-key" className="text-sm font-medium">
               Gemini API Key
@@ -64,18 +87,6 @@ export default function GeminiApiKeyInput() {
                 Google AI Studio
               </a>
             </p>
-          </div>
-        ) : (
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="font-medium">API Key</p>
-              <p className="text-sm text-muted-foreground">
-                •••••••••••••••••••••••{apiKey ? apiKey.slice(-4) : ""}
-              </p>
-            </div>
-            <Button variant="outline" onClick={() => setIsEditingKey(true)}>
-              Change
-            </Button>
           </div>
         )}
 

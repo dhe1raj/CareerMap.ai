@@ -31,7 +31,7 @@ export default function Settings() {
           <TabsList className="grid grid-cols-3 mb-8 w-full max-w-md">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="api">API Keys</TabsTrigger>
+            <TabsTrigger value="api">API Configuration</TabsTrigger>
           </TabsList>
           
           <TabsContent value="account" className="space-y-6">

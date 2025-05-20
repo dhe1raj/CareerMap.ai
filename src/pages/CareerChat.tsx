@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, AlertCircle } from "lucide-react";
+import { Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -11,8 +11,6 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useGemini } from "@/lib/gemini";
-import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Message {
   id: string;
@@ -71,15 +69,6 @@ export default function CareerChat() {
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !user) return;
-    
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please set your Gemini API key to use the chat",
-        variant: "destructive"
-      });
-      return;
-    }
     
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -148,10 +137,6 @@ export default function CareerChat() {
             Chat with our AI career assistant for personalized guidance and advice.
           </p>
         </div>
-
-        {!apiKey && (
-          <GeminiApiKeyInput />
-        )}
         
         <Card className="flex-1 p-4 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto space-y-4 pb-4">
@@ -211,10 +196,10 @@ export default function CareerChat() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type your message..."
-                disabled={isLoading || !apiKey}
+                disabled={isLoading}
                 className="flex-1"
               />
-              <Button type="submit" size="icon" disabled={isLoading || !apiKey}>
+              <Button type="submit" size="icon" disabled={isLoading}>
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </Button>

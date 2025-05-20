@@ -17,6 +17,7 @@ import CareerMatches from "./pages/CareerMatches";
 import RoleDetails from "./pages/RoleDetails";
 import Roadmap from "./pages/Roadmap";
 import CareerChat from "./pages/CareerChat";
+import ResumeAnalysis from "./pages/ResumeAnalysis";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
@@ -83,6 +84,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <CareerChat />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/resume-analysis" 
+              element={
+                <AuthGuard>
+                  <ResumeAnalysis />
                 </AuthGuard>
               } 
             />

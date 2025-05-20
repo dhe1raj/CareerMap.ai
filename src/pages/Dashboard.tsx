@@ -8,6 +8,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Upload } from "lucide-react";
 
 interface CareerSuggestion {
   id: string;
@@ -86,22 +87,43 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <Card className="bg-brand-100 border-brand-300">
-          <CardHeader>
-            <CardTitle>Start Your Career Journey Today</CardTitle>
-            <CardDescription>
-              Take our questionnaire to discover your ideal career path.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              className="bg-brand-500 hover:bg-brand-600"
-              onClick={() => navigate("/career-designer")}
-            >
-              Design My Career
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="bg-brand-100 border-brand-300">
+            <CardHeader>
+              <CardTitle>Start Your Career Journey Today</CardTitle>
+              <CardDescription>
+                Take our questionnaire to discover your ideal career path.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                className="bg-brand-500 hover:bg-brand-600"
+                onClick={() => navigate("/career-designer")}
+              >
+                Design My Career
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle>Resume Analysis</CardTitle>
+              <CardDescription>
+                Get smart, AI-powered career guidance based on your resume.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline"
+                className="border-blue-400 text-blue-700 hover:bg-blue-100"
+                onClick={() => navigate("/resume-analysis")}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Resume
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>

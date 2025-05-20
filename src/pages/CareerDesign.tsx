@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -19,11 +20,11 @@ export default function CareerDesign() {
   const { 
     userRoadmap, 
     roadmapProgress, 
-    saveRoadmap, 
+    selectRoadmap, 
     resetRoadmap, 
-    toggleStepCompleted, 
-    personalizeRoadmap,
-    isPersonalizing
+    updateRoadmapStep, 
+    personalizeWithAI,
+    loadingRoadmap
   } = useRoadmap(apiKey || '');
   const [showRoadmapSelector, setShowRoadmapSelector] = useState(false);
 
@@ -34,13 +35,13 @@ export default function CareerDesign() {
   }, [userRoadmap]);
 
   const handleSelectRoadmap = async (roadmapId: string) => {
-    await saveRoadmap(roadmapId);
+    await selectRoadmap(roadmapId);
     setShowRoadmapSelector(false);
     
     toast({
       title: "Roadmap selected!",
       description: "Your career roadmap has been created.",
-      variant: "default" // <-- Changed from "success" to "default" to fix the type error
+      variant: "default"
     });
   };
 
@@ -68,7 +69,15 @@ export default function CareerDesign() {
   const handlePersonalize = async () => {
     if (!userRoadmap) return;
     
-    const success = await personalizeRoadmap();
+    // Create a simple user profile for personalization
+    // In a real app, this would come from the user's stored profile
+    const userProfile = {
+      level: "beginner",
+      interests: ["machine learning", "data analysis"],
+      goal: "Get entry-level position"
+    };
+    
+    const success = await personalizeWithAI(userProfile);
     
     if (success) {
       toast({
@@ -108,7 +117,7 @@ export default function CareerDesign() {
         </div>
 
         {showRoadmapSelector ? (
-          <RoadmapSelector onSelectRoadmap={handleSelectRoadmap} />
+          <RoadmapSelector onSelect={handleSelectRoadmap} />
         ) : userRoadmap ? (
           <div className="space-y-6">
             <Card className="glass-morphism">
@@ -123,20 +132,27 @@ export default function CareerDesign() {
                   
                   <Button
                     onClick={handlePersonalize}
-                    disabled={isPersonalizing}
+                    disabled={loadingRoadmap}
                     variant="outline"
                     className="flex items-center gap-2"
                   >
                     <Route className="h-4 w-4" />
-                    {isPersonalizing ? "Personalizing..." : "✨ Personalize with AI"}
+                    {loadingRoadmap ? "Personalizing..." : "✨ Personalize with AI"}
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <RoadmapProgress progress={roadmapProgress} />
+                <RoadmapProgress 
+                  roadmap={userRoadmap}
+                  progress={roadmapProgress}
+                  onReset={handleResetRoadmap}
+                  onPersonalize={handlePersonalize}
+                  onExport={handleExportPDF}
+                  personalizeDisabled={loadingRoadmap}
+                />
                 <RoadmapSteps 
                   steps={userRoadmap.steps} 
-                  onToggleStep={toggleStepCompleted} 
+                  onToggleStep={updateRoadmapStep} 
                 />
               </CardContent>
             </Card>

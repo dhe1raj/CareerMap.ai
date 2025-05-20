@@ -15,6 +15,8 @@ import Roadmap from "./pages/Roadmap";
 import CareerChat from "./pages/CareerChat";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Features from "./pages/Features";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
           <Route path="/roadmap/:id" element={<Roadmap />} />
           <Route path="/career-chat" element={<CareerChat />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/features" element={<Features />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

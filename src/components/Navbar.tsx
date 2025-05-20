@@ -44,11 +44,11 @@ export default function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
-              alt="CareerForge Logo" 
+              src="/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png" 
+              alt="CareerMap Logo" 
               className="h-20 w-auto transition-transform hover:scale-110" 
             />
-            <span className="text-xl font-bold">CareerForge</span>
+            <span className="text-xl font-bold">CareerMap</span>
           </Link>
         </div>
 
@@ -147,7 +147,7 @@ export default function Navbar() {
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
-              <SheetTitle>CareerForge</SheetTitle>
+              <SheetTitle>CareerMap</SheetTitle>
               <SheetDescription>
                 Navigate to different sections of the app.
               </SheetDescription>

@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 
 export default function Footer() {
@@ -8,11 +9,11 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
-                alt="CareerForge Logo" 
+                src="/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png" 
+                alt="CareerMap Logo" 
                 className="h-16 w-auto mr-2 transition-transform hover:scale-110" 
               />
-              <h3 className="text-lg font-semibold text-gradient">CareerForge</h3>
+              <h3 className="text-lg font-semibold text-gradient">CareerMap</h3>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
               AI-powered career planning and roadmap generator for your professional journey.
@@ -81,7 +82,7 @@ export default function Footer() {
         </div>
         <div className="mt-10 pt-8 border-t flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} CareerForge. All rights reserved.
+            © {new Date().getFullYear()} CareerMap. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">

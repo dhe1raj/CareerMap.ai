@@ -9,7 +9,7 @@ import './styles/glassmorphism.css'
 const preloadLogo = () => {
   const link = document.createElement('link');
   link.rel = 'preload';
-  link.href = '/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png';
+  link.href = '/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png';
   link.as = 'image';
   document.head.appendChild(link);
 };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,10 +24,7 @@ export default function Login() {
     
     try {
       await signIn(email, password);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to CareerMap!",
-      });
+      navigate('/dashboard');
     } catch (error: any) {
       // Error is handled in the signIn function
     } finally {

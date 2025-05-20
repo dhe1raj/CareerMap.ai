@@ -18,6 +18,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import AccountSettings from "./pages/AccountSettings";
 import CareerDesigner from "./pages/CareerDesigner";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 function App() {
   return (
@@ -31,11 +32,15 @@ function App() {
 
 function AppContent() {
   const { user } = useAuth();
+  
+  console.log("Auth state:", user ? "Logged in" : "Not logged in");
 
   return (
     <Routes>
+      {/* Public routes accessible to everyone */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+      <Route path="/" element={<Index />} />
       
       {/* Protected routes - only accessible if the user is logged in */}
       <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
@@ -47,9 +52,6 @@ function AppContent() {
       <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/profile-settings" element={user ? <ProfileSettings /> : <Navigate to="/login" />} />
       <Route path="/account-settings" element={user ? <AccountSettings /> : <Navigate to="/login" />} />
-
-      {/* Redirect to dashboard if logged in, otherwise to login */}
-      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
       
       {/* 404 route to catch all unknown routes */}
       <Route path="*" element={<NotFound />} />

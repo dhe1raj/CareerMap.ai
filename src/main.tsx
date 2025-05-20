@@ -17,6 +17,9 @@ const preloadLogo = () => {
 // Execute preload
 preloadLogo();
 
+// Add console log for debugging
+console.log('Application starting...');
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

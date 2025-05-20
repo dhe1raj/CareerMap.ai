@@ -1,182 +1,59 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
-import { GeminiProvider } from "@/context/GeminiContext";
-import AuthGuard from "@/components/AuthGuard";
-import { useEffect } from "react";
-
-import Index from "./pages/Index";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import CareerDesigner from "./pages/CareerDesigner";
-import CareerDesign from "./pages/CareerDesign";
-import CareerMatches from "./pages/CareerMatches";
-import RoleDetails from "./pages/RoleDetails";
-import Roadmap from "./pages/Roadmap";
 import CareerChat from "./pages/CareerChat";
 import ResumeAnalysis from "./pages/ResumeAnalysis";
+import CareerMatches from "./pages/CareerMatches";
+import Roadmap from "./pages/Roadmap";
 import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import About from "./pages/About";
-import Features from "./pages/Features";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import GenZCareerDecider from "./pages/GenZCareerDecider";
+import GeminiSettings from "./pages/GeminiSettings";
+import ProfileSettings from "./pages/ProfileSettings";
 
-// Create a custom hook to remove any unwanted popups that might be appearing
-const useRemovePopups = () => {
-  useEffect(() => {
-    // Check for and remove any recurring popups that might be present
-    const removePopups = () => {
-      const popupElements = document.querySelectorAll('.popup-notification, .ai-thinking-popup, [id*="popup"], [class*="popup"]');
-      popupElements.forEach(element => {
-        if (element.textContent?.includes('AI is thinking') || element.textContent?.includes('retrying')) {
-          element.remove();
-          console.log('Removed recurring popup');
-        }
-      });
-    };
-    
-    // Run immediately and then set on an interval
-    removePopups();
-    const interval = setInterval(removePopups, 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
-};
-
-// Component to use the hook
-const PopupRemover = () => {
-  useRemovePopups();
-  return null;
-};
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+function App() {
+  return (
     <AuthProvider>
-      <GeminiProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PopupRemover />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              
-              {/* Protected routes */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <AuthGuard>
-                    <Dashboard />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/career-designer" 
-                element={
-                  <AuthGuard>
-                    <CareerDesigner />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/career-design" 
-                element={
-                  <AuthGuard>
-                    <CareerDesign />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/career-matches" 
-                element={
-                  <AuthGuard>
-                    <CareerMatches />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/role/:id" 
-                element={
-                  <AuthGuard>
-                    <RoleDetails />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/roadmap/:id" 
-                element={
-                  <AuthGuard>
-                    <Roadmap />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/roadmap" 
-                element={
-                  <AuthGuard>
-                    <Roadmap />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/career-chat" 
-                element={
-                  <AuthGuard>
-                    <CareerChat />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/resume-analysis" 
-                element={
-                  <AuthGuard>
-                    <ResumeAnalysis />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <AuthGuard>
-                    <Settings />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/genz-career-decider" 
-                element={
-                  <AuthGuard>
-                    <GenZCareerDecider />
-                  </AuthGuard>
-                } 
-              />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </GeminiProvider>
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
-  </QueryClientProvider>
-);
+  );
+}
+
+function AppContent() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+      <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+      
+      {/* Protected routes - only accessible if the user is logged in */}
+      <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+      <Route path="/career-chat" element={user ? <CareerChat /> : <Navigate to="/login" />} />
+      <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
+      <Route path="/career-matches" element={user ? <CareerMatches /> : <Navigate to="/login" />} />
+      <Route path="/roadmap" element={user ? <Roadmap /> : <Navigate to="/login" />} />
+      <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
+      <Route path="/gemini-settings" element={user ? <GeminiSettings /> : <Navigate to="/login" />} />
+
+      {/* Add the new ProfileSettings route */}
+      <Route path="/profile-settings" element={<ProfileSettings />} />
+
+      {/* Redirect to dashboard if logged in, otherwise to login */}
+      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+    </Routes>
+  );
+}
 
 export default App;

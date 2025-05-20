@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { roadmapTemplates, RoadmapTemplate, RoadmapStep } from '@/data/roadmapTemplates';
 import { useGemini } from '@/lib/gemini';
+import { GeneratedRoadmap } from '@/components/career/CareerDesignWizard';
 
 export interface UserRoadmap extends RoadmapTemplate {
   lastUpdated: string;
@@ -16,6 +17,7 @@ interface UseRoadmapReturn {
   updateRoadmapStep: (stepOrder: number, completed: boolean) => void;
   resetRoadmap: () => void;
   personalizeWithAI: (userProfile: any) => Promise<boolean>;
+  saveCustomRoadmap?: (customRoadmap: GeneratedRoadmap) => Promise<void>;
 }
 
 export function useRoadmap(apiKey: string): UseRoadmapReturn {
@@ -208,6 +210,43 @@ Only include the JSON array in your response, nothing else.
     }
   }, [userRoadmap, apiKey, callGemini, toast]);
 
+  // New function to save a custom roadmap
+  const saveCustomRoadmap = useCallback(async (customRoadmap: GeneratedRoadmap): Promise<void> => {
+    setLoadingRoadmap(true);
+    
+    try {
+      // Convert the generated roadmap to the UserRoadmap format
+      const newRoadmap: UserRoadmap = {
+        id: `custom-${Date.now()}`,
+        title: customRoadmap.title,
+        description: "Custom AI-generated career roadmap",
+        category: "custom",
+        icon: "sparkles",
+        steps: customRoadmap.steps.map(step => ({
+          ...step,
+          completed: step.completed || false
+        })),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      setUserRoadmap(newRoadmap);
+      
+      toast({
+        title: "Custom Roadmap Created",
+        description: "Your personalized career roadmap has been created.",
+      });
+    } catch (error) {
+      console.error('Error saving custom roadmap:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save custom roadmap: ${(error as Error).message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingRoadmap(false);
+    }
+  }, [toast]);
+
   return {
     userRoadmap,
     loadingRoadmap,
@@ -215,6 +254,7 @@ Only include the JSON array in your response, nothing else.
     selectRoadmap,
     updateRoadmapStep,
     resetRoadmap,
-    personalizeWithAI
+    personalizeWithAI,
+    saveCustomRoadmap
   };
 }

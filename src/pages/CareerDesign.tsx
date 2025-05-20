@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +12,9 @@ import { exportRoadmapToPDF } from "@/utils/pdfExport";
 import { RoadmapSelector } from "@/components/roadmap/RoadmapSelector";
 import { RoadmapProgress } from "@/components/roadmap/RoadmapProgress";
 import { RoadmapSteps } from "@/components/roadmap/RoadmapSteps";
-import { Route } from "lucide-react";
+import { Route, Sparkles } from "lucide-react";
+import CareerDesignModal from "@/components/career/CareerDesignModal";
+import { GeneratedRoadmap } from "@/components/career/CareerDesignWizard";
 
 export default function CareerDesign() {
   const { toast } = useToast();
@@ -24,9 +26,11 @@ export default function CareerDesign() {
     resetRoadmap, 
     updateRoadmapStep, 
     personalizeWithAI,
-    loadingRoadmap
+    loadingRoadmap,
+    saveCustomRoadmap,
   } = useRoadmap(apiKey || '');
   const [showRoadmapSelector, setShowRoadmapSelector] = useState(false);
+  const [showDesignWizard, setShowDesignWizard] = useState(false);
 
   useEffect(() => {
     if (!userRoadmap) {
@@ -93,6 +97,17 @@ export default function CareerDesign() {
     }
   };
 
+  const handleWizardComplete = async (customRoadmap: GeneratedRoadmap) => {
+    if (saveCustomRoadmap) {
+      await saveCustomRoadmap(customRoadmap);
+      
+      toast({
+        title: "Custom Roadmap Created",
+        description: "Your custom career roadmap has been saved.",
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -104,20 +119,57 @@ export default function CareerDesign() {
             </p>
           </div>
           
-          {userRoadmap && (
-            <div className="flex gap-2">
-              <Button onClick={handleExportPDF} variant="outline">
-                Export PDF
-              </Button>
-              <Button onClick={handleResetRoadmap} variant="outline">
-                Reset Roadmap
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowDesignWizard(true)}
+              variant="default"
+              className="bg-primary hover:bg-primary/90 flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Design Your Own Career Role
+            </Button>
+            
+            {userRoadmap && (
+              <>
+                <Button onClick={handleExportPDF} variant="outline">
+                  Export PDF
+                </Button>
+                <Button onClick={handleResetRoadmap} variant="outline">
+                  Reset Roadmap
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {showRoadmapSelector ? (
-          <RoadmapSelector onSelect={handleSelectRoadmap} />
+          <div className="space-y-6">
+            <Card className="glass-morphism card-hover border-primary/20 mb-6">
+              <CardHeader>
+                <CardTitle>Create Your Own Career Role</CardTitle>
+                <CardDescription>
+                  Use AI to generate a personalized career roadmap based on your profile and goals
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Answer a series of questions about your background, skills, and career aspirations, 
+                  and our AI will create a custom step-by-step roadmap just for you.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={() => setShowDesignWizard(true)}
+                  className="w-full bg-primary/10 hover:bg-primary/20 border border-primary/30"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Design Your Own Career Role
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <RoadmapSelector onSelect={handleSelectRoadmap} />
+          </div>
         ) : userRoadmap ? (
           <div className="space-y-6">
             <Card className="glass-morphism">
@@ -176,6 +228,12 @@ export default function CareerDesign() {
           </Card>
         )}
       </div>
+      
+      <CareerDesignModal
+        isOpen={showDesignWizard}
+        onClose={() => setShowDesignWizard(false)}
+        onComplete={handleWizardComplete}
+      />
     </DashboardLayout>
   );
 }

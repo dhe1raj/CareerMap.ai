@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -159,7 +158,7 @@ export default function CareerDesigner() {
     });
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setUploadedResume(file);
@@ -173,15 +172,38 @@ export default function CareerDesigner() {
           }
         };
         reader.readAsText(file);
-      } else {
-        // For non-text files, just acknowledge the upload
-        setResumeText("Resume uploaded. We'll process the file for additional insights.");
+      } else if (user) {
+        // For other file types, upload to Supabase and get text later
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${user.id}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+          const filePath = `resumes/${fileName}`;
+          
+          // Upload to the career-documents bucket
+          const { data, error } = await supabase.storage
+            .from('career-documents')
+            .upload(filePath, file);
+            
+          if (error) {
+            throw error;
+          }
+          
+          setResumeText("Resume uploaded. We'll use it to enhance your career recommendations.");
+          
+          // For non-text files, just acknowledge the upload
+          toast({
+            title: "Resume uploaded",
+            description: "Your resume has been successfully uploaded and will be used for personalized recommendations",
+          });
+        } catch (error: any) {
+          console.error("Error uploading resume:", error);
+          toast({
+            variant: "destructive",
+            title: "Upload failed",
+            description: error.message || "There was a problem uploading your resume."
+          });
+        }
       }
-      
-      toast({
-        title: "Resume uploaded",
-        description: "Your resume has been successfully uploaded",
-      });
     }
   };
 

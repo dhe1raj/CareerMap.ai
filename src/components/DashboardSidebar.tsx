@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -81,35 +80,6 @@ export default function DashboardSidebar() {
                       <line x1="8" x2="16" y1="12" y2="12" />
                     </svg>
                     <span>Design My Career</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/career-matches">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M17 18a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2z" />
-                      <path d="M17 10a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2z" />
-                      <path d="M7 18a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2z" />
-                      <path d="M7 10a2 2 0 0 1 2 2a2 2 0 0 1-2 2a2 2 0 0 1-2-2a2 2 0 0 1 2-2z" />
-                      <path d="M17 14v4" />
-                      <path d="M7 14v4" />
-                      <path d="M7 6v4" />
-                      <path d="M17 6v4" />
-                      <rect width="4" height="4" x="3" y="2" rx="1" />
-                      <rect width="4" height="4" x="17" y="2" rx="1" />
-                    </svg>
-                    <span>Career Matches</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>

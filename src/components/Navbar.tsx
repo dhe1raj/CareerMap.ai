@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -104,9 +103,6 @@ export default function Navbar() {
                     <Link to="/career-designer">Career Designer</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/career-matches">Career Matches</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <Link to="/genz-career-decider">Gen Z Career Decider</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -205,13 +201,6 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Career Designer
-                  </Link>
-                  <Link
-                    to="/career-matches"
-                    className="text-sm font-medium hover:underline"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Career Matches
                   </Link>
                   <Link
                     to="/genz-career-decider"

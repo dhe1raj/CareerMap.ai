@@ -67,7 +67,7 @@ export default function ResumeAnalysis() {
       const fileName = `${user.id}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `resumes/${fileName}`;
       
-      // Upload file to Supabase Storage
+      // Upload file to Supabase Storage using the new career-documents bucket
       const { data, error } = await supabase.storage
         .from('career-documents')
         .upload(filePath, file);
@@ -99,7 +99,7 @@ export default function ResumeAnalysis() {
     setIsAnalyzing(true);
     
     try {
-      // Get the file URL
+      // Get the file URL from the career-documents bucket
       const { data: urlData } = await supabase.storage
         .from('career-documents')
         .createSignedUrl(filePath, 60); // 60 seconds expiry
@@ -112,12 +112,12 @@ export default function ResumeAnalysis() {
           const response = await fetch(urlData.signedUrl);
           resumeText = await response.text();
         } else {
-          // In a real implementation, you would use a document parsing service
-          // For demo purposes, we'll assume we can extract the text
+          // For PDF and DOCX files, we'd normally use a document parsing service
+          // For this demo, we'll use placeholder text
           resumeText = "SAMPLE RESUME TEXT: Software Engineer with 3 years of experience in React, TypeScript, and Node.js. Developed multiple web applications and APIs. Proficient in database design and cloud services.";
         }
         
-        // Send to Gemini for analysis
+        // Enhanced prompt for Gemini to provide better career suggestions
         const prompt = `You are CareerForge AI — a futuristic career mentor. Analyze the following resume and provide:
 
 1. The most relevant career paths based on their **current experience and skills**

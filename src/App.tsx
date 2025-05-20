@@ -16,7 +16,8 @@ import Roadmap from "./pages/Roadmap";
 import Settings from "./pages/Settings";
 import ProfileSettings from "./pages/ProfileSettings";
 import AccountSettings from "./pages/AccountSettings";
-import CareerDesign from "./pages/CareerDesign";
+import CareerDesigner from "./pages/CareerDesigner";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -42,13 +43,16 @@ function AppContent() {
       <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
       <Route path="/career-matches" element={user ? <CareerMatches /> : <Navigate to="/login" />} />
       <Route path="/roadmap" element={user ? <Roadmap /> : <Navigate to="/login" />} />
-      <Route path="/career-design" element={user ? <CareerDesign /> : <Navigate to="/login" />} />
+      <Route path="/career-designer" element={user ? <CareerDesigner /> : <Navigate to="/login" />} />
       <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/profile-settings" element={user ? <ProfileSettings /> : <Navigate to="/login" />} />
       <Route path="/account-settings" element={user ? <AccountSettings /> : <Navigate to="/login" />} />
 
       {/* Redirect to dashboard if logged in, otherwise to login */}
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+      
+      {/* 404 route to catch all unknown routes */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

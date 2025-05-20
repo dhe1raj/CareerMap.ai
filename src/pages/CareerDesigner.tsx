@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/DashboardLayout";
+import DashboardLayoutEnhanced from "@/components/DashboardLayoutEnhanced";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -207,7 +207,7 @@ ${JSON.stringify(userProfile, null, 2)}`;
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayoutEnhanced>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -306,6 +306,6 @@ ${JSON.stringify(userProfile, null, 2)}`;
         onCancel={() => setShowOnboarding(false)}
         initialProfile={profile || {}}
       />
-    </DashboardLayout>
+    </DashboardLayoutEnhanced>
   );
 }

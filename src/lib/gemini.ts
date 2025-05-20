@@ -35,6 +35,7 @@ export async function askGemini(promptText: string, apiKey: string, modelName: s
       ],
     };
 
+    // Add temperature parameter for more conversational responses
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
       {
@@ -42,7 +43,15 @@ export async function askGemini(promptText: string, apiKey: string, modelName: s
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          ...requestBody,
+          generationConfig: {
+            temperature: 0.7,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 2048,
+          },
+        }),
       }
     );
 

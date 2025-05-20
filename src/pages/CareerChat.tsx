@@ -89,13 +89,18 @@ export default function CareerChat() {
         is_ai: false
       });
       
-      // Generate AI response with Gemini
-      const prompt = `You are CareerForge AI — a helpful career advisor specializing in career guidance. 
+      // Generate AI response with Gemini - more conversational tone
+      const prompt = `You're a helpful career mentor named Alex having a casual conversation with a student. 
       
-      Answer the following question about careers, job search, skill development, or career transition. 
-      Provide practical, actionable advice. If you're asked about something unrelated to careers, politely redirect the conversation to career topics.
+      Respond to this question about career development, job search, skills, or career transitions. Keep your answer:
+      - Conversational and friendly (like you're texting a friend)
+      - Short and focused (3-4 paragraphs max)
+      - Specific and actionable (avoid vague advice)
+      - Encouraging but honest
       
-      User question: ${inputMessage}`;
+      If asked about something unrelated to careers, briefly acknowledge and gently steer back to career topics.
+      
+      Their message: "${inputMessage}"`;
       
       const aiResponse = await callGemini(prompt, apiKey);
       

@@ -242,36 +242,41 @@ export default function GenZCareerDecider() {
         return option ? option.label : interest;
       }).join(", ");
       
-      const prompt = `You are a Gen Z-friendly career advisor. Write in a casual, conversational tone with occasional Gen Z slang and emojis.
+      const prompt = `Hey there! I'm your career mentor - someone who genuinely gets the Gen Z vibe. Let's chat about your career options based on what you've shared.
 
-Based on the following user data, recommend:
-- 3-5 career roles that suit their skills, interest, and vibe
-- Why it suits them (be honest but encouraging)
-- Skills they need to add (specific tools and technologies, not vague skills)
-- Suggested companies and internships to apply for
-- Realistic roadmap for the next 6-12 months
+Based on your profile, I'll recommend:
+- 3-4 career paths that would actually fit your vibe and skills
+- Why I honestly think they'd work for you (keeping it real)
+- Specific tools and skills worth picking up (no vague advice)
+- Places to apply that make sense for someone like you
+- What your next 6-12 months could look like (realistic steps)
 
-User profile:
-- College: ${collegeLabel}
-- Placement situation: ${placementLabel}
-- Current plan: ${gamePlanLabel}
-- Grind level: ${grindLabel}
-- Work preference: ${workLabel}
-- Open to detours: ${detourLabel}
-- Interests: ${interestLabels}
-- Current level: ${levelLabel}
-- Preferred location: ${countryLabel}
-${formData.resumeText ? `- Resume content: ${formData.resumeText}` : ''}
+What I know about you:
+- College situation: ${collegeLabel}
+- Placement scene: ${placementLabel}
+- Your current plan: ${gamePlanLabel}
+- Your hustle level: ${grindLabel}
+- Work vibe you want: ${workLabel}
+- Flexibility on your path: ${detourLabel}
+- What you enjoy: ${interestLabels}
+- Where you're at now: ${levelLabel}
+- Where you want to be: ${countryLabel}
+${formData.resumeText ? `- From your resume: ${formData.resumeText}` : ''}
 
-Format your response with clear section headings like "CAREER ROLES:", "WHY IT SUITS YOU:", "SKILLS TO ADD:", "COMPANIES & INTERNSHIPS:", "ROADMAP:" followed by bullet points with emojis. Be brutally honest but encouraging.
+Keep your response short, focused and super easy to scan. Write like you're texting a friend - conversational but helpful. Use bullets and short paragraphs. 
 
-Also include specific details about:
-- Salary ranges for each role in the preferred location
-- Work-life balance and stress levels
-- Growth potential
-- Required education and certification paths
-- Remote work possibilities
-- Top 3-5 companies hiring for these roles in the specified location`;
+Include these sections with clear headings:
+- CAREER ROLES (3-4 options that actually match)
+- WHY IT SUITS YOU (brief, honest take)
+- SKILLS TO ADD (specific tools, not generic advice)
+- COMPANIES & INTERNSHIPS (realistic options)
+- ROADMAP (simple next steps)
+
+For each career path, also tell me:
+- Realistic salary range in their location
+- What the day-to-day life actually feels like
+- Growth potential in plain language
+- Whether remote work is actually possible`;
 
       // Call Gemini API
       const response = await callGemini(prompt, apiKey);

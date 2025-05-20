@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -158,52 +157,53 @@ export default function CareerDesigner() {
         })
         .eq("id", user.id);
       
-      // Generate career roadmap with Gemini
-      const prompt = `User wants to become a professional in ${formData.fieldsOfInterest} with the following profile:
+      // Generate career roadmap with Gemini - more conversational prompt
+      const prompt = `You're a friendly career mentor helping a friend plan their next career move. They have this background:
       
-      - Current education level: ${formData.education}
-      - Degree/Course: ${formData.degree}
+      - Education: ${formData.education}
+      - Studied: ${formData.degree}
       - Strongest skill: ${formData.strongestSkill}
-      - Work preference: ${formData.workPreference}
-      - Income expectation: ${formData.incomeRange}
-      - Time able to invest in development: ${formData.timeInvestment}
-      - Current location/country: ${formData.location}
+      - Looking for: ${formData.workPreference} work
+      - Hoping to earn: ${formData.incomeRange}
+      - Can invest: ${formData.timeInvestment} in development
+      - Based in: ${formData.location}
       
-      Provide a detailed career roadmap including:
-      1. Relevant certifications tailored to their background
-      2. Must-have skills for this field
-      3. Tools and technologies to learn
-      4. Job platforms specific to their location/country
-      5. Average salary range for entry, mid, and senior levels
-      6. Typical work-life balance in this field (stress levels, working hours)
-      7. Growth potential and career progression paths
-      8. Company types that would be a good match
+      Create a personalized, encouraging career roadmap that feels like advice from a supportive mentor. Include:
       
-      Format the response as JSON with the following structure:
+      1. A few relevant certifications they should consider
+      2. 3-5 key skills to develop (be specific about tools/technologies)
+      3. Where they should look for jobs in their location
+      4. Realistic salary expectations at different career stages
+      5. What to expect for work-life balance 
+      6. Growth opportunities they can look forward to
+      7. Types of companies where they'd likely thrive
+      
+      Format as JSON with this structure (keep descriptions concise and conversational):
+      
       {
         "title": "Career Path Title",
-        "overview": "Brief overview of this career path",
+        "overview": "Brief, encouraging overview",
         "salary": {
-          "entry": "Entry level salary range",
-          "mid": "Mid level salary range",
-          "senior": "Senior level salary range"
+          "entry": "Entry level range with context",
+          "mid": "Mid-level range with context",
+          "senior": "Senior level range with context"
         },
         "workLifeBalance": {
-          "stress": "Low/Medium/High",
-          "workHours": "Typical hours per week",
-          "flexibility": "Description of flexibility"
+          "stress": "Low/Medium/High with specifics",
+          "workHours": "Typical hours with context",
+          "flexibility": "Description of flexibility options"
         },
-        "growthPotential": "Description of growth opportunities",
+        "growthPotential": "Upbeat description of opportunities",
         "steps": [
           {
-            "title": "Step Title",
-            "description": "Short description of this step",
-            "items": ["Item 1", "Item 2", "Item 3"],
-            "timeframe": "Estimated time to complete"
+            "title": "Step 1: Short title",
+            "description": "Brief, actionable advice",
+            "items": ["Specific item 1", "Specific item 2"],
+            "timeframe": "Realistic timeline"
           }
         ],
-        "recommendedCompanies": ["Company 1", "Company 2", "Company 3"],
-        "jobPlatforms": ["Platform 1", "Platform 2", "Platform 3"]
+        "recommendedCompanies": ["Company type 1", "Company type 2"],
+        "jobPlatforms": ["Specific platform 1", "Specific platform 2"]
       }`;
       
       // Call Gemini API in the background, but don't wait for it

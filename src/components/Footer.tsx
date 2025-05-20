@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 export default function Footer() {
@@ -9,7 +8,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <img 
-                src="/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png" 
+                src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
                 alt="CareerForge Logo" 
                 className="h-6 mr-2" 
               />

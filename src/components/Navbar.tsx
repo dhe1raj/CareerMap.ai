@@ -44,7 +44,7 @@ export default function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png" 
+              src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
               alt="CareerForge Logo" 
               className="h-8" 
             />

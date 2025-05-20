@@ -38,10 +38,17 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/signup" element={<Auth />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              
+              {/* Protected routes */}
               <Route 
                 path="/dashboard" 
                 element={
@@ -83,6 +90,14 @@ const App = () => (
                 } 
               />
               <Route 
+                path="/roadmap" 
+                element={
+                  <AuthGuard>
+                    <Roadmap />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
                 path="/career-chat" 
                 element={
                   <AuthGuard>
@@ -114,10 +129,8 @@ const App = () => (
                   </AuthGuard>
                 } 
               />
-              <Route path="/about" element={<About />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
+              
+              {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

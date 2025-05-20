@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -103,7 +104,16 @@ export default function Navbar() {
                     <Link to="/career-designer">Career Designer</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/career-matches">Career Matches</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/genz-career-decider">Gen Z Career Decider</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/career-chat">Career Chat</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/resume-analysis">Resume Analysis</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings">Settings</Link>
@@ -197,11 +207,32 @@ export default function Navbar() {
                     Career Designer
                   </Link>
                   <Link
+                    to="/career-matches"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Career Matches
+                  </Link>
+                  <Link
+                    to="/genz-career-decider"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Gen Z Career Decider
+                  </Link>
+                  <Link
                     to="/career-chat"
                     className="text-sm font-medium hover:underline"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Career Chat
+                  </Link>
+                  <Link
+                    to="/resume-analysis"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Resume Analysis
                   </Link>
                   <Link
                     to="/settings"

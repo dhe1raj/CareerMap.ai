@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -124,7 +123,7 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
+              <Button asChild>
                 <Link to="/auth">Log in</Link>
               </Button>
               <Button asChild>
@@ -244,7 +243,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex flex-col space-y-2">
-                  <Button variant="outline" asChild>
+                  <Button asChild>
                     <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                       Log in
                     </Link>

@@ -142,13 +142,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      // Get current URL origin for dynamic redirects
-      const origin = window.location.origin;
+      console.log("Starting Google sign in process...");
       
+      // Use the exact callback URL from Supabase
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${origin}/auth`,
+          redirectTo: "https://ddjqbsscsxgiicaabxxc.supabase.co/auth/v1/callback",
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -160,6 +160,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Google sign in error:", error);
         throw error;
       }
+      
+      console.log("Google sign in initiated successfully");
     } catch (error: any) {
       console.error("Google sign in error caught:", error);
       toast({

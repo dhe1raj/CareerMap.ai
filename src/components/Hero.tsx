@@ -22,7 +22,7 @@ export default function Hero() {
               <img 
                 src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
                 alt="CareerForge Logo" 
-                className="relative h-56 z-10 animate-subtle-float" 
+                className="relative h-72 z-10 animate-subtle-float" 
               />
             </div>
           </motion.div>
@@ -65,7 +65,7 @@ export default function Hero() {
                     Get Started
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" asChild className="bg-white/5 backdrop-blur-sm border-white/20 hover:bg-white/10 text-white rounded-xl text-base px-8 py-6">
+                <Button size="lg" asChild className="neon-button rounded-xl text-base px-8 py-6">
                   <Link to="/auth">
                     Log in
                   </Link>

@@ -76,7 +76,7 @@ export default function Hero() {
         </div>
       </div>
       
-      {/* Background decorative elements */}
+      {/* Improved decorative background elements */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <svg
           className="absolute left-[calc(50%-4rem)] top-10 -z-10 transform-gpu blur-3xl sm:left-[calc(50%-18rem)] lg:left-48 lg:top-[calc(50%-30rem)] xl:left-[calc(50%-24rem)]"
@@ -107,17 +107,27 @@ export default function Hero() {
         </svg>
       </div>
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 -z-5">
-        {Array.from({ length: 15 }).map((_, i) => (
-          <div 
+      {/* Enhanced floating particles with better positioning and animation */}
+      <div className="absolute inset-0 -z-5 pointer-events-none">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <motion.div 
             key={i}
-            className="absolute w-1 h-1 rounded-full bg-brand-400/70"
+            className="absolute w-2 h-2 rounded-full bg-brand-400"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.5 + 0.3,
-              animation: `float ${Math.random() * 3 + 3}s ease-in-out infinite ${Math.random() * 2}s`
+            }}
+            initial={{ opacity: 0.3 }}
+            animate={{ 
+              opacity: [0.3, 0.8, 0.3], 
+              y: [0, -15, 0],
+            }}
+            transition={{ 
+              duration: Math.random() * 3 + 4,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatType: "reverse",
+              delay: Math.random() * 2
             }}
           />
         ))}

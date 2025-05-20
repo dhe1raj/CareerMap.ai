@@ -47,7 +47,7 @@ export default function Navbar() {
             <img 
               src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
               alt="CareerForge Logo" 
-              className="h-14 w-auto transition-transform hover:scale-105" 
+              className="h-20 w-auto transition-transform hover:scale-110" 
             />
             <span className="text-xl font-bold">CareerForge</span>
           </Link>

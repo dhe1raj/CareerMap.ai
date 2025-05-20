@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 export default function Footer() {
@@ -11,7 +10,7 @@ export default function Footer() {
               <img 
                 src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
                 alt="CareerForge Logo" 
-                className="h-12 w-auto mr-2 transition-transform hover:scale-105" 
+                className="h-16 w-auto mr-2 transition-transform hover:scale-110" 
               />
               <h3 className="text-lg font-semibold text-gradient">CareerForge</h3>
             </div>

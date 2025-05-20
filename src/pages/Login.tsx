@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,30 +17,35 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signIn, signInWithGoogle } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // In a real app, we would authenticate with a backend here
-    setTimeout(() => {
+    try {
+      await signIn(email, password);
+      toast({
+        title: "Login successful",
+        description: "Welcome back to CareerPath!",
+      });
+    } catch (error: any) {
+      // Error is handled in the signIn function
+    } finally {
       setIsLoading(false);
-      
-      // Demo login - in a real app, we'd check credentials against a backend
-      if (email && password) {
-        toast({
-          title: "Login successful",
-          description: "Welcome back to CareerPath!",
-        });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Please check your credentials and try again.",
-          variant: "destructive",
-        });
-      }
-    }, 1500);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    
+    try {
+      await signInWithGoogle();
+      // Redirect happens automatically via OAuth
+    } catch (error) {
+      setIsLoading(false);
+      // Error is handled in the signInWithGoogle function
+    }
   };
 
   return (
@@ -101,7 +107,12 @@ export default function Login() {
             </div>
             
             <div className="grid grid-cols-1 gap-4">
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

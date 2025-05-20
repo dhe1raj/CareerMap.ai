@@ -142,17 +142,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
+      // Get current URL origin for dynamic redirects
+      const origin = window.location.origin;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
       if (error) {
+        console.error("Google sign in error:", error);
         throw error;
       }
     } catch (error: any) {
+      console.error("Google sign in error caught:", error);
       toast({
         title: "Google sign in failed",
         description: error.message || "Please try again later.",

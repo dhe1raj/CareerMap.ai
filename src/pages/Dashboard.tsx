@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -189,8 +188,8 @@ export default function Dashboard() {
         onComplete={handleOnboardingComplete}
         onCancel={() => setShowOnboarding(false)}
         initialProfile={userData ? {
-          roleStatus: userData.profile.fullName,
-          email: userData.profile.email,
+          roleStatus: userData.profile.fullName
+          // Removed email property as it's not part of the OnboardingProfile type
         } : {}}
       />
     </DashboardLayout>

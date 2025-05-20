@@ -1,4 +1,6 @@
+
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -18,14 +20,31 @@ import { useToast } from "@/hooks/use-toast";
 export default function DashboardSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signOut, user, profile } = useAuth();
 
-  const handleLogout = () => {
-    // In a real app, we would logout from a backend here
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate("/");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Logout failed",
+        description: "There was an issue logging you out.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Get user initials for avatar fallback
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   return (
@@ -308,12 +327,12 @@ export default function DashboardSidebar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />
+              <AvatarFallback>{getInitials(profile?.full_name)}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-sm">John Doe</p>
-              <p className="text-xs text-muted-foreground">john@example.com</p>
+              <p className="font-medium text-sm">{profile?.full_name || user?.email?.split('@')[0] || 'User'}</p>
+              <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
             </div>
           </div>
           <Button 

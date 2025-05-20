@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardSidebarEnhanced() {
-  const { signOut } = useAuth();
+  const { signOut, user, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -73,6 +73,15 @@ export default function DashboardSidebarEnhanced() {
       </div>
       
       <div className="absolute bottom-8 left-0 right-0 px-4">
+        {user && profile && (
+          <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+            <p className="text-sm font-medium text-white truncate">
+              {profile.full_name || user.email?.split('@')[0] || 'User'}
+            </p>
+            <p className="text-xs text-white/60 truncate">{user.email}</p>
+          </div>
+        )}
+
         <Button
           variant="outline"
           className="w-full justify-start hover:bg-white/10 hover:text-red-400 hover:border-red-400/50"

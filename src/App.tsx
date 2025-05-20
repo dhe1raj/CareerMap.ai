@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { GeminiProvider } from "./context/GeminiContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
@@ -29,9 +30,11 @@ import AuthGuard from "./components/AuthGuard";
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <GeminiProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </GeminiProvider>
     </AuthProvider>
   );
 }

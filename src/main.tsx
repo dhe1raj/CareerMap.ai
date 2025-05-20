@@ -19,6 +19,7 @@ preloadLogo();
 
 // Add console log for debugging
 console.log('Application starting...');
+console.log('Initializing providers and routing...');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

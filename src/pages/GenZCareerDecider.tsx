@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, ArrowRight, ArrowLeft, Download, FileText, BookOpen, 
   DollarSign, Briefcase, BookMarked, GraduationCap, Clock, BarChart3,
-  Code, Tool, Building, GitBranch
+  Code, Wrench, GitBranch, Building
 } from "lucide-react";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { Badge } from "@/components/ui/badge";
@@ -840,7 +840,7 @@ ${JSON.stringify(userProfile, null, 2)}
                     toolOptions,
                     "toolsDetails",
                     formData.toolsDetails,
-                    <Tool className="h-5 w-5 text-brand-400" />,
+                    <Wrench className="h-5 w-5 text-brand-400" />,
                     "Other tools or expertise level..."
                   )}
                 </>

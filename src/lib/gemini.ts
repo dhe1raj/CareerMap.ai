@@ -1,6 +1,4 @@
 
-import { useToast } from "@/hooks/use-toast";
-
 interface GeminiResponse {
   candidates?: Array<{
     content: {
@@ -35,7 +33,7 @@ export async function askGemini(promptText: string, apiKey: string, modelName: s
       ],
     };
 
-    // Add temperature parameter for more conversational responses
+    // Use the correct endpoint for the gemini-2.0-flash model
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
       {

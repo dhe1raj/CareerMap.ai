@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,14 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowRight, Upload, FileText, BookOpen, DollarSign, Briefcase, BookMarked, GraduationCap, Clock, BarChart3 } from "lucide-react";
+import { 
+  Loader2, ArrowRight, ArrowLeft, Download, FileText, BookOpen, 
+  DollarSign, Briefcase, BookMarked, GraduationCap, Clock, BarChart3,
+  Code, Tool, Building, GitBranch
+} from "lucide-react";
 import { useGeminiContext } from "@/context/GeminiContext";
-import { useGemini } from "@/lib/gemini";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import ReactMarkdown from "react-markdown";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 // Questions and options data
 const collegeOptions = [
@@ -90,39 +98,117 @@ const countryOptions = [
   { value: "anywhere", label: "Anywhere, just want good vibes" },
 ];
 
+// New options
+const workExperienceOptions = [
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
+
+const yearsExperienceOptions = [
+  { value: "0-1", label: "0-1 years" },
+  { value: "1-3", label: "1-3 years" },
+  { value: "3-5", label: "3-5 years" },
+  { value: "5+", label: "5+ years" },
+];
+
+const programmingLanguageOptions = [
+  { value: "javascript", label: "JavaScript" },
+  { value: "typescript", label: "TypeScript" },
+  { value: "python", label: "Python" },
+  { value: "java", label: "Java" },
+  { value: "csharp", label: "C#" },
+  { value: "cpp", label: "C++" },
+  { value: "go", label: "Go" },
+  { value: "rust", label: "Rust" },
+  { value: "php", label: "PHP" },
+  { value: "ruby", label: "Ruby" },
+  { value: "swift", label: "Swift" },
+  { value: "kotlin", label: "Kotlin" },
+];
+
+const techStackOptions = [
+  { value: "react", label: "React" },
+  { value: "angular", label: "Angular" },
+  { value: "vue", label: "Vue.js" },
+  { value: "next", label: "Next.js" },
+  { value: "node", label: "Node.js" },
+  { value: "express", label: "Express" },
+  { value: "django", label: "Django" },
+  { value: "flask", label: "Flask" },
+  { value: "rails", label: "Ruby on Rails" },
+  { value: "spring", label: "Spring Boot" },
+  { value: "laravel", label: "Laravel" },
+  { value: "dotnet", label: ".NET" },
+];
+
+const toolOptions = [
+  { value: "git", label: "Git" },
+  { value: "docker", label: "Docker" },
+  { value: "figma", label: "Figma" },
+  { value: "sketch", label: "Sketch" },
+  { value: "photoshop", label: "Photoshop" },
+  { value: "illustrator", label: "Illustrator" },
+  { value: "excel", label: "Excel" },
+  { value: "powerpoint", label: "PowerPoint" },
+  { value: "jira", label: "Jira" },
+  { value: "trello", label: "Trello" },
+  { value: "notion", label: "Notion" },
+  { value: "vscode", label: "VS Code" },
+];
+
 export default function GenZCareerDecider() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { apiKey } = useGeminiContext();
-  const { callGemini } = useGemini();
   
   // Current section/step
   const [currentSection, setCurrentSection] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [markdownResult, setMarkdownResult] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const resultRef = useRef<HTMLDivElement>(null);
   
   // Form state
   const [formData, setFormData] = useState({
     // Section 1: Real Talk
     college: "",
+    collegeDetails: "",
     placement: "",
+    placementDetails: "",
     gamePlan: "",
+    gamePlanDetails: "",
     
     // Section 2: Hype & Hustle
     grindLevel: "",
+    grindLevelDetails: "",
     workPlace: "",
+    workPlaceDetails: "",
     detours: "",
+    detoursDetails: "",
     
     // Section 3: Skills & Interests
     interests: [] as string[],
+    interestsDetails: "",
     currentLevel: "",
+    currentLevelDetails: "",
     preferredCountry: "",
+    preferredCountryDetails: "",
     
-    // Section 4: Resume
+    // Section 4: Experience & Tech Skills
+    workExperience: "",
+    workExperienceDetails: "",
+    yearsExperience: "",
+    yearsExperienceDetails: "",
+    programmingLanguages: [] as string[],
+    programmingLanguagesDetails: "",
+    techStacks: [] as string[],
+    techStacksDetails: "",
+    tools: [] as string[],
+    toolsDetails: "",
+    
+    // Section 5: Resume
     resumeText: "",
   });
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<string | null>(null);
-  const [parsedResults, setParsedResults] = useState<any>(null);
   
   // Handler to update form data
   const handleChange = (field: string, value: string | string[]) => {
@@ -132,22 +218,22 @@ export default function GenZCareerDecider() {
     }));
   };
   
-  // Handler for interests (multiple selection)
-  const handleInterestToggle = (interest: string) => {
+  // Handler for multi-select options
+  const handleMultiSelectToggle = (field: string, value: string) => {
     setFormData(prev => {
-      const currentInterests = [...prev.interests];
+      const currentValues = [...(prev[field as keyof typeof prev] as string[])];
       
-      if (currentInterests.includes(interest)) {
+      if (currentValues.includes(value)) {
         return {
           ...prev,
-          interests: currentInterests.filter(i => i !== interest),
+          [field]: currentValues.filter(v => v !== value),
         };
       } else {
-        // Limit to max 3 selections
-        if (currentInterests.length < 3) {
+        // Allow up to 5 selections
+        if (currentValues.length < 5) {
           return {
             ...prev,
-            interests: [...currentInterests, interest],
+            [field]: [...currentValues, value],
           };
         }
         return prev;
@@ -159,6 +245,7 @@ export default function GenZCareerDecider() {
   const handleNext = () => {
     if (currentSection < 5) {
       setCurrentSection(currentSection + 1);
+      window.scrollTo(0, 0);
     }
   };
   
@@ -166,151 +253,213 @@ export default function GenZCareerDecider() {
   const handlePrevious = () => {
     if (currentSection > 1) {
       setCurrentSection(currentSection - 1);
+      window.scrollTo(0, 0);
     }
   };
   
-  // Handle resume text input
-  const handleResumeTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Handle text input change
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      resumeText: e.target.value,
+      [name]: value,
     }));
   };
   
-  // Attempt to parse the Gemini results into structured data
-  const tryParseResults = (text: string) => {
-    try {
-      // Look for career roles
-      const careerRoles = extractSection(text, "career roles", "why it suits");
-      const whySuits = extractSection(text, "why it suits", "skills");
-      const skillsToAdd = extractSection(text, "skills", "companies");
-      const companies = extractSection(text, "companies", "roadmap");
-      const roadmap = extractSection(text, "roadmap", "");
-      
-      return {
-        careerRoles,
-        whySuits,
-        skillsToAdd,
-        companies,
-        roadmap
-      };
-    } catch (e) {
-      console.error("Failed to parse results:", e);
+  const buildUserProfile = () => {
+    // Create a user profile object with all data
+    const profile: Record<string, any> = {};
+    
+    // Process each field and its details
+    Object.entries(formData).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        // For arrays (multi-select), get the labels
+        const options = 
+          key === 'interests' ? interestOptions :
+          key === 'programmingLanguages' ? programmingLanguageOptions :
+          key === 'techStacks' ? techStackOptions :
+          key === 'tools' ? toolOptions : [];
+        
+        if (value.length > 0) {
+          const labels = value.map(v => {
+            const option = options.find(o => o.value === v);
+            return option ? option.label : v;
+          }).join(", ");
+          
+          profile[key] = labels;
+        }
+      } else if (value && !key.includes('Details')) {
+        // For single selects, get the label
+        const options = 
+          key === 'college' ? collegeOptions :
+          key === 'placement' ? placementOptions :
+          key === 'gamePlan' ? gamePlanOptions :
+          key === 'grindLevel' ? grindOptions :
+          key === 'workPlace' ? workOptions :
+          key === 'detours' ? detourOptions :
+          key === 'currentLevel' ? levelOptions :
+          key === 'preferredCountry' ? countryOptions :
+          key === 'workExperience' ? workExperienceOptions :
+          key === 'yearsExperience' ? yearsExperienceOptions : [];
+        
+        if (options.length > 0) {
+          const option = options.find(o => o.value === value);
+          profile[key] = option ? option.label : value;
+        } else {
+          profile[key] = value;
+        }
+      } else if (key.includes('Details') && value) {
+        // Add details directly
+        profile[key] = value;
+      }
+    });
+    
+    return profile;
+  };
+  
+  const callGeminiAPI = async () => {
+    if (!apiKey) {
+      toast({
+        title: "API Key Missing",
+        description: "Please add your Gemini API key in settings.",
+        variant: "destructive",
+      });
       return null;
+    }
+    
+    const userProfile = buildUserProfile();
+    console.log("User profile:", userProfile);
+    
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: `You are CareerForge AI, a brutally-honest but encouraging Gen-Z career coach. Analyse the following user profile and produce:
+
+1️⃣  Top 3 career roles that fit them (with one-line 'why it fits')
+2️⃣  6-12-month skill roadmap (bullet points, chronological)
+3️⃣  Recommended online courses or certs (platform + course name)
+4️⃣  Tools they should master
+5️⃣  Internship or job-hunt tips tailored to their college tier and location
+6️⃣  Online communities to join
+7️⃣  Motivational closing sentence
+
+Return output as Markdown with section headings (##).
+
+USER PROFILE:
+${JSON.stringify(userProfile, null, 2)}
+`
+            }
+          ]
+        }
+      ]
+    };
+    
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=${apiKey}`;
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("API response:", data);
+      
+      if (!data.candidates || 
+          !data.candidates[0] || 
+          !data.candidates[0].content || 
+          !data.candidates[0].content.parts || 
+          !data.candidates[0].content.parts[0].text) {
+        throw new Error("Invalid response format from Gemini API");
+      }
+      
+      const markdownContent = data.candidates[0].content.parts[0].text;
+      return markdownContent;
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      throw error;
     }
   };
   
-  // Helper function to extract a section from text
-  const extractSection = (text: string, startMarker: string, endMarker: string): string[] => {
-    try {
-      const lowerText = text.toLowerCase();
-      const startIdx = lowerText.indexOf(startMarker);
+  const downloadAsPDF = useCallback(() => {
+    if (!resultRef.current) return;
+    
+    toast({
+      title: "Generating PDF",
+      description: "Please wait while we create your career report...",
+    });
+    
+    html2canvas(resultRef.current, {
+      scale: 2,
+      logging: false,
+      useCORS: true,
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
       
-      if (startIdx === -1) return [];
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      let endIdx = lowerText.length;
-      if (endMarker && lowerText.indexOf(endMarker) > startIdx) {
-        endIdx = lowerText.indexOf(endMarker, startIdx);
-      }
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('CareerForge-Career-Report.pdf');
       
-      const section = text.substring(startIdx, endIdx).trim();
-      
-      // Extract bullet points
-      const bulletPoints = section.split(/\n-|\n•|\n\*/).slice(1).map(item => item.trim()).filter(Boolean);
-      return bulletPoints.length > 0 ? bulletPoints : [section];
-    } catch (e) {
-      return [];
-    }
-  };
+      toast({
+        title: "PDF Downloaded",
+        description: "Your career report has been downloaded.",
+      });
+    });
+  }, [toast]);
   
   // Submit form and get AI suggestions
   const handleSubmit = async () => {
     setIsLoading(true);
     
     try {
-      const collegeLabel = collegeOptions.find(o => o.value === formData.college)?.label || formData.college;
-      const placementLabel = placementOptions.find(o => o.value === formData.placement)?.label || formData.placement;
-      const gamePlanLabel = gamePlanOptions.find(o => o.value === formData.gamePlan)?.label || formData.gamePlan;
-      const grindLabel = grindOptions.find(o => o.value === formData.grindLevel)?.label || formData.grindLevel;
-      const workLabel = workOptions.find(o => o.value === formData.workPlace)?.label || formData.workPlace;
-      const detourLabel = detourOptions.find(o => o.value === formData.detours)?.label || formData.detours;
-      const levelLabel = levelOptions.find(o => o.value === formData.currentLevel)?.label || formData.currentLevel;
-      const countryLabel = countryOptions.find(o => o.value === formData.preferredCountry)?.label || formData.preferredCountry;
+      const result = await callGeminiAPI();
       
-      const interestLabels = formData.interests.map(interest => {
-        const option = interestOptions.find(o => o.value === interest);
-        return option ? option.label : interest;
-      }).join(", ");
-      
-      const prompt = `Hey there! I'm your career mentor - someone who genuinely gets the Gen Z vibe. Let's chat about your career options based on what you've shared.
-
-Based on your profile, I'll recommend:
-- 3-4 career paths that would actually fit your vibe and skills
-- Why I honestly think they'd work for you (keeping it real)
-- Specific tools and skills worth picking up (no vague advice)
-- Places to apply that make sense for someone like you
-- What your next 6-12 months could look like (realistic steps)
-
-What I know about you:
-- College situation: ${collegeLabel}
-- Placement scene: ${placementLabel}
-- Your current plan: ${gamePlanLabel}
-- Your hustle level: ${grindLabel}
-- Work vibe you want: ${workLabel}
-- Flexibility on your path: ${detourLabel}
-- What you enjoy: ${interestLabels}
-- Where you're at now: ${levelLabel}
-- Where you want to be: ${countryLabel}
-${formData.resumeText ? `- From your resume: ${formData.resumeText}` : ''}
-
-Keep your response short, focused and super easy to scan. Write like you're texting a friend - conversational but helpful. Use bullets and short paragraphs. 
-
-Include these sections with clear headings:
-- CAREER ROLES (3-4 options that actually match)
-- WHY IT SUITS YOU (brief, honest take)
-- SKILLS TO ADD (specific tools, not generic advice)
-- COMPANIES & INTERNSHIPS (realistic options)
-- ROADMAP (simple next steps)
-
-For each career path, also tell me:
-- Realistic salary range in their location
-- What the day-to-day life actually feels like
-- Growth potential in plain language
-- Whether remote work is actually possible`;
-
-      // Call Gemini API
-      const response = await callGemini(prompt, apiKey);
-      
-      if (response) {
-        setResults(response);
-        
-        // Try to parse structured data from the response
-        const parsed = tryParseResults(response);
-        if (parsed) {
-          setParsedResults(parsed);
-        }
-        
+      if (result) {
+        setMarkdownResult(result);
         toast({
-          title: "Career paths generated! 🚀",
-          description: "Check out your personalized career suggestions below.",
+          title: "Career analysis complete",
+          description: "Your personalized career report is ready!",
         });
-        
-        // Save results to localStorage for now
-        localStorage.setItem("genZ_career_results", response);
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to generate career suggestions. Please try again.",
-          variant: "destructive",
-        });
+        throw new Error("Empty response from Gemini API");
       }
     } catch (error) {
       console.error("Error generating career suggestions:", error);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      
+      if (retryCount < 2) {
+        toast({
+          title: "Failed—retrying",
+          description: `Attempt ${retryCount + 1} of 3...`,
+          variant: "destructive",
+        });
+        setRetryCount(prevCount => prevCount + 1);
+        // Retry after a short delay
+        setTimeout(() => handleSubmit(), 1500);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to generate career report after multiple attempts. Please try again later.",
+          variant: "destructive",
+        });
+        setRetryCount(0);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -320,12 +469,16 @@ For each career path, also tell me:
   const isCurrentSectionValid = () => {
     switch(currentSection) {
       case 1:
-        return !!formData.college && !!formData.placement && !!formData.gamePlan;
+        return !!formData.college;
       case 2:
-        return !!formData.grindLevel && !!formData.workPlace && !!formData.detours;
+        return !!formData.grindLevel;
       case 3:
-        return formData.interests.length > 0 && formData.interests.length <= 3 && !!formData.currentLevel && !!formData.preferredCountry;
+        return formData.interests.length > 0 && !!formData.currentLevel && !!formData.preferredCountry;
       case 4:
+        return !!formData.workExperience && 
+          (formData.workExperience === 'no' || !!formData.yearsExperience) && 
+          (formData.programmingLanguages.length > 0 || formData.techStacks.length > 0 || formData.tools.length > 0);
+      case 5:
         // Resume section is optional
         return true;
       default:
@@ -337,56 +490,171 @@ For each career path, also tell me:
   const handleReset = () => {
     setFormData({
       college: "",
+      collegeDetails: "",
       placement: "",
+      placementDetails: "",
       gamePlan: "",
+      gamePlanDetails: "",
       grindLevel: "",
+      grindLevelDetails: "",
       workPlace: "",
+      workPlaceDetails: "",
       detours: "",
+      detoursDetails: "",
       interests: [],
+      interestsDetails: "",
       currentLevel: "",
+      currentLevelDetails: "",
       preferredCountry: "",
+      preferredCountryDetails: "",
+      workExperience: "",
+      workExperienceDetails: "",
+      yearsExperience: "",
+      yearsExperienceDetails: "",
+      programmingLanguages: [],
+      programmingLanguagesDetails: "",
+      techStacks: [],
+      techStacksDetails: "",
+      tools: [],
+      toolsDetails: "",
       resumeText: "",
     });
-    setResults(null);
+    setMarkdownResult(null);
     setCurrentSection(1);
+    setRetryCount(0);
   };
-
-  // Function to get a random gradient for career role cards
-  const getRandomGradient = (index: number) => {
-    const gradients = [
-      "from-purple-500 to-indigo-500",
-      "from-blue-500 to-teal-400",
-      "from-pink-500 to-purple-500",
-      "from-amber-500 to-red-500",
-      "from-green-500 to-emerald-500"
-    ];
-    return gradients[index % gradients.length];
+  
+  // Function to render a question with dropdown and text input
+  const renderQuestionWithDetail = (
+    label: string, 
+    fieldName: string, 
+    value: string, 
+    options: { value: string; label: string }[], 
+    detailsField: string, 
+    detailsValue: string,
+    placeholder: string = "Add more details..."
+  ) => {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor={fieldName}>{label}</Label>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Select value={value} onValueChange={(val) => handleChange(fieldName, val)}>
+                <SelectTrigger className="w-full glass-input">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent className="bg-brand-900/90 backdrop-blur-xl border border-white/20 text-white">
+                  {options.map(option => (
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      className="text-white hover:bg-brand-400/30 focus:bg-brand-400/30"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <Input
+                name={detailsField}
+                value={detailsValue}
+                onChange={handleTextChange}
+                placeholder={placeholder}
+                className="glass-input"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Function to render multi-select options with text input
+  const renderMultiSelect = (
+    label: string,
+    fieldName: string,
+    values: string[],
+    options: { value: string; label: string }[],
+    detailsField: string,
+    detailsValue: string,
+    icon: JSX.Element,
+    placeholder: string = "Other skills or details..."
+  ) => {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            {icon}
+            <span>{label}</span> 
+            <span className="text-xs text-white/60 ml-2">
+              (Select up to 5)
+            </span>
+          </Label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+            {options.map(option => (
+              <Button 
+                key={option.value}
+                type="button"
+                variant={values.includes(option.value) ? "default" : "outline"}
+                className={`justify-start text-left text-sm ${values.includes(option.value) ? "bg-brand-400/80 hover:bg-brand-400" : "hover:bg-brand-900/40"}`}
+                onClick={() => handleMultiSelectToggle(fieldName, option.value)}
+                disabled={!values.includes(option.value) && values.length >= 5}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+          <Input
+            name={detailsField}
+            value={detailsValue}
+            onChange={handleTextChange}
+            placeholder={placeholder}
+            className="glass-input mt-2"
+          />
+        </div>
+      </div>
+    );
   };
   
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Gen Z Career Role Decider</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center">
+          <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-brand-400 to-purple-400 neon-purple-text">Gen Z Career Role Decider</h1>
+          <p className="text-white/70 mt-1">
             Be real with us, and we'll match you with career paths that actually vibe with you
           </p>
         </div>
         
-        {!results ? (
-          <Card className="border-t-4 border-t-primary shadow-md">
-            <CardHeader className="bg-muted/30">
+        {/* Progress bar */}
+        <div className="w-full">
+          <Progress value={(currentSection / 5) * 100} className="h-2 mb-1" />
+          <div className="flex justify-between text-xs text-white/60">
+            <span>Start</span>
+            <span>Step {currentSection} of 5</span>
+            <span>Complete</span>
+          </div>
+        </div>
+        
+        {!markdownResult ? (
+          <Card className="border-t-4 border-t-primary shadow-md backdrop-blur-xl bg-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(168,85,247,0.2)]">
+            <CardHeader className="bg-gradient-to-r from-brand-900/50 to-cyber-dark/50 rounded-t-xl border-b border-white/10">
               <CardTitle>
                 {currentSection === 1 && "Real Talk (College & Plans)"}
                 {currentSection === 2 && "Hype & Hustle Check"}
                 {currentSection === 3 && "Skills, Interests, and Style"}
-                {currentSection === 4 && "Resume & Reality Check (Optional)"}
+                {currentSection === 4 && "Experience & Tech Skills"}
+                {currentSection === 5 && "Resume & Final Details"}
               </CardTitle>
               <CardDescription>
                 {currentSection === 1 && "Let's start with your current education situation"}
                 {currentSection === 2 && "How hard are you willing to work?"}
                 {currentSection === 3 && "What do you actually enjoy doing?"}
-                {currentSection === 4 && "Add your resume for more tailored suggestions"}
+                {currentSection === 4 && "Tell us about your tech experience"}
+                {currentSection === 5 && "Add your resume for more tailored suggestions"}
               </CardDescription>
             </CardHeader>
             
@@ -394,110 +662,67 @@ For each career path, also tell me:
               {/* Section 1: Real Talk */}
               {currentSection === 1 && (
                 <>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="college">Be honest — how would you rate your current college?</Label>
-                      <Select value={formData.college} onValueChange={(value) => handleChange("college", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your college tier" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {collegeOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="placement">What kind of job placement does your college offer?</Label>
-                      <Select value={formData.placement} onValueChange={(value) => handleChange("placement", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select placement situation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {placementOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="gamePlan">What's your current game plan?</Label>
-                      <Select value={formData.gamePlan} onValueChange={(value) => handleChange("gamePlan", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your strategy" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {gamePlanOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  {renderQuestionWithDetail(
+                    "Be honest — how would you rate your current college?",
+                    "college",
+                    formData.college,
+                    collegeOptions,
+                    "collegeDetails",
+                    formData.collegeDetails,
+                    "Any specific details about your college..."
+                  )}
+                  
+                  {renderQuestionWithDetail(
+                    "What kind of job placement does your college offer?",
+                    "placement",
+                    formData.placement,
+                    placementOptions,
+                    "placementDetails",
+                    formData.placementDetails
+                  )}
+                  
+                  {renderQuestionWithDetail(
+                    "What's your current game plan?",
+                    "gamePlan",
+                    formData.gamePlan,
+                    gamePlanOptions,
+                    "gamePlanDetails",
+                    formData.gamePlanDetails,
+                    "More details about your plan..."
+                  )}
                 </>
               )}
               
               {/* Section 2: Hype & Hustle */}
               {currentSection === 2 && (
                 <>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="grindLevel">How ready are you to grind?</Label>
-                      <Select value={formData.grindLevel} onValueChange={(value) => handleChange("grindLevel", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your grind level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {grindOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="workPlace">Where do you see yourself working?</Label>
-                      <Select value={formData.workPlace} onValueChange={(value) => handleChange("workPlace", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your ideal workplace" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {workOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="detours">Are you okay with taking detours?</Label>
-                      <Select value={formData.detours} onValueChange={(value) => handleChange("detours", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your flexibility" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {detourOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  {renderQuestionWithDetail(
+                    "How ready are you to grind?",
+                    "grindLevel",
+                    formData.grindLevel,
+                    grindOptions,
+                    "grindLevelDetails",
+                    formData.grindLevelDetails
+                  )}
+                  
+                  {renderQuestionWithDetail(
+                    "Where do you see yourself working?",
+                    "workPlace",
+                    formData.workPlace,
+                    workOptions,
+                    "workPlaceDetails",
+                    formData.workPlaceDetails,
+                    "What kind of work environment motivates you..."
+                  )}
+                  
+                  {renderQuestionWithDetail(
+                    "Are you okay with taking detours?",
+                    "detours",
+                    formData.detours,
+                    detourOptions,
+                    "detoursDetails",
+                    formData.detoursDetails
+                  )}
                 </>
               )}
               
@@ -506,93 +731,159 @@ For each career path, also tell me:
                 <>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Pick 2-3 things you'd do even if no one paid you</Label>
-                      <p className="text-sm text-muted-foreground mb-2">Selected: {formData.interests.length}/3</p>
+                      <Label className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-brand-400" />
+                        <span>Pick things you'd do even if no one paid you</span>
+                        <span className="text-xs text-white/60 ml-2">
+                          (Selected: {formData.interests.length}/5)
+                        </span>
+                      </Label>
                       
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
                         {interestOptions.map(option => (
                           <Button 
                             key={option.value}
                             type="button"
                             variant={formData.interests.includes(option.value) ? "default" : "outline"}
-                            className={`justify-start text-left ${formData.interests.includes(option.value) ? "" : "hover:bg-accent"}`}
-                            onClick={() => handleInterestToggle(option.value)}
-                            disabled={!formData.interests.includes(option.value) && formData.interests.length >= 3}
+                            className={`justify-start text-left ${formData.interests.includes(option.value) ? "bg-brand-400/80 hover:bg-brand-400" : "hover:bg-brand-900/40"}`}
+                            onClick={() => handleMultiSelectToggle("interests", option.value)}
+                            disabled={!formData.interests.includes(option.value) && formData.interests.length >= 5}
                           >
                             {option.label}
                           </Button>
                         ))}
                       </div>
+                      
+                      <Input
+                        name="interestsDetails"
+                        value={formData.interestsDetails}
+                        onChange={handleTextChange}
+                        placeholder="Other interests or hobbies..."
+                        className="glass-input mt-2"
+                      />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="currentLevel">What's your current level?</Label>
-                      <Select value={formData.currentLevel} onValueChange={(value) => handleChange("currentLevel", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your experience level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {levelOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {renderQuestionWithDetail(
+                      "What's your current level?",
+                      "currentLevel",
+                      formData.currentLevel,
+                      levelOptions,
+                      "currentLevelDetails",
+                      formData.currentLevelDetails,
+                      "More context about your experience level..."
+                    )}
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="preferredCountry">Preferred country for future roles or study?</Label>
-                      <Select value={formData.preferredCountry} onValueChange={(value) => handleChange("preferredCountry", value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your preferred location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countryOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {renderQuestionWithDetail(
+                      "Preferred country for future roles or study?",
+                      "preferredCountry",
+                      formData.preferredCountry,
+                      countryOptions,
+                      "preferredCountryDetails",
+                      formData.preferredCountryDetails,
+                      "Any specific cities or regions?"
+                    )}
                   </div>
                 </>
               )}
               
-              {/* Section 4: Resume */}
+              {/* Section 4: Experience & Tech Skills */}
               {currentSection === 4 && (
+                <>
+                  {renderQuestionWithDetail(
+                    "Do you have any previous work experience?",
+                    "workExperience",
+                    formData.workExperience,
+                    workExperienceOptions,
+                    "workExperienceDetails",
+                    formData.workExperienceDetails,
+                    "Describe your role or company..."
+                  )}
+                  
+                  {formData.workExperience === 'yes' && (
+                    renderQuestionWithDetail(
+                      "Years of experience",
+                      "yearsExperience",
+                      formData.yearsExperience,
+                      yearsExperienceOptions,
+                      "yearsExperienceDetails",
+                      formData.yearsExperienceDetails,
+                      "What industry or role?"
+                    )
+                  )}
+                  
+                  {renderMultiSelect(
+                    "Programming languages you know",
+                    "programmingLanguages",
+                    formData.programmingLanguages,
+                    programmingLanguageOptions,
+                    "programmingLanguagesDetails",
+                    formData.programmingLanguagesDetails,
+                    <Code className="h-5 w-5 text-brand-400" />,
+                    "Other languages or skill level details..."
+                  )}
+                  
+                  {renderMultiSelect(
+                    "Tech stacks / frameworks",
+                    "techStacks",
+                    formData.techStacks,
+                    techStackOptions,
+                    "techStacksDetails",
+                    formData.techStacksDetails,
+                    <GitBranch className="h-5 w-5 text-brand-400" />,
+                    "Other frameworks or libraries..."
+                  )}
+                  
+                  {renderMultiSelect(
+                    "Tools you're comfortable with",
+                    "tools",
+                    formData.tools,
+                    toolOptions,
+                    "toolsDetails",
+                    formData.toolsDetails,
+                    <Tool className="h-5 w-5 text-brand-400" />,
+                    "Other tools or expertise level..."
+                  )}
+                </>
+              )}
+              
+              {/* Section 5: Resume */}
+              {currentSection === 5 && (
                 <>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="resumeText">Paste your resume text (optional)</Label>
+                      <Label htmlFor="resumeText" className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-brand-400" />
+                        <span>Paste your resume text or additional skills (optional)</span>
+                      </Label>
                       <Textarea
                         id="resumeText"
-                        placeholder="Copy and paste your resume text here for more tailored suggestions..."
+                        name="resumeText"
+                        placeholder="Copy and paste your resume text or add any additional skills, experiences, or preferences..."
                         rows={8}
                         value={formData.resumeText}
-                        onChange={handleResumeTextChange}
-                        className="border-dashed"
+                        onChange={handleTextChange}
+                        className="border-dashed glass-input"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-white/60">
                         This helps us provide more accurate career suggestions based on your existing skills.
                       </p>
                     </div>
                     
-                    <div className="mt-6">
+                    <div className="mt-6 text-center">
                       <Button
                         onClick={handleSubmit}
                         disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-500"
+                        className="w-full md:w-2/3 lg:w-1/2 bg-gradient-to-r from-brand-400 to-purple-600 hover:from-brand-400/90 hover:to-purple-600/90 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)] text-lg py-6"
                       >
                         {isLoading ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Analyzing your profile...
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            {retryCount > 0 ? `Retry ${retryCount}/3...` : "Analyzing your profile..."}
                           </>
                         ) : (
                           <>
-                            Generate My Career Paths
+                            Generate My Career Path
+                            <BookMarked className="ml-2 h-5 w-5" />
                           </>
                         )}
                       </Button>
@@ -602,216 +893,93 @@ For each career path, also tell me:
               )}
             </CardContent>
             
-            <CardFooter className="flex justify-between bg-muted/20 border-t">
+            <CardFooter className="flex justify-between bg-gradient-to-r from-brand-900/40 to-cyber-dark/40 border-t border-white/10 p-6">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentSection === 1}
+                className="flex items-center gap-2"
               >
+                <ArrowLeft className="h-4 w-4" />
                 Previous
               </Button>
               
-              {currentSection < 4 ? (
+              {currentSection < 5 ? (
                 <Button
                   onClick={handleNext}
                   disabled={!isCurrentSectionValid()}
+                  className="bg-brand-400/90 hover:bg-brand-400 flex items-center gap-2"
                 >
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
+                  Next
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : (
                 <Button
                   variant="ghost"
                   onClick={() => setCurrentSection(1)}
                   disabled={isLoading}
+                  className="text-white/70 hover:text-white"
                 >
-                  Back to start
+                  Start Over
                 </Button>
               )}
             </CardFooter>
           </Card>
         ) : (
           // Results Display with improved styling
-          <div>
-            <Tabs defaultValue="overview" className="mb-8">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">Career Paths</TabsTrigger>
-                <TabsTrigger value="skills">Skills to Add</TabsTrigger>
-                <TabsTrigger value="companies">Companies</TabsTrigger>
-                <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overview" className="space-y-4 mt-4">
-                <Card>
-                  <CardHeader className="bg-muted/30">
-                    <CardTitle className="flex items-center">
-                      <GraduationCap className="mr-2 h-5 w-5 text-primary" />
-                      Your Gen Z Career Analysis
+          <div className="space-y-6">
+            <Card className="border-t-4 border-t-purple-500 shadow-lg backdrop-blur-xl bg-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.12),0_0_20px_rgba(168,85,247,0.3)]" ref={resultRef}>
+              <CardHeader className="bg-gradient-to-r from-brand-900/50 to-cyber-dark/50 rounded-t-xl border-b border-white/10">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-white flex items-center">
+                      <BookMarked className="mr-2 h-6 w-6 text-brand-400" />
+                      Your Career Roadmap
                     </CardTitle>
-                    <CardDescription>
-                      Career paths that match your vibe and skills
+                    <CardDescription className="text-white/80">
+                      A personalized plan based on your skills and preferences
                     </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {parsedResults?.careerRoles?.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parsedResults.careerRoles.map((role: string, index: number) => (
-                          <div 
-                            key={index}
-                            className={`p-5 rounded-lg text-white bg-gradient-to-br ${getRandomGradient(index)}`}
-                          >
-                            <h3 className="font-bold text-lg mb-2">{role.split(':')[0]}</h3>
-                            <p>{role.split(':').slice(1).join(':')}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Why These Careers Suit You</h3>
-                        <div className="prose max-w-none">
-                          {parsedResults?.whySuits?.map((reason: string, idx: number) => (
-                            <div key={idx} className="flex items-start gap-2 mb-2">
-                              <div className="mt-1 text-primary">•</div>
-                              <p>{reason}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                <Card className="overflow-hidden">
-                  <CardHeader className="bg-muted/30">
-                    <CardTitle>Full AI Analysis</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="prose prose-sm max-w-none bg-muted/10 p-4 rounded-md border border-dashed overflow-auto max-h-[600px]">
-                      {results.split('\n').map((line, index) => {
-                        // Add special styling to headings
-                        if (line.toUpperCase() === line && line.length > 0) {
-                          return <h3 key={index} className="text-primary font-bold mt-4">{line}</h3>;
-                        }
-                        // Highlight emoji sections
-                        if (line.match(/^[•\-*]|\p{Emoji}/u)) {
-                          return (
-                            <div key={index} className="flex items-start gap-2 ml-2">
-                              <span>{line.startsWith('-') ? '•' : line.charAt(0)}</span>
-                              <p>{line.substring(1)}</p>
-                            </div>
-                          );
-                        }
-                        return line.length > 0 ? <p key={index} className="mb-1">{line}</p> : <br key={index} />;
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  </div>
+                  <Button
+                    onClick={downloadAsPDF} 
+                    variant="outline"
+                    className="flex items-center gap-2 border border-brand-400/50 hover:bg-brand-900/20"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </div>
+              </CardHeader>
               
-              <TabsContent value="skills" className="mt-4">
-                <Card>
-                  <CardHeader className="bg-muted/30">
-                    <CardTitle className="flex items-center">
-                      <BookOpen className="mr-2 h-5 w-5 text-blue-500" />
-                      Skills You Need to Add
-                    </CardTitle>
-                    <CardDescription>
-                      Tools and technologies to learn for your career path
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(parsedResults?.skillsToAdd || []).map((skill: string, index: number) => (
-                        <div key={index} className="p-4 border rounded-lg bg-card hover:bg-accent/50 transition-colors duration-200">
-                          <p>{skill}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="companies" className="mt-4">
-                <Card>
-                  <CardHeader className="bg-muted/30">
-                    <CardTitle className="flex items-center">
-                      <Briefcase className="mr-2 h-5 w-5 text-purple-500" />
-                      Recommended Companies
-                    </CardTitle>
-                    <CardDescription>
-                      Places where you could thrive based on your profile
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(parsedResults?.companies || []).map((company: string, index: number) => (
-                        <div key={index} className="p-4 border rounded-lg flex items-center space-x-3">
-                          <div className="bg-primary/10 p-2 rounded-full">
-                            <Briefcase className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{company.split(':')[0]}</p>
-                            <p className="text-sm text-muted-foreground">{company.split(':').slice(1).join(':')}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="roadmap" className="mt-4">
-                <Card>
-                  <CardHeader className="bg-muted/30">
-                    <CardTitle className="flex items-center">
-                      <BarChart3 className="mr-2 h-5 w-5 text-amber-500" />
-                      6-12 Month Roadmap
-                    </CardTitle>
-                    <CardDescription>
-                      Your realistic path forward in this career
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="relative border-l-2 border-primary/30 pl-6 space-y-6 ml-2">
-                      {(parsedResults?.roadmap || []).map((step: string, index: number) => (
-                        <div key={index} className="relative">
-                          <div className="absolute -left-9 top-1 w-5 h-5 rounded-full bg-primary z-10"></div>
-                          <div className="p-4 border rounded-lg">
-                            <p>{step}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+              <CardContent className="py-8 px-4 md:px-8 prose prose-invert prose-purple max-w-none">
+                <ReactMarkdown
+                  components={{
+                    h2: ({ node, ...props }) => <h2 className="text-xl md:text-2xl font-bold text-brand-300 mt-8 mb-4 border-b border-white/10 pb-2" {...props} />,
+                    ul: ({ node, ...props }) => <ul className="space-y-2 my-4" {...props} />,
+                    li: ({ node, ...props }) => <li className="flex items-start gap-3"><span className="text-brand-400 mt-1">•</span><span {...props} /></li>,
+                    p: ({ node, ...props }) => <p className="my-3 text-white/80" {...props} />,
+                    a: ({ node, ...props }) => <a className="text-brand-300 hover:underline" {...props} />,
+                  }}
+                >
+                  {markdownResult}
+                </ReactMarkdown>
+              </CardContent>
+            </Card>
             
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={handleReset}>
-                Start Over
+            <div className="flex flex-col md:flex-row justify-between gap-4">
+              <Button variant="outline" onClick={handleReset} className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Start New Analysis
               </Button>
+              
               <Button 
-                onClick={() => navigate("/dashboard")}
-                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-500"
+                onClick={downloadAsPDF}
+                className="bg-gradient-to-r from-brand-400 to-purple-600 hover:from-brand-400/90 hover:to-purple-600/90 flex items-center gap-2"
               >
-                Return to Dashboard
+                <Download className="h-4 w-4" />
+                Download Career Roadmap
               </Button>
             </div>
-          </div>
-        )}
-        
-        {/* Progress Bar */}
-        {!results && (
-          <div className="mt-4">
-            <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-              <div
-                className="h-2 bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-300"
-                style={{ width: `${(currentSection / 4) * 100}%` }}
-              />
-            </div>
-            <p className="text-center text-sm text-muted-foreground mt-2">
-              Step {currentSection} of 4
-            </p>
           </div>
         )}
       </div>

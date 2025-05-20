@@ -62,6 +62,29 @@ export default function DashboardSidebar() {
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
+              <SidebarMenuItem>
+                <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
+                  <a href="/career-design">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                    <span>Career Design</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/career-designer">
@@ -84,6 +107,7 @@ export default function DashboardSidebar() {
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/genz-career-decider">
@@ -107,6 +131,7 @@ export default function DashboardSidebar() {
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/career-chat">
@@ -128,6 +153,7 @@ export default function DashboardSidebar() {
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/resume-analysis">
@@ -152,6 +178,7 @@ export default function DashboardSidebar() {
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton className="bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90 transition-all duration-300" asChild>
                   <a href="/settings">

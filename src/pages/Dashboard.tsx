@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -9,7 +10,9 @@ import { useUserData } from "@/hooks/use-user-data";
 import { CareerProgress } from "@/components/dashboard/CareerProgress";
 import { ResumeAnalysis } from "@/components/dashboard/ResumeAnalysis";
 import { CareerChat } from "@/components/dashboard/CareerChat";
-import { ChevronRight, BookMarked, FileText, Briefcase } from "lucide-react";
+import { ChevronRight, BookMarked, FileText, Briefcase, Route, BookOpen } from "lucide-react";
+import { useRoadmap } from "@/hooks/use-roadmap";
+import { useGeminiContext } from "@/context/GeminiContext";
 
 // Check if this is the first login
 const isFirstLogin = () => {
@@ -24,15 +27,17 @@ const isFirstLogin = () => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { apiKey } = useGeminiContext();
   const [showOnboarding, setShowOnboarding] = useState(isFirstLogin());
   const { userData, isLoading, fetchUserData, saveField } = useUserData();
+  const { userRoadmap, roadmapProgress } = useRoadmap(apiKey || '');
   
   // Fetch user data on mount
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
   
-  const handleOnboardingComplete = (profile) => {
+  const handleOnboardingComplete = (profile: any) => {
     setShowOnboarding(false);
     
     // Save profile data
@@ -100,6 +105,46 @@ export default function Dashboard() {
               userData={userData} 
               onUpdateField={saveField}
             />
+            
+            {/* Career Design Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Career Design</CardTitle>
+                <CardDescription>
+                  Build your personalized career roadmap
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userRoadmap ? (
+                  <div>
+                    <p className="text-white/70">
+                      You have a {userRoadmap.title} roadmap with {roadmapProgress}% progress.
+                    </p>
+                    <div className="w-full bg-white/10 rounded-full h-2.5 mt-3">
+                      <div 
+                        className="bg-primary h-2.5 rounded-full"
+                        style={{ width: `${roadmapProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-white/70">
+                    Create a step-by-step roadmap for your career with our interactive tool.
+                  </p>
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/career-design")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Route className="mr-2 h-4 w-4" />
+                  {userRoadmap ? "View My Roadmap" : "Create Roadmap"}
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
             
             {/* Career Roadmap Card */}
             <Card className="glass-morphism card-hover">

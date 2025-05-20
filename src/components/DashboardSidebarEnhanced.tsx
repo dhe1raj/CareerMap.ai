@@ -27,7 +27,7 @@ export default function DashboardSidebarEnhanced() {
     }
   };
 
-  // Navigation items including the new profile settings link
+  // Navigation items including the new account settings link
   const navItems = [
     { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
     { name: "Career Chat", icon: <MessageSquare size={20} />, path: "/career-chat" },
@@ -35,6 +35,7 @@ export default function DashboardSidebarEnhanced() {
     { name: "Career Matches", icon: <BarChart3 size={20} />, path: "/career-matches" },
     { name: "Roadmap", icon: <BookOpen size={20} />, path: "/roadmap" },
     { name: "Profile Settings", icon: <User size={20} />, path: "/profile-settings" },
+    { name: "Account Settings", icon: <Settings size={20} />, path: "/account-settings" },
     { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
   ];
 

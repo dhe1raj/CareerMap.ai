@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -15,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { home, settings, users } from "lucide-react";
+import { Home, Settings, Users } from "lucide-react";
 
 export default function DashboardSidebar() {
   const navigate = useNavigate();

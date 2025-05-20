@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useGeminiContext } from "@/context/GeminiContext";
+import { useGemini } from "@/lib/gemini";
+import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
 
 const educationLevels = [
   "High School",
@@ -65,6 +68,20 @@ const timeInvestments = [
   "40+ hours/week"
 ];
 
+// Add a new field for current location/country
+const countries = [
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "India",
+  "Germany",
+  "France",
+  "Brazil",
+  "Japan",
+  "Other"
+];
+
 export default function CareerDesigner() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,15 +91,18 @@ export default function CareerDesigner() {
     fieldsOfInterest: "",
     workPreference: "",
     incomeRange: "",
-    timeInvestment: ""
+    timeInvestment: "",
+    location: "" // New field for location/country
   });
   
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { apiKey } = useGeminiContext();
+  const { callGemini } = useGemini();
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -109,20 +129,70 @@ export default function CareerDesigner() {
       });
       return;
     }
+
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please set your Gemini API key to generate career matches",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
-      // Update user profile with education preference
+      // Update user profile with preferences
       await supabase
         .from("profiles")
         .update({
-          education: formData.education
+          education: formData.education,
+          location: formData.location
         })
         .eq("id", user.id);
       
-      // For a real application, you might want to save all preferences
-      // and use them to calculate career matches with an algorithm
+      // Generate career roadmap with Gemini
+      const prompt = `User wants to become a professional in ${formData.fieldsOfInterest} with the following profile:
+      
+      - Current education level: ${formData.education}
+      - Strongest skill: ${formData.strongestSkill}
+      - Work preference: ${formData.workPreference}
+      - Income expectation: ${formData.incomeRange}
+      - Time able to invest in development: ${formData.timeInvestment}
+      - Current location/country: ${formData.location}
+      
+      Suggest a detailed roadmap including:
+      1. Relevant certifications tailored to their background
+      2. Must-have skills for this field
+      3. Tools and technologies to learn
+      4. Job platforms specific to their location/country
+      
+      Format the response as JSON with the following structure:
+      {
+        "title": "Career Path Title",
+        "steps": [
+          {
+            "title": "Step Title",
+            "description": "Short description of this step",
+            "items": ["Item 1", "Item 2", "Item 3"]
+          }
+        ]
+      }`;
+      
+      // Call Gemini API in the background, but don't wait for it
+      // This allows us to navigate the user to the matches page while the API call is processing
+      callGemini(prompt, apiKey)
+        .then(response => {
+          if (response) {
+            try {
+              // Store the JSON response in localStorage for now
+              // In a real app, you would store this in the database
+              localStorage.setItem('careerRoadmap', response);
+            } catch (error) {
+              console.error("Error processing Gemini response:", error);
+            }
+          }
+        });
       
       toast({
         title: "Career analysis complete",
@@ -148,6 +218,12 @@ export default function CareerDesigner() {
       description: "What's your current education level?",
       field: "education",
       options: educationLevels,
+    },
+    {
+      title: "Location",
+      description: "Where are you currently located?",
+      field: "location",
+      options: countries,
     },
     {
       title: "Strongest Skill",
@@ -194,6 +270,10 @@ export default function CareerDesigner() {
           </p>
         </div>
 
+        {!apiKey && (
+          <GeminiApiKeyInput />
+        )}
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>{currentQuestion.title}</CardTitle>
@@ -204,7 +284,7 @@ export default function CareerDesigner() {
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor={currentQuestion.field}>{currentQuestion.title}</Label>
                 <Select
-                  value={formData[currentQuestion.field as keyof typeof formData]}
+                  value={formData[currentQuestion.field as keyof typeof formData] || ""}
                   onValueChange={(value) => handleSelectChange(currentQuestion.field, value)}
                 >
                   <SelectTrigger className="w-full">
@@ -236,7 +316,7 @@ export default function CareerDesigner() {
             ) : (
               <Button 
                 onClick={handleSubmit} 
-                disabled={isSubmitting || !formData[currentQuestion.field as keyof typeof formData]}
+                disabled={isSubmitting || !formData[currentQuestion.field as keyof typeof formData] || !apiKey}
               >
                 {isSubmitting ? "Analyzing..." : "Submit"}
               </Button>

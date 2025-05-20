@@ -2,13 +2,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Send, AlertCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useGeminiContext } from "@/context/GeminiContext";
+import { useGemini } from "@/lib/gemini";
+import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Message {
   id: string;
@@ -24,6 +28,8 @@ export default function CareerChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { apiKey } = useGeminiContext();
+  const { callGemini } = useGemini();
 
   // Fetch messages on component mount
   useEffect(() => {
@@ -66,6 +72,15 @@ export default function CareerChat() {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !user) return;
     
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please set your Gemini API key to use the chat",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const userMessage: Message = {
       id: crypto.randomUUID(),
       sender: "user",
@@ -85,10 +100,17 @@ export default function CareerChat() {
         is_ai: false
       });
       
-      // Simulate AI response (in a real app, this would call an AI service)
-      setTimeout(async () => {
-        const aiResponse = await generateAIResponse(inputMessage);
-        
+      // Generate AI response with Gemini
+      const prompt = `You are CareerForge AI — a helpful career advisor specializing in career guidance. 
+      
+      Answer the following question about careers, job search, skill development, or career transition. 
+      Provide practical, actionable advice. If you're asked about something unrelated to careers, politely redirect the conversation to career topics.
+      
+      User question: ${inputMessage}`;
+      
+      const aiResponse = await callGemini(prompt, apiKey);
+      
+      if (aiResponse) {
         const aiMessage: Message = {
           id: crypto.randomUUID(),
           sender: "ai",
@@ -104,9 +126,7 @@ export default function CareerChat() {
         });
 
         setMessages(prevMessages => [...prevMessages, aiMessage]);
-        setIsLoading(false);
-      }, 1000);
-
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -114,23 +134,8 @@ export default function CareerChat() {
         title: "Error",
         description: "Failed to send message. Please try again.",
       });
+    } finally {
       setIsLoading(false);
-    }
-  };
-
-  // For demo purposes - generates a simple AI response
-  const generateAIResponse = async (userMessage: string): Promise<string> => {
-    // In a real app, this would call an AI service API
-    const lowerMsg = userMessage.toLowerCase();
-    
-    if (lowerMsg.includes("skill") || lowerMsg.includes("learn")) {
-      return "Based on your interests, you might want to focus on learning JavaScript, Python, or UX design. These skills are highly in demand in the current job market.";
-    } else if (lowerMsg.includes("job") || lowerMsg.includes("career")) {
-      return "There are several career paths that might be a good fit for you, such as Software Developer, Data Analyst, or UX Designer. Would you like me to give you more information about any of these roles?";
-    } else if (lowerMsg.includes("interview") || lowerMsg.includes("resume")) {
-      return "For interview preparation, I recommend focusing on your strengths and preparing stories about your achievements. For your resume, highlight your technical skills and projects that demonstrate your abilities.";
-    } else {
-      return "I'm your career assistant. I can help you explore career options, develop skills, prepare for interviews, or create a career roadmap. What specific area would you like help with today?";
     }
   };
 
@@ -143,6 +148,10 @@ export default function CareerChat() {
             Chat with our AI career assistant for personalized guidance and advice.
           </p>
         </div>
+
+        {!apiKey && (
+          <GeminiApiKeyInput />
+        )}
         
         <Card className="flex-1 p-4 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto space-y-4 pb-4">
@@ -168,7 +177,9 @@ export default function CareerChat() {
                         : "bg-muted"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <div className="whitespace-pre-wrap">
+                      {message.content}
+                    </div>
                     <p className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString()}
                     </p>
@@ -200,10 +211,10 @@ export default function CareerChat() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type your message..."
-                disabled={isLoading}
+                disabled={isLoading || !apiKey}
                 className="flex-1"
               />
-              <Button type="submit" size="icon" disabled={isLoading}>
+              <Button type="submit" size="icon" disabled={isLoading || !apiKey}>
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </Button>

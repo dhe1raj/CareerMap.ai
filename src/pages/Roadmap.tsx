@@ -1,9 +1,15 @@
 
 import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useGeminiContext } from "@/context/GeminiContext";
+import { useGemini } from "@/lib/gemini";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
 
 // Mock data for the roadmaps
 const roadmapMockData = {
@@ -159,12 +165,137 @@ const roadmapMockData = {
   }
 };
 
+interface RoadmapStep {
+  title: string;
+  description: string;
+  items: string[];
+}
+
+interface RoadmapData {
+  title: string;
+  steps: RoadmapStep[];
+}
+
 export default function Roadmap() {
   const { id } = useParams<{ id: string }>();
+  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { apiKey } = useGeminiContext();
+  const { callGemini } = useGemini();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchRoadmap = async () => {
+      setIsLoading(true);
+      try {
+        // First check if we have a stored roadmap from CareerDesigner
+        const storedRoadmap = localStorage.getItem('careerRoadmap');
+        
+        if (storedRoadmap) {
+          try {
+            const parsedRoadmap = JSON.parse(storedRoadmap);
+            setRoadmapData(parsedRoadmap);
+            localStorage.removeItem('careerRoadmap'); // Clear it after use
+            setIsLoading(false);
+            return;
+          } catch (error) {
+            console.error("Error parsing stored roadmap:", error);
+            // Continue to fallback options if parsing fails
+          }
+        }
+        
+        // If no stored roadmap or parsing failed, check if we have API key to generate one
+        if (apiKey && id) {
+          const careerField = id.replace(/-/g, ' ');
+          
+          // Generate roadmap with Gemini
+          const prompt = `Create a detailed career roadmap for someone who wants to become a ${careerField}.
+          
+          Include the following sections:
+          1. Foundational concepts to learn
+          2. Recommended courses or learning resources
+          3. Practical projects to build
+          4. Certifications to pursue
+          5. Professional communities to join
+          
+          Format the response as a JSON object with this structure:
+          {
+            "title": "${careerField}",
+            "steps": [
+              {
+                "title": "Step Title",
+                "description": "Brief description of the step",
+                "items": ["Item 1", "Item 2", "Item 3"]
+              }
+            ]
+          }`;
+          
+          const geminiResponse = await callGemini(prompt, apiKey);
+          
+          if (geminiResponse) {
+            try {
+              const parsedResponse = JSON.parse(geminiResponse);
+              setRoadmapData(parsedResponse);
+              setIsLoading(false);
+              return;
+            } catch (error) {
+              console.error("Error parsing Gemini response:", error);
+              toast({
+                title: "Error",
+                description: "Failed to parse the roadmap data. Using default data instead.",
+                variant: "destructive"
+              });
+            }
+          }
+        }
+        
+        // If all else fails, use the mock data
+        setRoadmapData(roadmapMockData[id as keyof typeof roadmapMockData] || roadmapMockData["data-scientist"]);
+      } catch (error) {
+        console.error("Error fetching roadmap:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load the roadmap. Using default data instead.",
+          variant: "destructive"
+        });
+        setRoadmapData(roadmapMockData[id as keyof typeof roadmapMockData] || roadmapMockData["data-scientist"]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchRoadmap();
+  }, [id, apiKey, callGemini, toast]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-[60vh]">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          <p className="mt-4 text-lg">Generating your personalized career roadmap...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
   
-  // In a real app, we would fetch the roadmap data based on the ID
-  // For now, we'll use the mock data
-  const roadmapData = roadmapMockData[id as keyof typeof roadmapMockData] || roadmapMockData["data-scientist"];
+  if (!roadmapData) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Career Roadmap
+            </h1>
+            <p className="text-muted-foreground">
+              We need a Gemini API key to generate your personalized career roadmap
+            </p>
+          </div>
+          
+          <GeminiApiKeyInput />
+        </div>
+      </DashboardLayout>
+    );
+  }
   
   return (
     <DashboardLayout>

@@ -11,6 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, File, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ResumeAnalysisResults from "@/components/ResumeAnalysisResults";
+import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
+import { useGeminiContext } from "@/context/GeminiContext";
+import { useGemini } from "@/lib/gemini";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function ResumeAnalysis() {
   const { user } = useAuth();
@@ -20,6 +24,8 @@ export default function ResumeAnalysis() {
   const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const { apiKey } = useGeminiContext();
+  const { callGemini } = useGemini();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -51,7 +57,7 @@ export default function ResumeAnalysis() {
   };
   
   const handleUpload = async () => {
-    if (!file || !user) return;
+    if (!file || !user || !apiKey) return;
     
     setIsUploading(true);
     
@@ -107,13 +113,80 @@ export default function ResumeAnalysis() {
           resumeText = await response.text();
         } else {
           // In a real implementation, you would use a document parsing service
-          // Simulating parsed text for demo purposes
+          // For demo purposes, we'll assume we can extract the text
           resumeText = "SAMPLE RESUME TEXT: Software Engineer with 3 years of experience in React, TypeScript, and Node.js. Developed multiple web applications and APIs. Proficient in database design and cloud services.";
         }
         
-        // Send to AI for analysis (simulated)
-        const analysisData = await simulateAIAnalysis(resumeText);
-        setAnalysisResults(analysisData);
+        // Send to Gemini for analysis
+        const prompt = `You are CareerForge AI — a futuristic career mentor. Analyze the following resume and provide:
+
+1. The most relevant career paths based on their **current experience and skills**
+2. High-demand roles or industries they are already fit for
+3. Skill gaps they should address
+4. Suggested certifications, projects, or internships to level up
+5. Recommended companies, remote platforms, or startup roles where they can thrive
+6. Country-specific suggestions based on resume details
+
+Resume:
+${resumeText}
+
+⚠️ Do not suggest degrees or academic courses unless the resume clearly shows the user is still a student and explicitly asks for it.
+
+Format your response as a JSON object with the following fields:
+{
+  "strengths": ["strength1", "strength2", ...],
+  "improvements": ["improvement1", "improvement2", ...],
+  "careerPaths": ["path1", "path2", ...],
+  "topSkills": ["skill1", "skill2", ...],
+  "potentialCompanies": ["company/platform1", "company/platform2", ...]
+}`;
+
+        const geminiResponse = await callGemini(prompt, apiKey);
+        
+        if (geminiResponse) {
+          try {
+            // Parse the JSON response from Gemini
+            const parsedResponse = JSON.parse(geminiResponse);
+            setAnalysisResults(parsedResponse);
+          } catch (error) {
+            console.error("Error parsing Gemini response:", error);
+            
+            // Fallback to sample data if parsing fails
+            setAnalysisResults({
+              strengths: [
+                "Strong frontend development skills with React and TypeScript",
+                "Experience with full-stack development using Node.js",
+                "Database design and implementation experience"
+              ],
+              improvements: [
+                "Cloud infrastructure and DevOps knowledge",
+                "Mobile development skills",
+                "Leadership experience"
+              ],
+              careerPaths: [
+                "Senior Frontend Developer",
+                "Full-Stack Engineer",
+                "React Technical Lead"
+              ],
+              topSkills: [
+                "AWS/Azure cloud services",
+                "CI/CD pipeline implementation",
+                "System architecture design"
+              ],
+              potentialCompanies: [
+                "Tech startups focused on web applications",
+                "Mid-sized companies with established engineering teams",
+                "Remote-first companies like GitLab, Zapier, etc."
+              ]
+            });
+            
+            toast({
+              title: "Warning",
+              description: "Could not parse AI response, showing sample data instead.",
+              variant: "destructive"
+            });
+          }
+        }
       }
     } catch (error: any) {
       console.error("Error analyzing resume:", error.message);
@@ -126,41 +199,6 @@ export default function ResumeAnalysis() {
       setIsAnalyzing(false);
     }
   };
-  
-  // Simulate AI analysis (in a real app, you would call an edge function)
-  const simulateAIAnalysis = async (resumeText: string) => {
-    // Simulating API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Sample response structure - in a real app this would come from GPT or another AI
-    return {
-      strengths: [
-        "Strong frontend development skills with React and TypeScript",
-        "Experience with full-stack development using Node.js",
-        "Database design and implementation experience"
-      ],
-      improvements: [
-        "Cloud infrastructure and DevOps knowledge",
-        "Mobile development skills",
-        "Leadership experience"
-      ],
-      careerPaths: [
-        "Senior Frontend Developer",
-        "Full-Stack Engineer",
-        "React Technical Lead"
-      ],
-      topSkills: [
-        "AWS/Azure cloud services",
-        "CI/CD pipeline implementation",
-        "System architecture design"
-      ],
-      potentialCompanies: [
-        "Tech startups focused on web applications",
-        "Mid-sized companies with established engineering teams",
-        "Remote-first companies like GitLab, Zapier, etc."
-      ]
-    };
-  };
 
   return (
     <DashboardLayout>
@@ -171,6 +209,10 @@ export default function ResumeAnalysis() {
             Upload your resume to get smart, AI-powered career guidance based on your real skills and experience.
           </p>
         </div>
+        
+        {!apiKey && (
+          <GeminiApiKeyInput />
+        )}
         
         {!analysisResults ? (
           <Card>
@@ -223,7 +265,7 @@ export default function ResumeAnalysis() {
               
               <Button
                 className="w-full"
-                disabled={!file || isUploading || isAnalyzing}
+                disabled={!file || !apiKey || isUploading || isAnalyzing}
                 onClick={handleUpload}
               >
                 {(isUploading || isAnalyzing) ? (

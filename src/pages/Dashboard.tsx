@@ -1,18 +1,86 @@
 
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+
+interface CareerSuggestion {
+  id: string;
+  title: string;
+  match_percentage: number;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const [progress, setProgress] = useState(0);
   
+  // Fetch user's roadmap progress
+  const { data: userRoadmaps } = useQuery({
+    queryKey: ['userRoadmaps', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('roadmaps')
+        .select('*, roadmap_steps(*)')
+        .eq('user_id', user.id);
+        
+      if (error) {
+        console.error("Error fetching roadmaps:", error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+  
+  // Fetch career suggestions
+  const { data: careerSuggestions } = useQuery({
+    queryKey: ['careerSuggestions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('career_roles')
+        .select('id, title')
+        .limit(2);
+        
+      if (error) {
+        console.error("Error fetching career roles:", error);
+        return [];
+      }
+      
+      // Add mock match percentages (in a real app, this would be calculated based on user skills)
+      return data.map(role => ({
+        ...role,
+        match_percentage: Math.floor(Math.random() * (95 - 60) + 60)
+      })).sort((a, b) => b.match_percentage - a.match_percentage);
+    }
+  });
+
+  useEffect(() => {
+    // Calculate roadmap progress
+    if (userRoadmaps && userRoadmaps.length > 0) {
+      const allSteps = userRoadmaps.flatMap(roadmap => roadmap.roadmap_steps);
+      const completedSteps = allSteps.filter(step => step.completed);
+      const progressValue = allSteps.length > 0 
+        ? (completedSteps.length / allSteps.length) * 100 
+        : 0;
+      
+      setProgress(progressValue);
+    }
+  }, [userRoadmaps]);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome, John!</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Welcome, {profile?.full_name || 'there'}!</h1>
           <p className="text-muted-foreground">
             Here's an overview of your career journey progress.
           </p>
@@ -45,9 +113,9 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-muted-foreground">25%</span>
+                  <span className="text-sm text-muted-foreground">{progress.toFixed(0)}%</span>
                 </div>
-                <Progress value={25} className="h-2" />
+                <Progress value={progress} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -59,18 +127,24 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4 pt-2">
-                <Button variant="outline" className="w-full justify-start text-left" asChild>
-                  <div>
-                    <p>Frontend Developer</p>
-                    <p className="text-xs text-muted-foreground">85% match</p>
-                  </div>
-                </Button>
-                <Button variant="outline" className="w-full justify-start text-left" asChild>
-                  <div>
-                    <p>UX Designer</p>
-                    <p className="text-xs text-muted-foreground">78% match</p>
-                  </div>
-                </Button>
+                {careerSuggestions && careerSuggestions.length > 0 ? (
+                  careerSuggestions.map((suggestion) => (
+                    <Button 
+                      key={suggestion.id}
+                      variant="outline" 
+                      className="w-full justify-start text-left" 
+                      onClick={() => navigate(`/role/${suggestion.id}`)}
+                      asChild
+                    >
+                      <div>
+                        <p>{suggestion.title}</p>
+                        <p className="text-xs text-muted-foreground">{suggestion.match_percentage}% match</p>
+                      </div>
+                    </Button>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Complete the career designer to get personalized suggestions.</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -99,19 +173,36 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Roadmap would be populated after career design */}
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground">
-                You haven't created a roadmap yet. Complete the career designer questionnaire to generate your roadmap.
-              </p>
-              <Button 
-                className="mt-4"
-                variant="outline"
-                onClick={() => navigate("/career-designer")}
-              >
-                Design My Career
-              </Button>
-            </div>
+            {userRoadmaps && userRoadmaps.length > 0 ? (
+              <div className="space-y-4">
+                {userRoadmaps.map((roadmap) => (
+                  <Button
+                    key={roadmap.id}
+                    variant="outline"
+                    className="w-full justify-between"
+                    onClick={() => navigate(`/roadmap/${roadmap.id}`)}
+                  >
+                    <span>{roadmap.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {roadmap.roadmap_steps.filter(step => step.completed).length} / {roadmap.roadmap_steps.length} steps
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground">
+                  You haven't created a roadmap yet. Complete the career designer questionnaire to generate your roadmap.
+                </p>
+                <Button 
+                  className="mt-4"
+                  variant="outline"
+                  onClick={() => navigate("/career-designer")}
+                >
+                  Design My Career
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

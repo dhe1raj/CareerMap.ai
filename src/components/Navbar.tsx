@@ -1,90 +1,251 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
+
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="text-2xl font-bold text-gradient">CareerPath</div>
-        </Link>
-        
-        {/* Mobile menu button */}
-        <button 
-          className="block md:hidden"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-        
-        {/* Desktop navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium hover:text-primary">
-            Home
+    <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <div className="container flex h-16 items-center justify-between py-4">
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center space-x-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-6 w-6 text-primary"
+            >
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            </svg>
+            <span className="text-xl font-bold">CareerPath</span>
           </Link>
-          <Link to="/features" className="text-sm font-medium hover:text-primary">
+        </div>
+
+        {/* Desktop navigation */}
+        <nav className="hidden md:flex items-center space-x-6">
+          <Link
+            to="/features"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             Features
           </Link>
-          <Link to="/about" className="text-sm font-medium hover:text-primary">
+          <Link
+            to="/about"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             About
           </Link>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/signup">Sign Up</Link>
-            </Button>
-          </div>
-        </nav>
-        
-        {/* Mobile navigation */}
-        <div className={cn(
-          "absolute top-16 left-0 right-0 bg-background border-b p-4 md:hidden",
-          isMenuOpen ? "block" : "hidden"
-        )}>
-          <div className="flex flex-col gap-4">
-            <Link 
-              to="/" 
-              className="text-sm font-medium p-2 hover:bg-muted rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/features" 
-              className="text-sm font-medium p-2 hover:bg-muted rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Features
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-sm font-medium p-2 hover:bg-muted rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  Login
-                </Link>
+          
+          {user ? (
+            <div className="flex items-center space-x-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage 
+                        src={profile?.avatar_url}
+                        alt={profile?.full_name || user.email} 
+                      />
+                      <AvatarFallback>
+                        {profile?.full_name ? getInitials(profile.full_name) : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{profile?.full_name || "User"}</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/career-designer">Career Designer</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/career-chat">Career Chat</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Button variant="ghost" asChild>
+                <Link to="/auth">Log in</Link>
               </Button>
-              <Button className="w-full" asChild>
-                <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                  Sign Up
-                </Link>
+              <Button asChild>
+                <Link to="/auth?tab=signup">Sign up</Link>
               </Button>
             </div>
-          </div>
-        </div>
+          )}
+        </nav>
+
+        {/* Mobile navigation */}
+        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <SheetHeader>
+              <SheetTitle>CareerPath</SheetTitle>
+              <SheetDescription>
+                Navigate to different sections of the app.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="flex flex-col space-y-4 py-4">
+              <Link
+                to="/features"
+                className="text-sm font-medium hover:underline"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Features
+              </Link>
+              <Link
+                to="/about"
+                className="text-sm font-medium hover:underline"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                About
+              </Link>
+              
+              {user ? (
+                <>
+                  <div className="flex items-center py-2">
+                    <Avatar className="h-9 w-9 mr-2">
+                      <AvatarImage 
+                        src={profile?.avatar_url}
+                        alt={profile?.full_name || user.email} 
+                      />
+                      <AvatarFallback>
+                        {profile?.full_name ? getInitials(profile.full_name) : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">{profile?.full_name || "User"}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <hr />
+                  <Link
+                    to="/dashboard"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/career-designer"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Career Designer
+                  </Link>
+                  <Link
+                    to="/career-chat"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Career Chat
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="text-sm font-medium hover:underline"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Settings
+                  </Link>
+                  <hr />
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Log out
+                  </Button>
+                </>
+              ) : (
+                <div className="flex flex-col space-y-2">
+                  <Button variant="outline" asChild>
+                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                      Log in
+                    </Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/auth?tab=signup" onClick={() => setIsMenuOpen(false)}>
+                      Sign up
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );

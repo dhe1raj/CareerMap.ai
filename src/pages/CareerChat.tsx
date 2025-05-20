@@ -1,5 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,40 +20,116 @@ const examplePrompts = [
 ];
 
 interface Message {
-  id: number;
+  id: number | string;
   sender: "user" | "ai";
-  text: string;
+  content: string;
   timestamp: Date;
 }
 
 export default function CareerChat() {
+  const { user, profile } = useAuth();
+  const queryClient = useQueryClient();
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Fetch chat history from Supabase
+  const { data: chatHistory } = useQuery({
+    queryKey: ['chatMessages', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+        
+      if (error) {
+        console.error("Error fetching chat messages:", error);
+        return [];
+      }
+      
+      return data.map(message => ({
+        id: message.id,
+        sender: message.is_ai ? 'ai' : 'user',
+        content: message.content,
+        timestamp: new Date(message.created_at)
+      }));
+    },
+    enabled: !!user?.id
+  });
+  
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
+      id: 'welcome',
       sender: "ai",
-      text: "Hello! I'm your Career Assistant. How can I help with your career questions today?",
+      content: "Hello! I'm your Career Assistant. How can I help with your career questions today?",
       timestamp: new Date(),
     },
   ]);
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (chatHistory && chatHistory.length > 0) {
+      setMessages([
+        {
+          id: 'welcome',
+          sender: "ai",
+          content: "Hello! I'm your Career Assistant. How can I help with your career questions today?",
+          timestamp: new Date(),
+        },
+        ...chatHistory
+      ]);
+    }
+  }, [chatHistory]);
+  
+  // Mutation to save messages to Supabase
+  const saveMessageMutation = useMutation({
+    mutationFn: async (message: { content: string, is_ai: boolean }) => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: user.id,
+          content: message.content,
+          is_ai: message.is_ai
+        })
+        .select();
+        
+      if (error) {
+        console.error("Error saving message:", error);
+        return null;
+      }
+      
+      return data[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', user?.id] });
+    }
+  });
 
   const handleSendMessage = (text?: string) => {
     const messageText = text || input;
     
     if (!messageText.trim()) return;
 
-    // Add user message
+    // Add user message to local state
     const userMessage: Message = {
-      id: messages.length + 1,
+      id: Date.now(),
       sender: "user",
-      text: messageText,
+      content: messageText,
       timestamp: new Date(),
     };
     
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    
+    // Save user message to Supabase
+    saveMessageMutation.mutate({
+      content: messageText,
+      is_ai: false
+    });
 
     // Simulate AI response (in a real app, this would call a backend API)
     setTimeout(() => {
@@ -66,15 +145,22 @@ export default function CareerChat() {
         responseText = "That's a great question! To give you the best guidance on this topic, I'd recommend exploring resources like industry blogs, courses on platforms like Coursera or Udemy, and joining professional communities in your field of interest. Would you like more specific recommendations about a particular aspect?";
       }
 
+      // Add AI message to local state
       const aiMessage: Message = {
-        id: messages.length + 2,
+        id: Date.now() + 1,
         sender: "ai",
-        text: responseText,
+        content: responseText,
         timestamp: new Date(),
       };
       
-      setMessages(prevMessages => [...prevMessages, aiMessage]);
+      setMessages((prev) => [...prev, aiMessage]);
       setIsLoading(false);
+      
+      // Save AI message to Supabase
+      saveMessageMutation.mutate({
+        content: responseText,
+        is_ai: true
+      });
     }, 1500);
   };
 
@@ -122,8 +208,8 @@ export default function CareerChat() {
                           </>
                         ) : (
                           <>
-                            <AvatarImage src="https://github.com/shadcn.png" />
-                            <AvatarFallback>JD</AvatarFallback>
+                            <AvatarImage src={profile?.avatar_url || ""} />
+                            <AvatarFallback>{profile?.full_name ? profile.full_name.charAt(0) : "U"}</AvatarFallback>
                           </>
                         )}
                       </Avatar>
@@ -135,7 +221,7 @@ export default function CareerChat() {
                               : "bg-muted"
                           }`}
                         >
-                          <p className="text-sm">{message.text}</p>
+                          <p className="text-sm">{message.content}</p>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           {message.timestamp.toLocaleTimeString([], {

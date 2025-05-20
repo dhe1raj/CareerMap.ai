@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +79,7 @@ export default function CareerDesigner() {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleNext = () => {
     if (currentStep < 5) {
@@ -97,18 +100,46 @@ export default function CareerDesigner() {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to save your career preferences.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // In a real app, we would send the data to a backend for processing
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Update user profile with education preference
+      await supabase
+        .from("profiles")
+        .update({
+          education: formData.education
+        })
+        .eq("id", user.id);
+      
+      // For a real application, you might want to save all preferences
+      // and use them to calculate career matches with an algorithm
+      
       toast({
         title: "Career analysis complete",
         description: "Your personalized career matches are ready!",
       });
+      
       navigate("/career-matches");
-    }, 2000);
+    } catch (error) {
+      console.error("Error saving career preferences:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem saving your preferences.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const steps = [

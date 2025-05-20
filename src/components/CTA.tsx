@@ -1,41 +1,38 @@
 
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CTA() {
+  const { user } = useAuth();
+  
   return (
-    <section className="py-16 md:py-24 hero-gradient">
-      <div className="container px-4 md:px-6 relative z-10">
-        <div className="flex flex-col items-center text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Ready to Start Your Career Journey?
+    <div className="bg-muted/50 py-16 sm:py-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Ready to find your perfect career?
           </h2>
-          <p className="text-xl text-white/90 mb-10 max-w-3xl">
-            Join thousands of professionals who have transformed their careers with our AI-powered guidance.
+          <p className="mt-4 text-lg text-muted-foreground">
+            Get personalized career recommendations and a roadmap to success with our AI-powered tools.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              size="lg" 
-              className="bg-white text-primary hover:bg-white/90"
-              asChild
-            >
-              <Link to="/signup">
-                Get Started For Free
-              </Link>
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white/10"
-              asChild
-            >
-              <Link to="/features">
-                Learn More
-              </Link>
-            </Button>
+          <div className="mt-10 flex items-center justify-center">
+            {user ? (
+              <Button size="lg" asChild>
+                <Link to="/dashboard">
+                  Go to Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <Button size="lg" asChild>
+                <Link to="/auth?tab=signup">
+                  Get Started
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

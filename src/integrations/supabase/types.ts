@@ -9,7 +9,289 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      career_roles: {
+        Row: {
+          avg_salary: number | null
+          created_at: string | null
+          description: string
+          id: string
+          job_demand: string | null
+          title: string
+          work_environment: string | null
+        }
+        Insert: {
+          avg_salary?: number | null
+          created_at?: string | null
+          description: string
+          id?: string
+          job_demand?: string | null
+          title: string
+          work_environment?: string | null
+        }
+        Update: {
+          avg_salary?: number | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          job_demand?: string | null
+          title?: string
+          work_environment?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_ai: boolean
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_ai: boolean
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_ai?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          education: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          education?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          education?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      roadmap_steps: {
+        Row: {
+          category: string
+          completed: boolean | null
+          created_at: string | null
+          description: string
+          id: string
+          resource_url: string | null
+          roadmap_id: string
+          step_number: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          completed?: boolean | null
+          created_at?: string | null
+          description: string
+          id?: string
+          resource_url?: string | null
+          roadmap_id: string
+          step_number: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          completed?: boolean | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          resource_url?: string | null
+          roadmap_id?: string
+          step_number?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_steps_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmaps: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          role_id: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          role_id: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          role_id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmaps_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "career_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmaps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_skills: {
+        Row: {
+          created_at: string | null
+          id: string
+          importance: string
+          role_id: string
+          skill_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          importance: string
+          role_id: string
+          skill_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          importance?: string
+          role_id?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_skills_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "career_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skills: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_skills: {
+        Row: {
+          created_at: string | null
+          id: string
+          proficiency_level: string | null
+          skill_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          proficiency_level?: string | null
+          skill_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          proficiency_level?: string | null
+          skill_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_skills_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

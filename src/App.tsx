@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,7 @@ import About from "./pages/About";
 import Features from "./pages/Features";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import GenZCareerDecider from "./pages/GenZCareerDecider";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +103,14 @@ const App = () => (
                 element={
                   <AuthGuard>
                     <Settings />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/genz-career-decider" 
+                element={
+                  <AuthGuard>
+                    <GenZCareerDecider />
                   </AuthGuard>
                 } 
               />

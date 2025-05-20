@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useGeminiContext } from "@/context/GeminiContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
 
 export default function GeminiApiKeyInput() {
   const { apiKey, modelName, setApiKey, setModelName } = useGeminiContext();
@@ -62,6 +62,13 @@ export default function GeminiApiKeyInput() {
                 Change
               </Button>
             </div>
+            
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                The app comes pre-configured with a default API key. You only need to change it if you want to use your own key.
+              </AlertDescription>
+            </Alert>
           </div>
         ) : (
           <div className="space-y-2">

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -46,7 +47,7 @@ export default function Navbar() {
             <img 
               src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
               alt="CareerForge Logo" 
-              className="h-8" 
+              className="h-10" 
             />
             <span className="text-xl font-bold">CareerForge</span>
           </Link>

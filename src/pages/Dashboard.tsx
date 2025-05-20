@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -167,7 +166,10 @@ export default function Dashboard() {
                   <span className="text-sm font-medium text-white/90">Overall Progress</span>
                   <span className="text-sm text-white/70">{progress.toFixed(0)}%</span>
                 </div>
-                <Progress value={progress} className="h-2 bg-white/20" indicatorClassName="bg-brand-400" />
+                <Progress 
+                  value={progress} 
+                  className="h-2 bg-white/20"
+                />
               </div>
             </CardContent>
           </Card>

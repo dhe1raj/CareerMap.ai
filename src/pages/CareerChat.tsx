@@ -137,18 +137,18 @@ export default function CareerChat() {
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-8rem)]">
         <div className="space-y-2 mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Career Chat</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-white">Career Chat</h1>
+          <p className="text-white/70">
             Chat with our AI career assistant for personalized guidance and advice.
           </p>
         </div>
         
-        <Card className="flex-1 p-4 overflow-hidden flex flex-col">
+        <Card className="flex-1 p-4 overflow-hidden flex flex-col glass-card">
           <div className="flex-1 overflow-y-auto space-y-4 pb-4">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                <h3 className="text-lg font-medium">Welcome to Career Chat</h3>
-                <p className="text-muted-foreground mt-2">
+                <h3 className="text-lg font-medium text-white">Welcome to Career Chat</h3>
+                <p className="text-white/70 mt-2">
                   Ask me anything about career paths, skills to learn, or job market trends.
                 </p>
               </div>
@@ -163,8 +163,8 @@ export default function CareerChat() {
                   <div
                     className={`max-w-[80%] rounded-lg p-3 ${
                       message.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        ? "bg-brand-500 text-white"
+                        : "bg-white/10 text-white border border-white/10"
                     }`}
                   >
                     <div className="whitespace-pre-wrap">
@@ -179,17 +179,17 @@ export default function CareerChat() {
             )}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="max-w-[80%] space-y-2">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-4 w-[150px]" />
+                <div className="max-w-[80%] space-y-2 bg-white/10 p-4 rounded-lg">
+                  <Skeleton className="h-4 w-[250px] bg-white/20" />
+                  <Skeleton className="h-4 w-[200px] bg-white/20" />
+                  <Skeleton className="h-4 w-[150px] bg-white/20" />
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t pt-4 mt-auto">
+          <div className="border-t border-white/10 pt-4 mt-auto">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -202,9 +202,9 @@ export default function CareerChat() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type your message..."
                 disabled={isLoading}
-                className="flex-1"
+                className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50"
               />
-              <Button type="submit" size="icon" disabled={isLoading}>
+              <Button type="submit" size="icon" disabled={isLoading} className="bg-brand-500 hover:bg-brand-600 text-white">
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </Button>

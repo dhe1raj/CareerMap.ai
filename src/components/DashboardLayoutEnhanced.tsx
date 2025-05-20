@@ -16,11 +16,11 @@ export default function DashboardLayoutEnhanced({ children }: DashboardLayoutEnh
   }, [location.pathname]);
   
   return (
-    <div className="min-h-screen flex">
+    <div className="flex min-h-screen w-full bg-gradient-to-b from-cyber-deeper via-brand-900 to-cyber-dark">
       <div className="w-64 flex-shrink-0">
         <DashboardSidebarEnhanced />
       </div>
-      <div className="flex-grow bg-gradient-to-b from-cyber-deeper via-brand-900 to-cyber-dark p-6 overflow-y-auto">
+      <div className="flex-grow p-6 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>

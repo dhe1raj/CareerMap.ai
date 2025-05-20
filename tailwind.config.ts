@@ -63,17 +63,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom theme colors
+				// Enhanced neon purple theme colors
 				brand: {
-					100: "#e5deff",
-					200: "#c6bdff",
-					300: "#a79aff",
-					400: "#9b87f5",
-					500: "#7e69ab",
-					600: "#6e59a5",
-					700: "#5a4982",
-					800: "#3f325c",
-					900: "#1A1F2C"
+					100: "#eee6ff",
+					200: "#d9ccff",
+					300: "#c2adff",
+					400: "#a17bf5", // Primary neon purple
+					500: "#8a65e3", // Vibrant purple
+					600: "#724dc9", // Deep purple
+					700: "#5a3b9f", // Rich purple
+					800: "#3d2875", // Dark purple
+					900: "#20174c"  // Very dark purple/blue
 				}
 			},
 			borderRadius: {
@@ -105,13 +105,27 @@ export default {
 				'slide-in': {
 					from: { transform: 'translateY(10px)', opacity: '0' },
 					to: { transform: 'translateY(0)', opacity: '1' }
+				},
+				'pulse-glow': {
+					'0%, 100%': { 
+						boxShadow: '0 0 10px rgba(161, 123, 245, 0.7), 0 0 20px rgba(155, 135, 245, 0.4)' 
+					},
+					'50%': { 
+						boxShadow: '0 0 15px rgba(161, 123, 245, 0.9), 0 0 25px rgba(155, 135, 245, 0.6)' 
+					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-15px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.4s ease-in-out',
-				'slide-in': 'slide-in 0.5s ease-out'
+				'slide-in': 'slide-in 0.5s ease-out',
+				'pulse-glow': 'pulse-glow 3s infinite',
+				'float': 'float 6s ease-in-out infinite'
 			}
 		}
 	},

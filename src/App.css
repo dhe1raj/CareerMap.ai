@@ -1,8 +1,15 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+body {
+  background: linear-gradient(135deg, #1a1033 0%, #2d1b54 50%, #130b29 100%);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
 }
 
 .logo {
@@ -11,11 +18,13 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #a17bf5);
 }
+
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #a17bf5);
 }
 
 @keyframes logo-spin {
@@ -35,8 +44,48 @@
 
 .card {
   padding: 2em;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .read-the-docs {
-  color: #888;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Glowing Elements */
+.glow-text {
+  text-shadow: 0 0 5px #a17bf5, 0 0 10px #8a65e3;
+  color: white;
+}
+
+.glow-border {
+  box-shadow: 0 0 5px #a17bf5, 0 0 15px #8a65e3;
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 10px #a17bf5, 0 0 20px #8a65e3;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Custom scrollbar for WebKit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(161, 123, 245, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 123, 245, 0.8);
 }

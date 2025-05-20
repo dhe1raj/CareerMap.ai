@@ -11,45 +11,68 @@ export default function Hero() {
     <div className="relative overflow-hidden py-24 sm:py-32">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center">
-          <div className="flex justify-center mb-6">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center mb-8"
+          >
             <div className="relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-300 to-brand-500 rounded-full blur opacity-75"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-brand-300 to-brand-500 rounded-full blur-md opacity-75 animate-pulse-glow"></div>
               <img 
                 src="/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png" 
                 alt="CareerForge Logo" 
-                className="relative h-20 z-10" 
+                className="relative h-24 z-10" 
               />
             </div>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-brand-200 to-brand-400 drop-shadow-[0_0_25px_rgba(155,135,245,0.3)]">
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-brand-200 via-brand-300 to-brand-400 drop-shadow-[0_0_30px_rgba(161,123,245,0.6)] neon-purple-text"
+          >
             Design Your Perfect Career Path
-          </h1>
-          <p className="mt-6 text-lg leading-8 text-white/80 max-w-2xl mx-auto backdrop-blur-sm rounded-lg p-4 bg-white/5 border border-white/10">
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="mt-6 text-lg leading-8 text-white/80 max-w-2xl mx-auto futuristic-glass p-5 rounded-xl"
+          >
             Discover career paths matched to your skills and preferences.
             Get personalized roadmaps, AI guidance, and resources to achieve your career goals.
-          </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="mt-10 flex items-center justify-center gap-x-6"
+          >
             {user ? (
-              <Button size="lg" asChild className="glass-button bg-brand-500 hover:bg-brand-600 text-white shadow-[0_0_15px_rgba(155,135,245,0.5)]">
+              <Button size="lg" asChild className="neon-button rounded-xl text-base px-8 py-6">
                 <Link to="/dashboard">
                   Go to Dashboard
                 </Link>
               </Button>
             ) : (
               <>
-                <Button size="lg" asChild className="glass-button bg-brand-500 hover:bg-brand-600 text-white shadow-[0_0_15px_rgba(155,135,245,0.5)]">
+                <Button size="lg" asChild className="neon-button rounded-xl text-base px-8 py-6">
                   <Link to="/auth?tab=signup">
                     Get Started
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" asChild className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 text-white">
+                <Button variant="outline" size="lg" asChild className="bg-white/5 backdrop-blur-sm border-white/20 hover:bg-white/10 text-white rounded-xl text-base px-8 py-6">
                   <Link to="/auth">
                     Log in
                   </Link>
                 </Button>
               </>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
       
@@ -65,7 +88,7 @@ export default function Hero() {
         >
           <path
             fill="url(#gradient-purple)"
-            fillOpacity=".25"
+            fillOpacity=".15"
             d="M235.233 402.609c-127.052 0-207.734-100.457-207.734-293.611 0-197.355 107.444-222.542 193.545-222.542 96.42 0 158.087 54.598 178.369 148.98l125.924-19.21c-12.558-138.283-158.849-253.78-303.41-253.78C99.703-237.554 0-134.812 0 115.412 0 379.638 113.49 539.088 348.018 539.088c139.996 0 254.995-80.482 308.493-227.573l-125.947-27.342c-39.7 98.304-101.345 118.436-295.331 118.436Z"
           />
           <defs>
@@ -77,11 +100,27 @@ export default function Hero() {
               y2="100%"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stopColor="#9b87f5" />
-              <stop offset="1" stopColor="#6e59a5" />
+              <stop stopColor="#a17bf5" />
+              <stop offset="1" stopColor="#724dc9" />
             </linearGradient>
           </defs>
         </svg>
+      </div>
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 -z-5">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div 
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-brand-400/70"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              opacity: Math.random() * 0.5 + 0.3,
+              animation: `float ${Math.random() * 3 + 3}s ease-in-out infinite ${Math.random() * 2}s`
+            }}
+          />
+        ))}
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
 import { ReactNode, useEffect } from "react";
 import DashboardSidebarEnhanced from "./DashboardSidebarEnhanced";
 import { Toaster } from "./ui/toaster";
-import { toast } from "@/hooks/use-toast";
 import { useLocation } from "react-router-dom";
 
 interface DashboardLayoutEnhancedProps {

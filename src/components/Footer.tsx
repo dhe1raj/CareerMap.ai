@@ -1,0 +1,95 @@
+
+import { Link } from "react-router-dom";
+
+export default function Footer() {
+  return (
+    <footer className="border-t bg-background">
+      <div className="container py-10 md:py-16">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-4 text-gradient">CareerPath</h3>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              AI-powered career planning and roadmap generator for your professional journey.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-medium mb-4">Product</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link to="/features" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/roadmap" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Roadmap
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-medium mb-4">Company</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link to="/careers" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Careers
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-medium mb-4">Legal</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookies" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Cookies
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-10 pt-8 border-t flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} CareerPath. All rights reserved.
+          </p>
+          <div className="flex space-x-6 mt-4 md:mt-0">
+            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              Twitter
+            </a>
+            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              LinkedIn
+            </a>
+            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

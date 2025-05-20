@@ -20,8 +20,8 @@ export default function Hero() {
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-brand-300 to-brand-500 rounded-full blur-md opacity-75 animate-pulse-glow"></div>
               <img 
-                src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
-                alt="CareerForge Logo" 
+                src="/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png" 
+                alt="CareerMap Logo" 
                 className="relative h-72 z-10 animate-subtle-float" 
               />
             </div>

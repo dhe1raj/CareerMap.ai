@@ -1,4 +1,6 @@
 
+import { useToast } from "@/hooks/use-toast";
+
 interface GeminiResponse {
   candidates?: Array<{
     content: {

@@ -2,74 +2,198 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { ArrowRight, Briefcase, Clock, BookOpen, DollarSign, Star, BarChart3, Smile, PieChart } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useGeminiCareer } from "@/hooks/use-gemini-career";
+import { Briefcase, BookOpen, ArrowRight } from "lucide-react";
+import "../styles/glassmorphism.css";
 
-interface CareerStep {
-  title: string;
-  description: string;
-  items: string[];
-  timeframe: string;
-}
-
-interface CareerRoadmap {
-  title: string;
-  overview: string;
-  salary: {
-    entry: string;
-    mid: string;
-    senior: string;
-  };
-  workLifeBalance: {
-    stress: string;
-    workHours: string;
-    flexibility: string;
-  };
-  growthPotential: string;
-  steps: CareerStep[];
-  recommendedCompanies: string[];
-  jobPlatforms: string[];
+interface CareerMatch {
+  id: string;
+  role: string;
+  short_desc: string;
+  icon: string;
+  match_pct: number;
+  bullets: string[];
+  created_at: string;
 }
 
 export default function CareerMatches() {
-  const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
+  const [matches, setMatches] = useState<CareerMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const { isProcessing, generateSuggestions } = useGeminiCareer();
 
   useEffect(() => {
-    // Fetch the roadmap data from localStorage
-    const roadmapData = localStorage.getItem("careerRoadmap");
-    if (roadmapData) {
+    const fetchMatches = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
       try {
-        const parsedData = JSON.parse(roadmapData);
-        setRoadmap(parsedData);
+        // Check if user already has matches
+        const { data: userMatches, error: matchesError } = await supabase
+          .from('user_matches')
+          .select(`
+            match_id,
+            matches (*)
+          `)
+          .eq('user_id', user.id);
+        
+        if (matchesError) throw matchesError;
+        
+        if (userMatches && userMatches.length > 0) {
+          const formattedMatches = userMatches.map(item => item.matches);
+          setMatches(formattedMatches);
+        } else {
+          // Need to generate matches with AI
+          await generateMatchesWithAI();
+        }
       } catch (error) {
-        console.error("Error parsing roadmap data:", error);
+        console.error("Error fetching career matches:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load career matches. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
-  }, []);
-
-  const getStressLevelColor = (stressLevel: string) => {
-    switch (stressLevel.toLowerCase()) {
-      case "low": return "bg-green-500";
-      case "medium": return "bg-yellow-500";
-      case "high": return "bg-red-500";
-      default: return "bg-blue-500";
+    };
+    
+    fetchMatches();
+  }, [user, toast]);
+  
+  // Generate matches using AI
+  const generateMatchesWithAI = async () => {
+    if (!user) return;
+    
+    try {
+      // Get user profile data
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError) throw profileError;
+      
+      // Mock data for demonstration (replace with actual AI call)
+      const mockMatches = [
+        {
+          id: "1",
+          role: "Software Engineer",
+          short_desc: "Develop applications and systems using various programming languages",
+          icon: "code",
+          match_pct: 95,
+          bullets: ["Strong coding skills", "Problem-solving aptitude", "Avg salary: $120K"],
+          created_at: new Date().toISOString()
+        },
+        {
+          id: "2",
+          role: "Data Scientist",
+          short_desc: "Extract insights from large datasets and create predictive models",
+          icon: "database",
+          match_pct: 92,
+          bullets: ["Statistical analysis", "Machine learning", "Avg salary: $130K"],
+          created_at: new Date().toISOString()
+        },
+        {
+          id: "3",
+          role: "UX Designer",
+          short_desc: "Design user interfaces and experiences for digital products",
+          icon: "layout",
+          match_pct: 88,
+          bullets: ["Creative thinking", "User empathy", "Avg salary: $110K"],
+          created_at: new Date().toISOString()
+        },
+        {
+          id: "4",
+          role: "Product Manager",
+          short_desc: "Lead development of products from conception to launch",
+          icon: "briefcase",
+          match_pct: 85,
+          bullets: ["Strategic planning", "Team leadership", "Avg salary: $140K"],
+          created_at: new Date().toISOString()
+        },
+        {
+          id: "5",
+          role: "DevOps Engineer",
+          short_desc: "Manage infrastructure and deployment pipelines",
+          icon: "server",
+          match_pct: 82,
+          bullets: ["CI/CD experience", "Cloud platforms", "Avg salary: $125K"],
+          created_at: new Date().toISOString()
+        },
+        {
+          id: "6",
+          role: "AI Engineer",
+          short_desc: "Build AI models and systems that can perform tasks requiring human intelligence",
+          icon: "cpu",
+          match_pct: 79,
+          bullets: ["Deep learning", "Neural networks", "Avg salary: $135K"],
+          created_at: new Date().toISOString()
+        }
+      ];
+      
+      setMatches(mockMatches);
+      
+      // In a real implementation, we would:
+      // 1. Call Gemini API with user profile data
+      // 2. Insert results into the matches table
+      // 3. Link matches to user in user_matches table
+    } catch (error) {
+      console.error("Error generating AI matches:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate career matches. Please try again.",
+        variant: "destructive"
+      });
     }
   };
-
-  const getStressPercentage = (stressLevel: string) => {
-    switch (stressLevel.toLowerCase()) {
-      case "low": return 30;
-      case "medium": return 60;
-      case "high": return 90;
-      default: return 50;
+  
+  // Add role to user's saved paths
+  const addToMyPaths = async (matchId: string) => {
+    if (!user) {
+      toast({
+        title: "Not logged in",
+        description: "Please log in to save career paths",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Insert into user_matches table
+      const { error } = await supabase
+        .from('user_matches')
+        .upsert({
+          user_id: user.id,
+          match_id: matchId,
+          saved_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success!",
+        description: "Career path added to your saved paths",
+      });
+      
+      // Navigate to Career Designer with this role pre-selected
+      navigate(`/career-designer?role=${matchId}`);
+    } catch (error) {
+      console.error("Error saving career path:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save career path. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -79,35 +203,8 @@ export default function CareerMatches() {
         <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-lg">Analyzing your perfect career match...</p>
+            <p className="mt-4 text-lg">Finding your perfect career matches...</p>
           </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!roadmap) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-4xl mx-auto">
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Career Match Not Found</CardTitle>
-              <CardDescription>
-                We couldn't find a career roadmap for you. Let's create one!
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>
-                It looks like you haven't completed the career design process yet, or there was an error analyzing your results.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={() => navigate("/career-designer")}>
-                Go to Career Designer
-              </Button>
-            </CardFooter>
-          </Card>
         </div>
       </DashboardLayout>
     );
@@ -115,204 +212,52 @@ export default function CareerMatches() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">{roadmap.title}</h1>
-          <p className="text-muted-foreground mt-2">{roadmap.overview}</p>
-        </div>
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-2">Matched Roles for You</h1>
+        <p className="text-white/70 mb-8">These careers align with your skills, interests, and goals.</p>
 
-        <Tabs defaultValue="roadmap" className="mb-8">
-          <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
-            <TabsTrigger value="insights">Career Insights</TabsTrigger>
-            <TabsTrigger value="companies">Companies</TabsTrigger>
-            <TabsTrigger value="platforms">Job Platforms</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="roadmap" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="mb-6">
-                <CardHeader className="bg-muted/50">
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-500" /> 
-                    Career Path Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground">{roadmap.overview}</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="mb-6">
-                <CardHeader className="bg-muted/50">
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-500" /> 
-                    Salary Expectations
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">Entry Level</span>
-                        <span className="text-sm font-bold text-green-500">{roadmap.salary.entry}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">Mid Level</span>
-                        <span className="text-sm font-bold text-green-500">{roadmap.salary.mid}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">Senior Level</span>
-                        <span className="text-sm font-bold text-green-500">{roadmap.salary.senior}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="space-y-6 mt-6">
-              {roadmap.steps.map((step, index) => (
-                <Card key={index} className={index === 0 ? "border-l-4 border-l-primary" : ""}>
-                  <CardHeader className="bg-muted/30">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <span className="flex items-center justify-center bg-primary text-white rounded-full h-6 w-6 text-sm">
-                          {index + 1}
-                        </span>
-                        {step.title}
-                      </CardTitle>
-                      <Badge variant="outline" className="ml-2">
-                        <Clock className="mr-1 h-3 w-3" /> {step.timeframe}
-                      </Badge>
-                    </div>
-                    <CardDescription>{step.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <ul className="list-disc list-inside space-y-1">
-                      {step.items.map((item, i) => (
-                        <li key={i} className="text-muted-foreground">{item}</li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="insights" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="bg-muted/50">
-                  <CardTitle className="flex items-center gap-2">
-                    <Smile className="h-5 w-5 text-blue-500" /> 
-                    Work-Life Balance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">Stress Level</span>
-                        <span className="text-sm font-medium">{roadmap.workLifeBalance.stress}</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2.5">
-                        <div 
-                          className={`h-2.5 rounded-full ${getStressLevelColor(roadmap.workLifeBalance.stress)}`} 
-                          style={{ width: `${getStressPercentage(roadmap.workLifeBalance.stress)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium">Work Hours</span>
-                        <span className="text-sm font-medium">{roadmap.workLifeBalance.workHours}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <span className="text-sm font-medium">Flexibility</span>
-                      <p className="mt-1 text-muted-foreground">{roadmap.workLifeBalance.flexibility}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="bg-muted/50">
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-purple-500" /> 
-                    Growth Potential
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <p className="text-muted-foreground">{roadmap.growthPotential}</p>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="companies">
-            <Card>
-              <CardHeader className="bg-muted/50">
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-indigo-500" /> 
-                  Recommended Companies
-                </CardTitle>
-                <CardDescription>Companies that would be a good match for this career path</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {roadmap.recommendedCompanies.map((company, index) => (
-                    <div 
-                      key={index} 
-                      className="p-4 border rounded-lg bg-card hover:bg-accent transition-colors duration-200"
-                    >
-                      <p className="font-medium">{company}</p>
-                    </div>
-                  ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {matches.map((match) => (
+            <Card key={match.id} className="card-hover glass-morphism">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <Badge variant="secondary" className="bg-primary/20 text-white">
+                    {match.match_pct}% match
+                  </Badge>
+                  <Briefcase className="h-6 w-6 text-purple-400" />
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="platforms">
-            <Card>
-              <CardHeader className="bg-muted/50">
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-teal-500" /> 
-                  Job Platforms
-                </CardTitle>
-                <CardDescription>Where to find jobs in this career path</CardDescription>
+                <CardTitle className="text-xl text-gradient-primary mt-2">{match.role}</CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {roadmap.jobPlatforms.map((platform, index) => (
-                    <div 
-                      key={index} 
-                      className="p-4 border rounded-lg bg-card hover:bg-accent transition-colors duration-200"
-                    >
-                      <p className="font-medium">{platform}</p>
-                    </div>
+              <CardContent>
+                <p className="text-white/80 mb-4">{match.short_desc}</p>
+                <ul className="space-y-1 mb-4">
+                  {match.bullets.map((bullet, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <span className="text-purple-400">•</span>
+                      <span className="text-white/70">{bullet}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </CardContent>
+              <CardFooter className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => navigate(`/role-details/${match.id}`)}
+                >
+                  Explore Role
+                </Button>
+                <Button 
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => addToMyPaths(match.id)}
+                >
+                  Add to My Paths
+                </Button>
+              </CardFooter>
             </Card>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="flex justify-between mt-8">
-          <Button variant="outline" onClick={() => navigate("/career-designer")}>
-            Back to Career Designer
-          </Button>
-          <Button onClick={() => navigate("/roadmap")}>
-            View Detailed Roadmap <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          ))}
         </div>
       </div>
     </DashboardLayout>

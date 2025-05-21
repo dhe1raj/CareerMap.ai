@@ -68,12 +68,13 @@ function AppContent() {
       <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/career-designer" element={user ? <CareerDesigner /> : <Navigate to="/login" />} />
       <Route path="/roadmap" element={user ? <Roadmap /> : <Navigate to="/login" />} />
+      <Route path="/roadmap/:roadmapId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
       <Route path="/career-matches" element={user ? <CareerMatches /> : <Navigate to="/login" />} />
       <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
       <Route path="/career-progress" element={user ? <CareerProgressPage /> : <Navigate to="/login" />} />
       <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
-      <Route path="/roadmap/:roadmapId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
+      <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

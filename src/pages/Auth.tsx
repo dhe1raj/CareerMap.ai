@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,12 +27,13 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Set active tab based on URL query param
+  // Set active tab based on URL path
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const tab = params.get("tab");
-    if (tab === "login" || tab === "signup") {
-      setActiveTab(tab);
+    const path = location.pathname;
+    if (path === "/signin") {
+      setActiveTab("login");
+    } else if (path === "/signup") {
+      setActiveTab("signup");
     }
   }, [location]);
 

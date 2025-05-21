@@ -3,8 +3,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from "./components/ui/theme-provider";
 import Home from './pages/index';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import AuthGuard from './components/AuthGuard';
 import { AuthProvider } from './context/AuthContext';
@@ -40,8 +39,8 @@ function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/signin" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/signin" element={<Auth />} />
+                  <Route path="/signup" element={<Auth />} />
                   
                   {/* Protected routes */}
                   <Route element={<AuthGuard />}>

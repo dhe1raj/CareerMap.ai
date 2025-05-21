@@ -21,6 +21,7 @@ import About from './pages/About';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Features from './pages/Features';
+import Founder from './pages/Founder';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import setupRoadmapTables from "./utils/supabase-setup";
@@ -74,6 +75,7 @@ function AppContent() {
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/features" element={<Features />} />
+      <Route path="/founder" element={<Founder />} />
       
       {/* Authentication routes */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />

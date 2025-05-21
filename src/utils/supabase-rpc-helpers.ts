@@ -118,16 +118,20 @@ export const supabaseRpc = {
           }
         } else if (Array.isArray(roadmap.sections)) {
           // If it's already an array, map it to ensure type safety
-          parsedSections = (roadmap.sections as Json[]).map(section => {
+          parsedSections = (roadmap.sections as unknown[]).map(section => {
             // Safely convert the Json type to RoadmapSection
             if (typeof section === 'object' && section !== null) {
+              const sectionObj = section as Record<string, unknown>;
               return {
-                title: String(section.title || ''),
-                items: Array.isArray(section.items) 
-                  ? section.items.map(item => ({
-                      id: String(item.id || ''),
-                      label: String(item.label || '')
-                    }))
+                title: String(sectionObj.title || ''),
+                items: Array.isArray(sectionObj.items) 
+                  ? sectionObj.items.map(item => {
+                      const itemObj = item as Record<string, unknown>;
+                      return {
+                        id: String(itemObj.id || ''),
+                        label: String(itemObj.label || '')
+                      };
+                    })
                   : []
               };
             }
@@ -135,18 +139,19 @@ export const supabaseRpc = {
           });
         } else if (typeof roadmap.sections === 'object' && roadmap.sections !== null) {
           // If it's some other object, try to convert it
-          const section = roadmap.sections as unknown as Json;
-          if (typeof section === 'object' && section !== null) {
-            parsedSections = [{
-              title: String(section.title || ''),
-              items: Array.isArray(section.items) 
-                ? section.items.map(item => ({
-                    id: String(item.id || ''),
-                    label: String(item.label || '')
-                  }))
-                : []
-            }];
-          }
+          const section = roadmap.sections as Record<string, unknown>;
+          parsedSections = [{
+            title: String(section.title || ''),
+            items: Array.isArray(section.items) 
+              ? section.items.map(item => {
+                  const itemObj = item as Record<string, unknown>;
+                  return {
+                    id: String(itemObj.id || ''),
+                    label: String(itemObj.label || '')
+                  };
+                })
+              : []
+          }];
         }
         
         // Count items from all sections

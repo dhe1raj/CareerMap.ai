@@ -10,6 +10,30 @@ export interface GeminiRoadmapStep {
   estTime: string;
 }
 
+export interface GeminiRoadmapResource {
+  label: string;
+  url?: string;
+}
+
+export interface GeminiRoadmapTimeline {
+  step: string;
+}
+
+export interface GeminiRoadmapSkill {
+  label: string;
+}
+
+export interface GeminiRoadmapTool {
+  label: string;
+}
+
+export interface GeminiRoadmapResponse {
+  resources: GeminiRoadmapResource[];
+  timeline: GeminiRoadmapTimeline[];
+  skills: GeminiRoadmapSkill[];
+  tools: GeminiRoadmapTool[];
+}
+
 export function useGeminiRoadmap() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -51,7 +75,13 @@ ${JSON.stringify(baseSteps, null, 2)}
                 { text: prompt }
               ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.4,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 2048,
+          }
         })
       });
       
@@ -99,8 +129,82 @@ ${JSON.stringify(baseSteps, null, 2)}
     }
   };
   
+  const generateStructuredRoadmap = async (
+    apiKey: string,
+    prompt: string
+  ): Promise<GeminiRoadmapResponse | null> => {
+    setIsLoading(true);
+    
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 2048,
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.candidates || 
+          !data.candidates[0] || 
+          !data.candidates[0].content || 
+          !data.candidates[0].content.parts || 
+          !data.candidates[0].content.parts[0].text) {
+        throw new Error("Invalid response format from Gemini API");
+      }
+      
+      const responseText = data.candidates[0].content.parts[0].text;
+      
+      try {
+        // Find JSON object in response
+        const match = responseText.match(/\{[\s\S]*\}/s);
+        if (match) {
+          const jsonStr = match[0];
+          const result = JSON.parse(jsonStr) as GeminiRoadmapResponse;
+          return result;
+        } else {
+          throw new Error("Could not find JSON object in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing structured roadmap response:", parseError);
+        throw new Error("Failed to parse generated roadmap");
+      }
+    } catch (error) {
+      console.error("Error generating structured roadmap:", error);
+      toast({
+        title: "Roadmap Generation Failed",
+        description: "Could not generate your roadmap. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return {
     personalizeRoadmap,
+    generateStructuredRoadmap,
     isLoading
   };
 }

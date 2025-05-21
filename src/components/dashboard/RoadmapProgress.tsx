@@ -22,6 +22,10 @@ export function RoadmapProgress() {
     
     const newCompleted = !userData.userRoadmap.steps[index].completed;
     saveField(`userRoadmap.steps.${index}`, { completed: newCompleted });
+    
+    if (newCompleted) {
+      toast.success("Progress updated! Keep going!");
+    }
   };
   
   const handleExportPDF = () => {
@@ -65,6 +69,7 @@ export function RoadmapProgress() {
   
   const handleResetRoadmap = () => {
     saveField("userRoadmap.reset", true);
+    toast.success("Roadmap progress has been reset");
   };
   
   const openWizard = () => {

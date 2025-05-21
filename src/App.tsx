@@ -14,6 +14,7 @@ import Signup from "./pages/Signup";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CareerDesigner from "./pages/CareerDesigner";
+import CustomCareerBuilder from "./pages/CustomCareerBuilder";
 import CareerMatches from "./pages/CareerMatches";
 import RoleDetails from "./pages/RoleDetails";
 import Roadmap from "./pages/Roadmap";
@@ -62,6 +63,14 @@ const App = () => (
                 element={
                   <AuthGuard>
                     <CareerDesigner />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/custom-career-builder" 
+                element={
+                  <AuthGuard>
+                    <CustomCareerBuilder />
                   </AuthGuard>
                 } 
               />

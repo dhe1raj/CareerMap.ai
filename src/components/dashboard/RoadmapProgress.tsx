@@ -8,12 +8,14 @@ import { useUserData } from "@/hooks/use-user-data";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import ProfileWizard from "@/components/ProfileWizard";
+import CustomCareerBuilder from "@/components/CustomCareerBuilder";
 import { RoadmapTemplate } from "@/data/roadmapTemplates";
-import { Check, FileDown, RefreshCcw, Clock } from "lucide-react";
+import { Check, FileDown, RefreshCcw, Clock, Sparkles } from "lucide-react";
 
 export function RoadmapProgress() {
   const { userData, saveField } = useUserData();
   const [wizardOpen, setWizardOpen] = React.useState(false);
+  const [customCareerBuilderOpen, setCustomCareerBuilderOpen] = React.useState(false);
   
   const handleStepToggle = (index: number) => {
     if (!userData.userRoadmap) return;
@@ -69,6 +71,10 @@ export function RoadmapProgress() {
     setWizardOpen(true);
   };
   
+  const openCustomCareerBuilder = () => {
+    setCustomCareerBuilderOpen(true);
+  };
+  
   if (!userData.userRoadmap) {
     return (
       <Card className="glass-morphism">
@@ -81,10 +87,22 @@ export function RoadmapProgress() {
             <p>You haven't set up your career roadmap yet.</p>
             <p className="text-muted-foreground">Create a personalized step-by-step plan to achieve your career goals.</p>
           </div>
-          <Button onClick={openWizard} className="glowing-purple">
-            Design My Career Path
-          </Button>
+          <div className="space-y-4">
+            <Button onClick={openWizard} className="glowing-purple w-full">
+              Design My Career Path
+            </Button>
+            <Button 
+              onClick={openCustomCareerBuilder} 
+              variant="outline" 
+              className="w-full border border-purple-400/30 bg-purple-500/10 hover:bg-purple-500/20"
+            >
+              <Sparkles className="mr-2 h-4 w-4 text-purple-300" />
+              Design Your Own Career Role (AI)
+            </Button>
+          </div>
         </CardContent>
+        <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
+        <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
       </Card>
     );
   }
@@ -137,14 +155,25 @@ export function RoadmapProgress() {
             <FileDown className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
-          <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            Reset Progress
-          </Button>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openCustomCareerBuilder}
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-purple-300" />
+              Create Custom
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Reset Progress
+            </Button>
+          </div>
         </CardFooter>
       </Card>
       
       <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
+      <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
     </>
   );
 }

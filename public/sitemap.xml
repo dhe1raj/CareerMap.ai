@@ -1,12 +1,26 @@
 
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
+            http://www.google.com/schemas/sitemap-image/1.1
+            http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
+  <!-- Home Page -->
   <url>
     <loc>https://careermapai.in/</loc>
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://careermapai.in/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png</image:loc>
+      <image:title>CareerMapAI Logo</image:title>
+      <image:caption>India's #1 AI-Powered Career Roadmap Generator</image:caption>
+    </image:image>
   </url>
+  
+  <!-- Main Pages -->
   <url>
     <loc>https://careermapai.in/about</loc>
     <lastmod>2025-05-21</lastmod>
@@ -20,6 +34,20 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://careermapai.in/privacy</loc>
+    <lastmod>2025-05-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://careermapai.in/terms</loc>
+    <lastmod>2025-05-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <!-- User Dashboard & Tools (require login, but still indexed) -->
+  <url>
     <loc>https://careermapai.in/dashboard</loc>
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
@@ -27,6 +55,17 @@
   </url>
   <url>
     <loc>https://careermapai.in/career-designer</loc>
+    <lastmod>2025-05-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://careermapai.in/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png</image:loc>
+      <image:title>Career Designer Tool</image:title>
+      <image:caption>Design your perfect career path with AI precision</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://careermapai.in/genz-career-decider</loc>
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -48,6 +87,11 @@
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://careermapai.in/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png</image:loc>
+      <image:title>Resume Analysis Tool</image:title>
+      <image:caption>AI-powered resume analysis to optimize your career documents</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://careermapai.in/career-resources</loc>
@@ -62,21 +106,9 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://careermapai.in/settings</loc>
+    <loc>https://careermapai.in/career-progress</loc>
     <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/privacy</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/terms</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.5</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

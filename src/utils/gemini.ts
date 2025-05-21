@@ -1,106 +1,105 @@
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { RoadmapStep } from '@/data/roadmapTemplates';
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
-
+// Additional types for roadmap personalization
 export interface GeminiRoadmapStep {
   order: number;
   label: string;
   estTime: string;
 }
 
-export interface GeminiRoadmapResponse {
-  steps: GeminiRoadmapStep[];
-}
-
-export const useGeminiRoadmap = () => {
+export function useGeminiRoadmap() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
-  const personalizeRoadmap = useCallback(async (
+  const personalizeRoadmap = async (
     apiKey: string,
-    profile: any,
+    userProfile: any,
     templateId: string,
-    templateSteps: any[]
+    baseSteps: RoadmapStep[]
   ): Promise<GeminiRoadmapStep[] | null> => {
     setIsLoading(true);
-    setError(null);
     
     try {
-      const prompt = `
-        You are a career advisor AI. I need you to personalize a career roadmap for a user based on their profile.
-        
-        USER PROFILE:
-        ${JSON.stringify(profile, null, 2)}
-        
-        TEMPLATE ROADMAP ID: ${templateId}
-        
-        TEMPLATE STEPS:
-        ${JSON.stringify(templateSteps, null, 2)}
-        
-        Please analyze the user profile and the template roadmap, then:
-        1. Add up to 3 additional personalized steps that would benefit this specific user
-        2. Optionally reorder steps if it makes sense for this user's background and goals
-        
-        RESPOND ONLY with a JSON array of steps with the following format:
-        [
-          {
-            "order": 1,
-            "label": "Step description",
-            "estTime": "Time estimate (e.g. '2 weeks')"
-          }
-        ]
-      `;
-      
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      const prompt = `You are an AI career coach. Based on this user's profile:
+${JSON.stringify(userProfile, null, 2)}
+
+I want you to personalize this roadmap template for ${templateId}:
+${JSON.stringify(baseSteps, null, 2)}
+
+1. Review the existing steps
+2. Add up to 3 additional steps that would be specifically valuable for this user based on their profile
+3. Reorder steps if necessary for better learning progression
+4. Return ONLY a JSON array of steps in this exact format (no explanation, just the array):
+[
+  { "order": 1, "label": "Step description here", "estTime": "X weeks" },
+  ...more steps...
+]`;
+
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ]
         })
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to personalize roadmap');
+        throw new Error(`API request failed with status ${response.status}`);
       }
       
       const data = await response.json();
-      const generatedText = data.candidates[0]?.content?.parts[0]?.text;
       
-      if (!generatedText) {
-        throw new Error('No response from AI');
+      if (!data.candidates || 
+          !data.candidates[0] || 
+          !data.candidates[0].content || 
+          !data.candidates[0].content.parts || 
+          !data.candidates[0].content.parts[0].text) {
+        throw new Error("Invalid response format from Gemini API");
       }
       
-      // Extract JSON from the response
+      const responseText = data.candidates[0].content.parts[0].text;
+      
+      // Try to parse the JSON response
       try {
-        const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
-        if (!jsonMatch) throw new Error('No JSON found in response');
-        
-        const parsedSteps = JSON.parse(jsonMatch[0]) as GeminiRoadmapStep[];
-        return parsedSteps;
-      } catch (jsonError) {
-        console.error('Error parsing AI response:', jsonError);
-        throw new Error('Failed to parse AI response');
+        // Find JSON array in the response
+        const match = responseText.match(/\[\s*\{.*\}\s*\]/s);
+        if (match) {
+          const jsonStr = match[0];
+          const steps = JSON.parse(jsonStr) as GeminiRoadmapStep[];
+          return steps;
+        } else {
+          throw new Error("Could not find JSON array in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing Gemini response:", parseError);
+        throw new Error("Failed to parse personalized roadmap");
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      toast.error(`AI Personalization failed: ${errorMessage}`);
+    } catch (error) {
+      console.error("Error personalizing roadmap:", error);
+      toast({
+        title: "Personalization Failed",
+        description: "Could not personalize your roadmap. Using standard template instead.",
+        variant: "destructive"
+      });
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
   
   return {
     personalizeRoadmap,
-    isLoading,
-    error
+    isLoading
   };
-};
+}

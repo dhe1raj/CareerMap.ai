@@ -1,4 +1,4 @@
-// Fixed imports and component props
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
@@ -7,8 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
-import CareerChat from "@/components/dashboard/CareerChat";
-import ResumeAnalysis from "@/components/dashboard/ResumeAnalysis";
+import { CareerChat } from "@/components/dashboard/CareerChat";
+import { ResumeAnalysis } from "@/components/dashboard/ResumeAnalysis";
 import { useUserData } from "@/hooks/use-user-data";
 import { RoadmapProgress } from "@/components/dashboard/RoadmapProgress";
 import SuggestionChip from "@/components/dashboard/SuggestionChip";

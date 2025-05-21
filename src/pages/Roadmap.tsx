@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
+import SEOMetadata from '@/components/SEOMetadata';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -28,17 +29,24 @@ export default function Roadmap() {
       if (!roadmapId) return;
       
       setIsLoading(true);
-      const result = await getRoadmap(roadmapId);
-      
-      // Fix for "expression of type 'void' cannot be tested for truthiness"
-      if (!result || !result.roadmap) {
-        navigate('/career-designer');
-        return;
+      try {
+        const result = await getRoadmap(roadmapId);
+        
+        // Fixed: Handle the case when result might be undefined
+        if (!result || !result.roadmap) {
+          navigate('/career-designer');
+          return;
+        }
+        
+        setRoadmapData(result.roadmap);
+        setProgressData(result.progress);
+      } catch (error) {
+        console.error("Error fetching roadmap:", error);
+        toast.error("Failed to load roadmap");
+        navigate('/career-progress');
+      } finally {
+        setIsLoading(false);
       }
-      
-      setRoadmapData(result.roadmap);
-      setProgressData(result.progress);
-      setIsLoading(false);
     }
     
     fetchRoadmap();
@@ -49,9 +57,11 @@ export default function Roadmap() {
     
     const updatedProgress = await updateItemStatus(roadmapId, itemId, completed);
     if (updatedProgress) {
+      // Fixed: Properly clone and update the progressData object
       setProgressData({
         ...progressData,
-        ...updatedProgress
+        progress_pct: updatedProgress.progress_pct,
+        completed_items: updatedProgress.completed_items
       });
       
       if (completed) {

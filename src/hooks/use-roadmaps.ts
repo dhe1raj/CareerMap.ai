@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,22 +70,21 @@ export function useRoadmaps() {
         throw roadmapsError;
       }
 
-      // Transform database results to add missing properties
+      // Transform database results to proper Roadmap type
       const transformedRoadmaps: Roadmap[] = (roadmapsData || []).map((roadmap) => {
-        // Create default values for missing fields
         return {
           id: roadmap.id,
           title: roadmap.title,
-          type: 'role', // Default value
-          sections: [], // Default empty array
+          type: roadmap.type || 'role', // Default value
+          sections: roadmap.sections || [], // Default empty array
           created_at: roadmap.created_at,
           user_id: roadmap.user_id,
-          is_public: false, // Default value
+          is_public: roadmap.is_public || false, // Default value
           description: roadmap.description
         };
       });
 
-      // Fetch progress data using RPC helper
+      // Fetch progress data using our helper
       let progressData: SupabaseRoadmapProgress[] = [];
       try {
         progressData = await supabaseRpc.getUserRoadmapProgress(user.id);
@@ -135,11 +135,11 @@ export function useRoadmaps() {
       const roadmap: Roadmap = {
         id: data.id,
         title: data.title,
-        type: 'role', // Default value
-        sections: [], // Default empty array
+        type: data.type || 'role', // Default value
+        sections: data.sections || [], // Default empty array
         created_at: data.created_at,
         user_id: data.user_id,
-        is_public: false, // Default value
+        is_public: data.is_public || false, // Default value
         description: data.description
       };
 
@@ -147,7 +147,7 @@ export function useRoadmaps() {
       let progress: RoadmapProgress | null = null;
       if (user) {
         try {
-          // Use RPC helper
+          // Use our helper
           const progressData = await supabaseRpc.getRoadmapProgress(roadmapId, user.id);
           
           if (progressData) {
@@ -241,6 +241,7 @@ export function useRoadmaps() {
           user_id: roadmapWithIds.user_id,
           description: roadmapWithIds.description,
           role_id: null, // Use null when not provided
+          sections: roadmapWithIds.sections, // Include sections in the insert
         })
         .select()
         .single();
@@ -261,7 +262,7 @@ export function useRoadmaps() {
         description: data.description
       };
 
-      // Initialize progress tracking for this roadmap using RPC
+      // Initialize progress tracking for this roadmap
       try {
         await supabaseRpc.initializeRoadmapProgress(data.id, user.id);
       } catch (e) {
@@ -303,8 +304,8 @@ export function useRoadmaps() {
     }
 
     try {
-      // Use RPC helper
-      await supabaseRpc.updateRoadmapItemStatus(roadmapId, user.id, itemId, completed);
+      // Use our helper
+      const result = await supabaseRpc.updateRoadmapItemStatus(roadmapId, user.id, itemId, completed);
       
       // Update local state if the selected roadmap is the one being updated
       if (selectedRoadmap && selectedRoadmap.id === roadmapId) {
@@ -327,6 +328,7 @@ export function useRoadmaps() {
       // Refresh the progress data
       fetchRoadmaps();
       
+      return result;
     } catch (error: any) {
       console.error('Error updating item status:', error.message);
       toast({
@@ -334,6 +336,7 @@ export function useRoadmaps() {
         description: 'Failed to update progress',
         variant: 'destructive'
       });
+      return null;
     }
   }, [user, toast, selectedRoadmap, fetchRoadmaps]);
 
@@ -349,7 +352,7 @@ export function useRoadmaps() {
     }
 
     try {
-      // Use RPC helper
+      // Use our helper
       await supabaseRpc.resetRoadmapProgress(roadmapId, user.id);
 
       // Update local state if the selected roadmap is the one being reset
@@ -433,13 +436,11 @@ export function useRoadmaps() {
     }
 
     try {
-      // Only include valid fields for the roadmaps table
+      // Update the roadmap with is_public field
       const { error } = await supabase
         .from('roadmaps')
         .update({ 
-          // No is_public field in the database schema, 
-          // but we'll keep this function for future compatibility
-          // You'd need to add that column to make this work
+          is_public: isPublic
         })
         .eq('id', roadmapId)
         .eq('user_id', user.id);

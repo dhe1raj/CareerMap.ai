@@ -1,4 +1,4 @@
-// Fixed imports and other components
+
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import SEOMetadata from '@/components/SEOMetadata'; // Fixed import

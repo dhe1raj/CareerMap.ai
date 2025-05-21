@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import SEOMetadata from '@/components/SEOMetadata';
@@ -23,7 +24,8 @@ const CareerMatches = () => {
   const [resumeText, setResumeText] = useState('');
   const [resumeAnalysis, setResumeAnalysis] = useState<{ summary: string; suggestions: string[] } | null>(null);
   
-  const { isLoading, isProcessing, matches, generateCareerMatches, analyzeResume, generateSuggestions } = useGeminiCareer();
+  // Remove references to isProcessing and generateSuggestions
+  const { isLoading, matches, generateCareerMatches, analyzeResume } = useGeminiCareer();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -196,12 +198,6 @@ const CareerMatches = () => {
                       Enter your skills and interests, then generate matches to see career recommendations.
                     </p>
                   </Card>
-                )}
-                
-                {isProcessing ? (
-                  <div>Processing...</div>
-                ) : (
-                  <Button onClick={generateSuggestions}>Generate Suggestions</Button>
                 )}
               </div>
             </div>

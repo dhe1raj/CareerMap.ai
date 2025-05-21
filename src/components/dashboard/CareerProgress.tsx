@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import SEOMetadata from '@/components/SEOMetadata'; // Fix the import statement
+import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -26,7 +26,7 @@ export default function CareerProgress() {
   }, [user, navigate]);
 
   const handleDeleteRoadmap = (id: string) => {
-    // Show confirmation toast
+    // Show confirmation toast with correct action format
     toast(
       "Are you sure you want to delete this roadmap?",
       {
@@ -39,6 +39,7 @@ export default function CareerProgress() {
         },
         cancel: {
           label: "Cancel",
+          onClick: () => {} // Fixed action format with onClick
         },
       }
     );
@@ -52,16 +53,6 @@ export default function CareerProgress() {
 
   // Filter roadmaps to only show the user's roadmaps
   const userRoadmaps = roadmaps.filter((roadmap) => roadmap.user_id === user?.id);
-
-  const handleGenerateCareerMatches = async () => {
-    try {
-      const matches = await generateCareerMatches([], [], "");
-      console.log("Career matches:", matches);
-    } catch (error) {
-      console.error("Error generating career matches:", error);
-      toast.error("Failed to generate career matches");
-    }
-  };
 
   return (
     <DashboardLayout>

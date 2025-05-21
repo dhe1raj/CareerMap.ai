@@ -24,7 +24,7 @@ export default function CareerProgress() {
   }, [user, navigate]);
 
   const handleDeleteRoadmap = (id: string) => {
-    // Show confirmation toast
+    // Show confirmation toast with correct action format
     toast(
       "Are you sure you want to delete this roadmap?",
       {
@@ -37,7 +37,7 @@ export default function CareerProgress() {
         },
         cancel: {
           label: "Cancel",
-          onClick: () => {} // Added onClick handler
+          onClick: () => {} // Fixed action format with onClick
         },
       }
     );

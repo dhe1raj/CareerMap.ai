@@ -15,9 +15,11 @@ import { RoadmapStep } from "@/data/roadmapTemplates";
 import { useGeminiRoadmap, GeminiRoadmapStep } from "@/utils/gemini";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { toast } from "@/components/ui/sonner"; // Import toast from sonner instead
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, ArrowRight, Edit, Save, RefreshCw, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface CareerBuilderQuestion {
   id: string;
@@ -116,6 +118,7 @@ export default function CustomCareerBuilder({
   const { userData, saveField } = useUserData();
   const { apiKey } = useGeminiContext();
   const { personalizeRoadmap, isLoading: isGeminiLoading } = useGeminiRoadmap();
+  const { user } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -446,22 +449,136 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
         });
       }
       
+      // Generate a unique ID for the roadmap
+      const roadmapId = crypto.randomUUID();
+      
       // Create a new user roadmap
       const newRoadmap: UserRoadmap = {
-        id: `custom-${Date.now()}`,
+        id: roadmapId,
         title: `Custom Career: ${answers.dreamRoles || "My Path"}`,
         steps,
         lastUpdated: new Date().toISOString()
       };
       
-      // Save to user data
+      // Save to Supabase if the user is logged in
+      if (user) {
+        // First save the main roadmap
+        const { data: roadmapData, error: roadmapError } = await supabase
+          .from('user_roadmaps')
+          .insert({
+            id: roadmapId,
+            user_id: user.id,
+            title: `Custom Career: ${answers.dreamRoles || "My Path"}`,
+            category: answers.industries || "Custom",
+            is_custom: true,
+            updated_at: new Date().toISOString()
+          })
+          .select();
+        
+        if (roadmapError) {
+          throw new Error(`Failed to create roadmap: ${roadmapError.message}`);
+        }
+        
+        // Insert all the roadmap steps
+        const stepsToInsert = steps.map((step) => ({
+          roadmap_id: roadmapId,
+          label: step.label,
+          order_number: step.order,
+          est_time: step.estTime,
+          completed: false
+        }));
+        
+        const { error: stepsError } = await supabase
+          .from('user_roadmap_steps')
+          .insert(stepsToInsert);
+          
+        if (stepsError) {
+          throw new Error(`Failed to create roadmap steps: ${stepsError.message}`);
+        }
+        
+        // Save detailed roadmap components separately
+        // Resources
+        if (parsedRoadmap.resources.length > 0) {
+          const { error: resourcesError } = await supabase
+            .from('roadmap_resources')
+            .insert(parsedRoadmap.resources.map(resource => ({
+              roadmap_id: roadmapId,
+              label: resource.label,
+              url: resource.url || null,
+              completed: false
+            })));
+            
+          if (resourcesError) {
+            console.error("Error saving resources:", resourcesError);
+          }
+        }
+        
+        // Skills
+        if (parsedRoadmap.skills.length > 0) {
+          const { error: skillsError } = await supabase
+            .from('roadmap_skills')
+            .insert(parsedRoadmap.skills.map(skill => ({
+              roadmap_id: roadmapId,
+              label: skill.label,
+              completed: false
+            })));
+            
+          if (skillsError) {
+            console.error("Error saving skills:", skillsError);
+          }
+        }
+        
+        // Timeline
+        if (parsedRoadmap.timeline.length > 0) {
+          const { error: timelineError } = await supabase
+            .from('roadmap_timeline')
+            .insert(parsedRoadmap.timeline.map((item, index) => ({
+              roadmap_id: roadmapId,
+              step: item.step,
+              order_number: index + 1,
+              completed: false
+            })));
+            
+          if (timelineError) {
+            console.error("Error saving timeline:", timelineError);
+          }
+        }
+        
+        // Tools
+        if (parsedRoadmap.tools.length > 0) {
+          const { error: toolsError } = await supabase
+            .from('roadmap_tools')
+            .insert(parsedRoadmap.tools.map(tool => ({
+              roadmap_id: roadmapId,
+              label: tool.label,
+              completed: false
+            })));
+            
+          if (toolsError) {
+            console.error("Error saving tools:", toolsError);
+          }
+        }
+        
+        toast.success("Roadmap saved successfully! You can now track your progress.");
+      }
+      
+      // Save to local storage
       await saveField("userRoadmap", newRoadmap);
       
-      toast.success("Roadmap saved! You can now track your progress.");
+      // Update user roadmaps array in localStorage
+      const storedData = localStorage.getItem('userData') || '{}';
+      const parsedData = JSON.parse(storedData);
       
-      // Close modal and redirect to dashboard
+      if (!parsedData.userRoadmaps) {
+        parsedData.userRoadmaps = [];
+      }
+      
+      parsedData.userRoadmaps.push(newRoadmap);
+      localStorage.setItem('userData', JSON.stringify(parsedData));
+      
+      // Close modal and redirect
       onClose();
-      navigate("/dashboard");
+      navigate("/career-progress");
     } catch (error) {
       console.error("Error saving roadmap:", error);
       toast.error("Failed to save roadmap. Please try again.");

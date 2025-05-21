@@ -1,3 +1,4 @@
+
 import {
   Home,
   FileSearch,
@@ -18,6 +19,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface NavItem {
   label: string;
@@ -37,15 +40,12 @@ export default function DashboardSidebar() {
       setIsLoading(true);
       try {
         if (user) {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .storage
             .from('avatars')
             .getPublicUrl(`avatars/${user.id}`);
           
-          if (error) {
-            console.error("Error fetching profile URL:", error);
-            toast.error("Failed to load profile image");
-          } else {
+          if (data) {
             setProfileUrl(data.publicUrl);
           }
         }

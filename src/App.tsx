@@ -1,24 +1,24 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider"
-import { Home } from './pages/Home';
-import { SignIn } from './pages/SignIn';
-import { SignUp } from './pages/SignUp';
-import { Dashboard } from './pages/Dashboard';
-import { AuthGuard } from './components/AuthGuard';
+import { ThemeProvider } from "./components/ui/theme-provider";
+import Home from './pages/Index';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import AuthGuard from './components/AuthGuard';
 import { AuthProvider } from './context/AuthContext';
-import { CareerDesigner } from './pages/CareerDesigner';
-import { CareerChat } from './pages/CareerChat';
-import { CareerProgress } from './pages/CareerProgress';
-import { CareerResources } from './pages/CareerResources';
-import { CareerMatches } from './pages/CareerMatches';
-import { Roadmap } from './pages/Roadmap';
-import { Profile } from './pages/Profile';
-import { Settings } from './pages/Settings';
-import { NotFound } from './pages/NotFound';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import CareerDesigner from './pages/CareerDesigner';
+import CareerChat from './pages/CareerChat';
+import CareerProgress from './pages/CareerProgress';
+import CareerResources from './pages/CareerResources';
+import CareerMatches from './pages/CareerMatches';
+import Roadmap from './pages/Roadmap';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
-import { ResumeAnalysis } from './pages/ResumeAnalysis';
+import ResumeAnalysis from './pages/ResumeAnalysis';
 import { GeminiProvider } from './context/GeminiContext';
 import GenZCareerDecider from './pages/GenZCareerDecider';
 
@@ -40,8 +40,8 @@ function App() {
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/signin" element={<SignIn />} />
-                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/signin" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
                   
                   {/* Protected routes */}
                   <Route element={<AuthGuard />}>
@@ -54,7 +54,6 @@ function App() {
                     <Route path="/career-resources/:id" element={<CareerResources />} />
                     <Route path="/career-matches" element={<CareerMatches />} />
                     <Route path="/roadmap/:id" element={<Roadmap />} />
-                    <Route path="/profile" element={<Profile />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/genz-career-decider" element={<GenZCareerDecider />} />
                   </Route>

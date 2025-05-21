@@ -161,6 +161,7 @@ export default function GenZCareerDecider() {
     
     try {
       // Create a new roadmap in Supabase
+      // Use JSON.stringify to convert the sections to a JSON string for storage
       const { data: roadmapData, error: roadmapError } = await supabase
         .from('roadmaps')
         .insert({
@@ -169,7 +170,7 @@ export default function GenZCareerDecider() {
           description: `GenZ career roadmap for ${generatedRoadmap.title}`,
           role_id: null, // No specific role ID for custom roadmaps
           is_public: false,
-          sections: generatedRoadmap.sections
+          sections: JSON.stringify(generatedRoadmap.sections) // Convert to JSON string for storage
         })
         .select('id')
         .single();

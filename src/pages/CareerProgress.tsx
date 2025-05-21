@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
+import SEOMetadata from '@/components/SEOMetadata';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -24,23 +24,19 @@ export default function CareerProgress() {
   }, [user, navigate]);
 
   const handleDeleteRoadmap = (id: string) => {
-    // Show confirmation toast with correct action format
-    toast(
-      "Are you sure you want to delete this roadmap?",
-      {
-        action: {
-          label: "Delete",
-          onClick: () => {
-            deleteRoadmap(id);
-            toast.success("Roadmap deleted successfully");
-          },
-        },
-        cancel: {
-          label: "Cancel",
-          onClick: () => {} // Fixed action format with onClick
-        },
+    toast("Are you sure you want to delete this roadmap?", {
+      action: {
+        label: "Delete",
+        onClick: () => {
+          deleteRoadmap(id);
+          toast.success("Roadmap deleted successfully");
+        }
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
       }
-    );
+    });
   };
 
   // Find the progress for a particular roadmap

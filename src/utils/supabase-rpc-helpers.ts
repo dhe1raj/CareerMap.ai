@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { RoadmapProgress } from "@/types/roadmap";
 
 // Type to represent the RoadmapProgress structure expected from the database
 export interface SupabaseRoadmapProgress {
@@ -14,22 +13,22 @@ export interface SupabaseRoadmapProgress {
 }
 
 /**
- * Helper functions for calling RPC functions directly
+ * Helper functions for working with Supabase
  */
 export const supabaseRpc = {
   // Get user roadmap progress
-  getUserRoadmapProgress: async (userId: string) => {
+  getUserRoadmapProgress: async (userId: string): Promise<SupabaseRoadmapProgress[]> => {
     const { data, error } = await supabase
       .from('users_roadmap_progress')
       .select('*')
       .eq('user_id', userId);
     
     if (error) throw error;
-    return data as SupabaseRoadmapProgress[];
+    return data as unknown as SupabaseRoadmapProgress[];
   },
   
   // Get progress for a specific roadmap
-  getRoadmapProgress: async (roadmapId: string, userId: string) => {
+  getRoadmapProgress: async (roadmapId: string, userId: string): Promise<SupabaseRoadmapProgress | null> => {
     const { data, error } = await supabase
       .from('users_roadmap_progress')
       .select('*')
@@ -38,7 +37,7 @@ export const supabaseRpc = {
       .single();
     
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned" which is OK
-    return data as SupabaseRoadmapProgress | null;
+    return data as unknown as SupabaseRoadmapProgress | null;
   },
   
   // Initialize roadmap progress
@@ -66,19 +65,16 @@ export const supabaseRpc = {
     completed: boolean
   ) => {
     // First get the current progress
-    const { data: currentProgress, error: fetchError } = await supabase
-      .from('users_roadmap_progress')
-      .select('*')
-      .eq('roadmap_id', roadmapId)
-      .eq('user_id', userId)
-      .single();
+    let progress = await supabaseRpc.getRoadmapProgress(roadmapId, userId);
       
-    if (fetchError) {
+    if (!progress) {
       // If no progress record exists, initialize one
-      if (fetchError.code === 'PGRST116') { // No rows found
-        return await supabaseRpc.initializeRoadmapProgress(roadmapId, userId);
+      await supabaseRpc.initializeRoadmapProgress(roadmapId, userId);
+      progress = await supabaseRpc.getRoadmapProgress(roadmapId, userId);
+      
+      if (!progress) {
+        throw new Error("Failed to initialize roadmap progress");
       }
-      throw fetchError;
     }
     
     // Get the roadmap to calculate total items
@@ -91,7 +87,7 @@ export const supabaseRpc = {
     if (roadmapError) throw roadmapError;
     
     // Update the completed items
-    let completedItems = currentProgress.completed_items || [];
+    let completedItems = progress.completed_items || [];
     
     if (completed && !completedItems.includes(itemId)) {
       completedItems.push(itemId);
@@ -100,8 +96,6 @@ export const supabaseRpc = {
     }
     
     // Calculate progress percentage
-    // This is a simplified calculation - we should get the total number of items
-    // from the roadmap sections in a real implementation
     let totalItems = 0;
     try {
       if (roadmap.sections) {

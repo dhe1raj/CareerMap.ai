@@ -1,7 +1,7 @@
 
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
+import SEOMetadata from '@/components/SEOMetadata';
 import CareerDesignForm from '@/components/CareerDesignForm';
 
 export default function CareerDesigner() {

@@ -6,27 +6,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Roadmap, RoadmapProgress, RoadmapItem } from '@/types/roadmap';
 import { supabaseRpc, SupabaseRoadmapProgress } from '@/utils/supabase-rpc-helpers';
 
-// Define interfaces for Supabase table data shape
-interface SupabaseRoadmap {
-  id: string;
-  title: string;
-  description?: string;
-  user_id: string;
-  created_at: string;
-  updated_at?: string;
-  role_id?: string;
-  type?: 'role' | 'skill' | 'course';
-  sections?: RoadmapSection[];
-  is_public?: boolean;
-}
-
-// Define the expected database structure for roadmap sections
-interface RoadmapSection {
-  title: string;
-  items: RoadmapItem[];
-  collapsed?: boolean;
-}
-
 export function useRoadmaps() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [userProgress, setUserProgress] = useState<RoadmapProgress[]>([]);
@@ -36,7 +15,7 @@ export function useRoadmaps() {
   const { user } = useAuth();
 
   // Transform Supabase roadmap to application roadmap
-  const transformRoadmap = (dbRoadmap: SupabaseRoadmap): Roadmap => {
+  const transformRoadmap = (dbRoadmap: any): Roadmap => {
     return {
       id: dbRoadmap.id,
       title: dbRoadmap.title,
@@ -71,18 +50,7 @@ export function useRoadmaps() {
       }
 
       // Transform database results to proper Roadmap type
-      const transformedRoadmaps: Roadmap[] = (roadmapsData || []).map((roadmap) => {
-        return {
-          id: roadmap.id,
-          title: roadmap.title,
-          type: roadmap.type || 'role', // Default value
-          sections: roadmap.sections || [], // Default empty array
-          created_at: roadmap.created_at,
-          user_id: roadmap.user_id,
-          is_public: roadmap.is_public || false, // Default value
-          description: roadmap.description
-        };
-      });
+      const transformedRoadmaps: Roadmap[] = (roadmapsData || []).map(transformRoadmap);
 
       // Fetch progress data using our helper
       let progressData: SupabaseRoadmapProgress[] = [];
@@ -132,16 +100,7 @@ export function useRoadmaps() {
       }
 
       // Create a roadmap with default values for missing fields
-      const roadmap: Roadmap = {
-        id: data.id,
-        title: data.title,
-        type: data.type || 'role', // Default value
-        sections: data.sections || [], // Default empty array
-        created_at: data.created_at,
-        user_id: data.user_id,
-        is_public: data.is_public || false, // Default value
-        description: data.description
-      };
+      const roadmap: Roadmap = transformRoadmap(data);
 
       // Fetch progress for this roadmap if user is logged in
       let progress: RoadmapProgress | null = null;
@@ -233,15 +192,15 @@ export function useRoadmaps() {
         }))
       };
 
-      // Create the roadmap in the database - only including valid fields
+      // Create the roadmap in the database - valid fields for insertion
       const { data, error } = await supabase
         .from('roadmaps')
         .insert({
           title: roadmapWithIds.title,
           user_id: roadmapWithIds.user_id,
           description: roadmapWithIds.description,
-          role_id: null, // Use null when not provided
-          sections: roadmapWithIds.sections, // Include sections in the insert
+          sections: roadmapWithIds.sections,
+          is_public: roadmapWithIds.is_public || false
         })
         .select()
         .single();
@@ -251,16 +210,7 @@ export function useRoadmaps() {
       }
 
       // Create a roadmap with the returned data plus default values
-      const createdRoadmap: Roadmap = {
-        id: data.id,
-        title: data.title,
-        type: 'role', // Default value
-        sections: roadmapWithIds.sections, // Use the sections from input
-        created_at: data.created_at,
-        user_id: data.user_id,
-        is_public: false, // Default value
-        description: data.description
-      };
+      const createdRoadmap: Roadmap = transformRoadmap(data);
 
       // Initialize progress tracking for this roadmap
       try {
@@ -439,9 +389,7 @@ export function useRoadmaps() {
       // Update the roadmap with is_public field
       const { error } = await supabase
         .from('roadmaps')
-        .update({ 
-          is_public: isPublic
-        })
+        .update({ is_public: isPublic })
         .eq('id', roadmapId)
         .eq('user_id', user.id);
 

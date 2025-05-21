@@ -32,7 +32,6 @@ export default function Roadmap() {
       try {
         const result = await getRoadmap(roadmapId);
         
-        // Fixed: Handle the case when result might be undefined
         if (!result || !result.roadmap) {
           navigate('/career-designer');
           return;
@@ -55,18 +54,26 @@ export default function Roadmap() {
   const handleItemStatusChange = async (itemId: string, completed: boolean) => {
     if (!roadmapId || !user) return;
     
-    const updatedProgress = await updateItemStatus(roadmapId, itemId, completed);
-    if (updatedProgress) {
-      // Fixed: Properly clone and update the progressData object
-      setProgressData({
-        ...progressData,
-        progress_pct: updatedProgress.progress_pct,
-        completed_items: updatedProgress.completed_items
-      });
-      
-      if (completed) {
-        toast.success('Progress updated!');
+    try {
+      const updatedProgress = await updateItemStatus(roadmapId, itemId, completed);
+      if (updatedProgress) {
+        // Update the progress data using the returned result
+        setProgressData(prevProgress => {
+          if (!prevProgress) return updatedProgress;
+          return {
+            ...prevProgress,
+            progress_pct: updatedProgress.progress_pct,
+            completed_items: updatedProgress.completed_items
+          };
+        });
+        
+        if (completed) {
+          toast.success('Progress updated!');
+        }
       }
+    } catch (error) {
+      console.error("Error updating item status:", error);
+      toast.error("Failed to update progress");
     }
   };
 

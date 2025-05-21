@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
+import SEOMetadata from '@/components/SEOMetadata';
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -74,7 +74,6 @@ export default function Dashboard() {
           Quick Actions
         </h2>
         
-        {/* Fixing SuggestionChip props - removing icon prop */}
         <div className="flex flex-wrap gap-2 mt-4">
           <SuggestionChip 
             label="Explore job matches" 

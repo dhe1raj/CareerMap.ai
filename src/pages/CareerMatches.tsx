@@ -1,283 +1,175 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import SEOMetadata from '@/components/SEOMetadata';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGeminiCareer } from '@/hooks/use-gemini-career';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CareerMatchCard } from '@/components/career/CareerMatchCard';
 import { useAuth } from '@/context/AuthContext';
+import { useGeminiCareer } from '@/hooks/use-gemini-career';
+import { CareerMatch, CareerMatchCard } from '@/components/career/CareerMatchCard';
+import { Loader2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { Sparkles, Upload } from 'lucide-react';
 
-const CareerMatches = () => {
-  const [skills, setSkills] = useState<string[]>([]);
-  const [interests, setInterests] = useState<string[]>([]);
-  const [education, setEducation] = useState('');
-  const [skillInput, setSkillInput] = useState('');
-  const [interestInput, setInterestInput] = useState('');
-  const [resumeText, setResumeText] = useState('');
-  const [resumeAnalysis, setResumeAnalysis] = useState<{ summary: string; suggestions: string[] } | null>(null);
-  
-  // Remove references to isProcessing and generateSuggestions
-  const { isLoading, matches, generateCareerMatches, analyzeResume } = useGeminiCareer();
+export default function CareerMatches() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  
+  const [skills, setSkills] = useState<string>('');
+  const [interests, setInterests] = useState<string>('');
+  const [education, setEducation] = useState<string>('');
+  const [showMatches, setShowMatches] = useState(false);
+  const { isLoading, matches, generateCareerMatches } = useGeminiCareer();
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
     }
   }, [user, navigate]);
-  
-  const handleAddSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills([...skills, skillInput.trim()]);
-      setSkillInput('');
-    }
-  };
-  
-  const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter(s => s !== skill));
-  };
-  
-  const handleAddInterest = () => {
-    if (interestInput.trim() && !interests.includes(interestInput.trim())) {
-      setInterests([...interests, interestInput.trim()]);
-      setInterestInput('');
-    }
-  };
-  
-  const handleRemoveInterest = (interest: string) => {
-    setInterests(interests.filter(i => i !== interest));
-  };
-  
+
   const handleGenerateMatches = async () => {
-    const results = await generateCareerMatches(skills, interests, education);
-    console.log("Generated matches:", results);
+    if (!skills && !interests && !education) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide at least one of: skills, interests, or education.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await generateCareerMatches(
+        skills.split(',').map(s => s.trim()).filter(Boolean),
+        interests.split(',').map(i => i.trim()).filter(Boolean),
+        education.trim()
+      );
+
+      setShowMatches(true);
+    } catch (error) {
+      console.error("Error generating matches:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate career matches. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
-  
-  const handleAnalyzeResume = async () => {
-    if (!resumeText.trim()) return;
-    
-    const analysis = await analyzeResume(resumeText);
-    setResumeAnalysis(analysis);
+
+  const handleUploadResume = () => {
+    navigate('/resume-analysis');
   };
-  
+
   return (
     <DashboardLayout>
-      <SEOMetadata 
+      <SEOMetadata
         title="Career Matches | CareerMap"
-        description="Discover career paths that match your skills and interests."
-        keywords="career matches, job recommendations, skills assessment"
+        description="Discover career paths that match your skills, interests, and education."
+        keywords="career matches, job matches, skills match, career recommendations"
         canonicalPath="/career-matches"
       />
-      
+
       <div className="container py-8 max-w-7xl">
-        <h1 className="text-3xl font-bold mb-2">Career Matches</h1>
-        <p className="text-muted-foreground mb-6">Find career paths that match your skills and interests</p>
-        
-        <Tabs defaultValue="skills">
-          <TabsList className="mb-6">
-            <TabsTrigger value="skills">Skills & Interests</TabsTrigger>
-            <TabsTrigger value="resume">Resume Analysis</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="skills">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="glass-morphism">
-                <CardHeader>
-                  <CardTitle>Your Profile</CardTitle>
-                  <CardDescription>Enter your skills, interests, and education</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Skills</label>
-                    <div className="flex gap-2 mb-2">
-                      <Input 
-                        value={skillInput}
-                        onChange={(e) => setSkillInput(e.target.value)}
-                        placeholder="Add a skill..."
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
-                      />
-                      <Button onClick={handleAddSkill} type="button">Add</Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {skills.map((skill) => (
-                        <div key={skill} className="bg-purple-500/20 text-purple-100 px-2 py-1 rounded-md flex items-center gap-2">
-                          {skill}
-                          <button 
-                            onClick={() => handleRemoveSkill(skill)}
-                            className="text-purple-300 hover:text-white"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Interests</label>
-                    <div className="flex gap-2 mb-2">
-                      <Input 
-                        value={interestInput}
-                        onChange={(e) => setInterestInput(e.target.value)}
-                        placeholder="Add an interest..."
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddInterest()}
-                      />
-                      <Button onClick={handleAddInterest} type="button">Add</Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {interests.map((interest) => (
-                        <div key={interest} className="bg-purple-500/20 text-purple-100 px-2 py-1 rounded-md flex items-center gap-2">
-                          {interest}
-                          <button 
-                            onClick={() => handleRemoveInterest(interest)}
-                            className="text-purple-300 hover:text-white"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Education</label>
-                    <Input 
-                      value={education}
-                      onChange={(e) => setEducation(e.target.value)}
-                      placeholder="Highest education level or field of study"
-                    />
-                  </div>
-                  
-                  <Button 
-                    onClick={handleGenerateMatches} 
-                    disabled={isLoading || skills.length === 0}
-                    className="w-full glowing-purple"
-                  >
+        <div className="flex flex-col md:flex-row items-start justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Career Matches</h1>
+            <p className="text-muted-foreground">
+              Find career paths that match your skills, interests, and education
+            </p>
+          </div>
+
+          <Button onClick={handleUploadResume} className="glowing-purple">
+            <Sparkles className="mr-2 h-4 w-4" />
+            Upload Resume for Matches
+          </Button>
+        </div>
+
+        {!showMatches ? (
+          <Card className="glass-morphism mb-10">
+            <CardHeader>
+              <CardTitle>Find Your Career Matches</CardTitle>
+              <CardDescription>
+                Enter your skills, interests, and education to get personalized career recommendations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Your Skills
+                </label>
+                <Textarea
+                  placeholder="E.g., Python, Data Analysis, Project Management, Communication (separate with commas)"
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Your Interests
+                </label>
+                <Textarea
+                  placeholder="E.g., Technology, Healthcare, Finance, Art (separate with commas)"
+                  value={interests}
+                  onChange={(e) => setInterests(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Your Education
+                </label>
+                <Textarea
+                  placeholder="E.g., Bachelor's in Computer Science, High School Diploma, Self-taught"
+                  value={education}
+                  onChange={(e) => setEducation(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <Button
+                onClick={handleGenerateMatches}
+                className="w-full glowing-purple"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Matches...
+                  </>
+                ) : (
+                  <>
                     <Sparkles className="mr-2 h-4 w-4" />
                     Generate Career Matches
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <div>
-                <h2 className="text-xl font-bold mb-4">Your Career Matches</h2>
-                
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Card key={i} className="glass-morphism">
-                        <CardHeader>
-                          <Skeleton className="h-6 w-3/4 mb-2" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </CardHeader>
-                        <CardContent>
-                          <Skeleton className="h-4 w-full mb-2" />
-                          <Skeleton className="h-4 w-5/6" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : matches.length > 0 ? (
-                  <div className="space-y-4">
-                    {matches.map((match, index) => (
-                      <CareerMatchCard key={index} match={match} />
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="glass-morphism text-center p-6">
-                    <p className="text-muted-foreground">
-                      Enter your skills and interests, then generate matches to see career recommendations.
-                    </p>
-                  </Card>
+                  </>
                 )}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-lg font-medium">
+                {matches.length} Career Matches Found
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowMatches(false)}
+              >
+                Edit Profile
+              </Button>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="resume">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="glass-morphism">
-                <CardHeader>
-                  <CardTitle>Resume Analysis</CardTitle>
-                  <CardDescription>Paste your resume to get career insights</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Textarea 
-                    value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
-                    placeholder="Paste your resume text here..."
-                    className="min-h-[200px]"
-                  />
-                  
-                  <Button 
-                    onClick={handleAnalyzeResume} 
-                    disabled={isLoading || !resumeText.trim()}
-                    className="w-full"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Analyze Resume
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <div>
-                <h2 className="text-xl font-bold mb-4">Resume Analysis</h2>
-                
-                {isLoading ? (
-                  <Card className="glass-morphism">
-                    <CardHeader>
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </CardContent>
-                  </Card>
-                ) : resumeAnalysis ? (
-                  <Card className="glass-morphism">
-                    <CardHeader>
-                      <CardTitle>Analysis Results</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <h3 className="font-medium mb-2">Summary</h3>
-                        <p>{resumeAnalysis.summary}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="font-medium mb-2">Suggestions</h3>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {resumeAnalysis.suggestions.map((suggestion, index) => (
-                            <li key={index}>{suggestion}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="glass-morphism text-center p-6">
-                    <p className="text-muted-foreground">
-                      Paste your resume and analyze it to get personalized feedback and career suggestions.
-                    </p>
-                  </Card>
-                )}
-              </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {matches.map((match, index) => (
+                <CareerMatchCard key={index} match={match} />
+              ))}
             </div>
-          </TabsContent>
-        </Tabs>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
-};
-
-export default CareerMatches;
+}

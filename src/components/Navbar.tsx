@@ -44,11 +44,11 @@ export default function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png" 
-              alt="CareerMap Logo" 
-              className="h-20 w-auto transition-transform hover:scale-110" 
+              src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
+              alt="CareerForge Logo" 
+              className="h-8" 
             />
-            <span className="text-xl font-bold">CareerMap</span>
+            <span className="text-xl font-bold">CareerForge</span>
           </Link>
         </div>
 
@@ -123,7 +123,7 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button asChild>
+              <Button variant="ghost" asChild>
                 <Link to="/auth">Log in</Link>
               </Button>
               <Button asChild>
@@ -147,7 +147,7 @@ export default function Navbar() {
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
-              <SheetTitle>CareerMap</SheetTitle>
+              <SheetTitle>CareerForge</SheetTitle>
               <SheetDescription>
                 Navigate to different sections of the app.
               </SheetDescription>
@@ -243,7 +243,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="flex flex-col space-y-2">
-                  <Button asChild>
+                  <Button variant="outline" asChild>
                     <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                       Log in
                     </Link>

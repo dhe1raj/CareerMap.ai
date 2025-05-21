@@ -20,9 +20,9 @@ export default function Hero() {
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-brand-300 to-brand-500 rounded-full blur-md opacity-75 animate-pulse-glow"></div>
               <img 
-                src="/lovable-uploads/d2d8e0ba-043a-43ca-89a4-25cc3de159b4.png" 
-                alt="CareerMap Logo" 
-                className="relative h-72 z-10 animate-subtle-float" 
+                src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
+                alt="CareerForge Logo" 
+                className="relative h-24 z-10" 
               />
             </div>
           </motion.div>
@@ -65,7 +65,7 @@ export default function Hero() {
                     Get Started
                   </Link>
                 </Button>
-                <Button size="lg" asChild className="neon-button rounded-xl text-base px-8 py-6">
+                <Button variant="outline" size="lg" asChild className="bg-white/5 backdrop-blur-sm border-white/20 hover:bg-white/10 text-white rounded-xl text-base px-8 py-6">
                   <Link to="/auth">
                     Log in
                   </Link>

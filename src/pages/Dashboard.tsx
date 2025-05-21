@@ -1,33 +1,38 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { useUserData } from "@/hooks/use-user-data";
-import { useRoadmap } from "@/hooks/use-roadmap";
-import { useGeminiContext } from "@/context/GeminiContext";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { LoadingFallback } from "@/components/LoadingFallback";
-import { isFirstLogin } from "@/utils/dashboard";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { LoadingDashboard } from "@/components/dashboard/LoadingDashboard";
-import { DashboardContent } from "@/components/dashboard/DashboardContent";
+import { CareerProgress } from "@/components/dashboard/CareerProgress";
+import { ResumeAnalysis } from "@/components/dashboard/ResumeAnalysis";
+import { CareerChat } from "@/components/dashboard/CareerChat";
+import { ChevronRight, BookMarked, FileText, Briefcase } from "lucide-react";
+
+// Check if this is the first login
+const isFirstLogin = () => {
+  const visited = localStorage.getItem('hasVisitedBefore');
+  if (!visited) {
+    localStorage.setItem('hasVisitedBefore', 'true');
+    return true;
+  }
+  return false;
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { apiKey } = useGeminiContext();
   const [showOnboarding, setShowOnboarding] = useState(isFirstLogin());
   const { userData, isLoading, fetchUserData, saveField } = useUserData();
-  const { userRoadmap, roadmapProgress } = useRoadmap(apiKey || '');
   
   // Fetch user data on mount
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
   
-  const handleOnboardingComplete = (profile: any) => {
+  const handleOnboardingComplete = (profile) => {
     setShowOnboarding(false);
     
     // Save profile data
@@ -44,30 +49,137 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <DashboardHeader 
-          fullName={userData.profile?.fullName} 
-          email={user?.email}
-          onEditProfile={() => setShowOnboarding(true)}
-        />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground mt-2">
+              Welcome back, {userData.profile.fullName || user?.email || 'User'}
+            </p>
+          </div>
+          
+          <Button onClick={() => setShowOnboarding(true)} variant="outline">
+            Edit Profile
+          </Button>
+        </div>
 
-        <ErrorBoundary 
-          fallback={
-            <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-white">
-              Something went wrong loading the dashboard content. Please refresh the page.
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="glass-morphism animate-pulse">
+                <CardHeader>
+                  <div className="h-6 bg-white/10 rounded w-1/2"></div>
+                  <div className="h-4 bg-white/10 rounded w-2/3"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-24 bg-white/5 rounded"></div>
+                </CardContent>
+                <CardFooter>
+                  <div className="h-10 bg-white/10 rounded w-full"></div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Career Progress Card */}
+            <div className="md:col-span-2 lg:col-span-2">
+              <CareerProgress 
+                userData={userData} 
+                onUpdateField={saveField}
+              />
             </div>
-          }
-        >
-          {isLoading ? (
-            <LoadingDashboard />
-          ) : (
-            <DashboardContent 
-              userData={userData}
-              saveField={saveField}
-              userRoadmap={userRoadmap}
-              roadmapProgress={roadmapProgress}
+            
+            {/* Resume Analysis Card */}
+            <ResumeAnalysis 
+              userData={userData} 
+              onUpdateField={saveField}
             />
-          )}
-        </ErrorBoundary>
+            
+            {/* Career Chat Card */}
+            <CareerChat 
+              userData={userData} 
+              onUpdateField={saveField}
+            />
+            
+            {/* Career Roadmap Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Career Roadmap</CardTitle>
+                <CardDescription>
+                  Your personalized learning path
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Follow a step-by-step roadmap to achieve your career goals with curated resources.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/roadmap")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <BookMarked className="mr-2 h-4 w-4" />
+                  View Roadmap
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Career Matches Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Career Matches</CardTitle>
+                <CardDescription>
+                  Explore roles that match your profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Discover career paths and roles that align with your skills, interests, and experience.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/career-matches")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  View Matches
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Resume Analysis Full Card */}
+            <Card className="glass-morphism card-hover">
+              <CardHeader>
+                <CardTitle>Resume Analysis</CardTitle>
+                <CardDescription>
+                  Get detailed feedback on your resume
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-white/70">
+                  Get comprehensive AI-powered feedback and suggestions to improve your resume and stand out to employers.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => navigate("/resume-analysis")}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Full Analysis
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
       </div>
       
       {/* Onboarding Wizard */}
@@ -76,7 +188,8 @@ export default function Dashboard() {
         onComplete={handleOnboardingComplete}
         onCancel={() => setShowOnboarding(false)}
         initialProfile={userData ? {
-          roleStatus: userData.profile?.fullName
+          roleStatus: userData.profile.fullName
+          // Removed email property as it's not part of the OnboardingProfile type
         } : {}}
       />
     </DashboardLayout>

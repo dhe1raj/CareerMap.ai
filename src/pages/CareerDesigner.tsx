@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import DashboardLayoutEnhanced from "@/components/DashboardLayoutEnhanced";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -108,7 +108,7 @@ ${JSON.stringify(userProfile, null, 2)}`;
       };
       
       // Call the Gemini API
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -207,7 +207,7 @@ ${JSON.stringify(userProfile, null, 2)}`;
   };
 
   return (
-    <DashboardLayoutEnhanced>
+    <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -306,6 +306,6 @@ ${JSON.stringify(userProfile, null, 2)}`;
         onCancel={() => setShowOnboarding(false)}
         initialProfile={profile || {}}
       />
-    </DashboardLayoutEnhanced>
+    </DashboardLayout>
   );
 }

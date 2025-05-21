@@ -36,13 +36,23 @@ export interface RoadmapTimeline {
   created_at: string;
 }
 
+type RoadmapResourceInsert = Omit<RoadmapResource, 'id' | 'created_at'>;
+type RoadmapSkillInsert = Omit<RoadmapSkill, 'id' | 'created_at'>;
+type RoadmapToolInsert = Omit<RoadmapTool, 'id' | 'created_at'>;
+type RoadmapTimelineInsert = Omit<RoadmapTimeline, 'id' | 'created_at'>;
+
 // Helper functions to work with custom tables
 export const supabaseCustom = {
   // Resources
   resources: {
     select: () => supabase.from('roadmap_resources'),
-    insert: (data: Omit<RoadmapResource, 'id' | 'created_at'> | Omit<RoadmapResource, 'id' | 'created_at'>[]) => 
-      supabase.from('roadmap_resources').insert(data),
+    insert: (data: RoadmapResourceInsert | RoadmapResourceInsert[]) => {
+      if (Array.isArray(data)) {
+        return supabase.from('roadmap_resources').insert(data);
+      } else {
+        return supabase.from('roadmap_resources').insert([data]);
+      }
+    },
     update: (data: Partial<RoadmapResource>) => 
       supabase.from('roadmap_resources').update(data),
     delete: () => supabase.from('roadmap_resources').delete(),
@@ -53,8 +63,13 @@ export const supabaseCustom = {
   // Skills
   skills: {
     select: () => supabase.from('roadmap_skills'),
-    insert: (data: Omit<RoadmapSkill, 'id' | 'created_at'> | Omit<RoadmapSkill, 'id' | 'created_at'>[]) => 
-      supabase.from('roadmap_skills').insert(data),
+    insert: (data: RoadmapSkillInsert | RoadmapSkillInsert[]) => {
+      if (Array.isArray(data)) {
+        return supabase.from('roadmap_skills').insert(data);
+      } else {
+        return supabase.from('roadmap_skills').insert([data]);
+      }
+    },
     update: (data: Partial<RoadmapSkill>) => 
       supabase.from('roadmap_skills').update(data),
     delete: () => supabase.from('roadmap_skills').delete(),
@@ -65,8 +80,13 @@ export const supabaseCustom = {
   // Tools
   tools: {
     select: () => supabase.from('roadmap_tools'),
-    insert: (data: Omit<RoadmapTool, 'id' | 'created_at'> | Omit<RoadmapTool, 'id' | 'created_at'>[]) => 
-      supabase.from('roadmap_tools').insert(data),
+    insert: (data: RoadmapToolInsert | RoadmapToolInsert[]) => {
+      if (Array.isArray(data)) {
+        return supabase.from('roadmap_tools').insert(data);
+      } else {
+        return supabase.from('roadmap_tools').insert([data]);
+      }
+    },
     update: (data: Partial<RoadmapTool>) => 
       supabase.from('roadmap_tools').update(data),
     delete: () => supabase.from('roadmap_tools').delete(),
@@ -77,8 +97,13 @@ export const supabaseCustom = {
   // Timeline
   timeline: {
     select: () => supabase.from('roadmap_timeline'),
-    insert: (data: Omit<RoadmapTimeline, 'id' | 'created_at'> | Omit<RoadmapTimeline, 'id' | 'created_at'>[]) => 
-      supabase.from('roadmap_timeline').insert(data),
+    insert: (data: RoadmapTimelineInsert | RoadmapTimelineInsert[]) => {
+      if (Array.isArray(data)) {
+        return supabase.from('roadmap_timeline').insert(data);
+      } else {
+        return supabase.from('roadmap_timeline').insert([data]);
+      }
+    },
     update: (data: Partial<RoadmapTimeline>) => 
       supabase.from('roadmap_timeline').update(data),
     delete: () => supabase.from('roadmap_timeline').delete(),

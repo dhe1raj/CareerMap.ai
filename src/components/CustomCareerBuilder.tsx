@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
@@ -16,7 +15,7 @@ import { RoadmapStep } from "@/data/roadmapTemplates";
 import { useGeminiRoadmap, GeminiRoadmapStep } from "@/utils/gemini";
 import { useGeminiContext } from "@/context/GeminiContext";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner"; // Import toast from sonner instead
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, ArrowRight, Edit, Save, RefreshCw, Check, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -113,7 +112,7 @@ export default function CustomCareerBuilder({
   isDialog = true 
 }: CustomCareerBuilderProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: useAppToast } = useToast();
   const { userData, saveField } = useUserData();
   const { apiKey } = useGeminiContext();
   const { personalizeRoadmap, isLoading: isGeminiLoading } = useGeminiRoadmap();
@@ -308,7 +307,7 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
   
   const handleGenerate = async () => {
     if (!apiKey) {
-      toast({
+      useAppToast({
         title: "API Key Required",
         description: "Please add a Gemini API key in settings to use this feature.",
         variant: "destructive"
@@ -379,7 +378,7 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
       }
     } catch (error) {
       console.error("Error generating roadmap:", error);
-      toast({
+      useAppToast({
         title: "Generation Failed",
         description: "There was an error creating your custom roadmap. Please try again.",
         variant: "destructive"

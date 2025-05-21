@@ -1,4 +1,5 @@
 
+# CareerMapAI Robots.txt
 User-agent: *
 Allow: /
 Disallow: /settings

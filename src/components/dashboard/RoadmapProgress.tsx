@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ export function RoadmapProgress() {
       setIsLoading(true);
       try {
         // Fetch user's roadmaps from Supabase
-        const { user } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data, error } = await supabase
             .from('user_roadmaps')

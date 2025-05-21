@@ -7,15 +7,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useUserData } from "@/hooks/use-user-data";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
 import ProfileWizard from "@/components/ProfileWizard";
 import CustomCareerBuilder from "@/components/CustomCareerBuilder";
 import { RoadmapTemplate } from "@/data/roadmapTemplates";
-import { Check, FileDown, RefreshCcw, Clock, Sparkles } from "lucide-react";
+import { Check, FileDown, RefreshCcw, Clock, Sparkles, ArrowRight } from "lucide-react";
 
 export function RoadmapProgress() {
   const { userData, saveField } = useUserData();
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [customCareerBuilderOpen, setCustomCareerBuilderOpen] = React.useState(false);
+  const navigate = useNavigate();
   
   const handleStepToggle = (index: number) => {
     if (!userData.userRoadmap) return;
@@ -78,6 +80,10 @@ export function RoadmapProgress() {
   
   const openCustomCareerBuilder = () => {
     setCustomCareerBuilderOpen(true);
+  };
+
+  const viewAllRoadmaps = () => {
+    navigate("/career-progress");
   };
   
   if (!userData.userRoadmap) {
@@ -156,10 +162,20 @@ export function RoadmapProgress() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between border-t border-white/10 pt-4">
-          <Button variant="outline" size="sm" onClick={handleExportPDF}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
+          <div className="space-x-2">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={viewAllRoadmaps}
+            >
+              All Roadmaps
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
           <div className="space-x-2">
             <Button
               variant="outline"

@@ -27,6 +27,7 @@ import Features from "./pages/Features";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import GenZCareerDecider from "./pages/GenZCareerDecider";
+import CareerProgress from "./pages/CareerProgress";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,14 @@ const App = () => (
                 element={
                   <AuthGuard>
                     <CareerMatches />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/career-progress" 
+                element={
+                  <AuthGuard>
+                    <CareerProgress />
                   </AuthGuard>
                 } 
               />

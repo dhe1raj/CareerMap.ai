@@ -11,35 +11,103 @@ import { roadmapTemplates } from "@/data/roadmapTemplates";
 import { useUserData } from "@/hooks/use-user-data";
 import CustomCareerBuilder from "@/components/CustomCareerBuilder";
 import { Sparkles, Clock, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CareerDesigner() {
   const navigate = useNavigate();
   const { userData, saveField } = useUserData();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [customCareerOpen, setCustomCareerOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const { user } = useAuth();
   
   const handleSelectTemplate = (id: string) => {
     setSelectedTemplate(id);
   };
   
-  const handleCreateRoadmap = () => {
+  const handleCreateRoadmap = async () => {
     if (!selectedTemplate) return;
     
     const template = roadmapTemplates.find(t => t.id === selectedTemplate);
     if (!template) return;
     
-    const newRoadmap = {
-      id: template.id,
-      title: template.title,
-      steps: template.steps.map(step => ({
-        ...step,
-        completed: false
-      })),
-      lastUpdated: new Date().toISOString()
-    };
+    setIsCreating(true);
     
-    saveField("userRoadmap", newRoadmap);
-    navigate("/dashboard");
+    try {
+      // Generate a unique ID for the roadmap
+      const roadmapId = crypto.randomUUID();
+      
+      const newRoadmap = {
+        id: roadmapId,
+        title: template.title,
+        steps: template.steps.map(step => ({
+          ...step,
+          completed: false
+        })),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      if (user) {
+        // Save to Supabase if the user is logged in
+        const { data: roadmapData, error: roadmapError } = await supabase
+          .from('user_roadmaps')
+          .insert({
+            id: roadmapId,
+            user_id: user.id,
+            title: template.title,
+            category: template.category || null,
+            is_custom: false,
+            updated_at: new Date().toISOString()
+          })
+          .select();
+        
+        if (roadmapError) {
+          throw new Error(`Failed to create roadmap: ${roadmapError.message}`);
+        }
+        
+        // Insert all the roadmap steps
+        const stepsToInsert = template.steps.map((step, index) => ({
+          roadmap_id: roadmapId,
+          label: step.label,
+          order_number: step.order,
+          est_time: step.estTime,
+          completed: false
+        }));
+        
+        const { error: stepsError } = await supabase
+          .from('user_roadmap_steps')
+          .insert(stepsToInsert);
+          
+        if (stepsError) {
+          throw new Error(`Failed to create roadmap steps: ${stepsError.message}`);
+        }
+        
+        toast.success("Roadmap created successfully!");
+      }
+      
+      // Also save to localStorage as a fallback
+      saveField("userRoadmap", newRoadmap);
+      
+      // Update user roadmaps array in localStorage
+      const storedData = localStorage.getItem('userData') || '{}';
+      const parsedData = JSON.parse(storedData);
+      
+      if (!parsedData.userRoadmaps) {
+        parsedData.userRoadmaps = [];
+      }
+      
+      parsedData.userRoadmaps.push(newRoadmap);
+      localStorage.setItem('userData', JSON.stringify(parsedData));
+      
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error creating roadmap:", error);
+      toast.error("Failed to create roadmap. Please try again.");
+    } finally {
+      setIsCreating(false);
+    }
   };
   
   return (
@@ -120,10 +188,19 @@ export default function CareerDesigner() {
           <CardFooter className="flex justify-end">
             <Button 
               onClick={handleCreateRoadmap} 
-              disabled={!selectedTemplate || selectedTemplate === 'custom-ai'}
+              disabled={!selectedTemplate || selectedTemplate === 'custom-ai' || isCreating}
             >
-              Create Roadmap
-              <ArrowRight className="ml-2 h-4 w-4" />
+              {isCreating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-t-white border-white/20 rounded-full animate-spin mr-2"></div>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  Create Roadmap
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>

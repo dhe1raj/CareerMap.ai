@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { SuggestionChip } from "./SuggestionChip";
 import { useNavigate } from "react-router-dom";
 import { ProgressBar } from "./ProgressBar";
-import { ArrowRight, FileText, Download } from "lucide-react";
+import { ArrowRight, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useGeminiCareer } from "@/hooks/use-gemini-career";
 import { UserData } from "@/hooks/use-user-data";
 import { exportElementToPDF } from "@/utils/pdfExport";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface CareerProgressProps {
   userData: UserData;
@@ -27,46 +29,112 @@ export function CareerProgress({
   const { generateSuggestions, isProcessing } = useGeminiCareer();
   const [roadmapRef, setRoadmapRef] = useState<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(userData.career.progress);
+  const { user } = useAuth();
   
   // Get progress from the roadmaps
   useEffect(() => {
-    // Load progress data from localStorage for now
-    // Later we'll replace this with Supabase queries
-    const storedData = localStorage.getItem('userData');
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        if (parsedData.userRoadmaps && Array.isArray(parsedData.userRoadmaps)) {
-          // Calculate combined progress from all roadmaps
-          if (parsedData.userRoadmaps.length > 0) {
-            const averageProgress = parsedData.userRoadmaps.reduce((sum: number, roadmap: any) => {
-              if (roadmap.steps && roadmap.steps.length > 0) {
-                const completed = roadmap.steps.filter((step: any) => step.completed).length;
-                return sum + (completed / roadmap.steps.length * 100);
+    const fetchProgress = async () => {
+      // First try to get progress from Supabase if the user is logged in
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_roadmaps')
+            .select('*, user_roadmap_steps(*)')
+            .eq('user_id', user.id);
+          
+          if (error) {
+            console.error("Error fetching roadmaps from Supabase:", error);
+            fallbackToLocalStorage();
+          } else if (data && data.length > 0) {
+            // Calculate combined progress from all roadmaps
+            const averageProgress = data.reduce((sum: number, roadmap: any) => {
+              if (roadmap.user_roadmap_steps && roadmap.user_roadmap_steps.length > 0) {
+                const completed = roadmap.user_roadmap_steps.filter((step: any) => step.completed).length;
+                return sum + (completed / roadmap.user_roadmap_steps.length * 100);
               }
               return sum;
-            }, 0) / parsedData.userRoadmaps.length;
+            }, 0) / data.length;
             
-            setProgress(Math.round(averageProgress));
-            onUpdateField('career.progress', Math.round(averageProgress));
+            const roundedProgress = Math.round(averageProgress);
+            setProgress(roundedProgress);
+            onUpdateField('career.progress', roundedProgress);
           } else {
-            setProgress(userData.career.progress);
+            fallbackToLocalStorage();
           }
-        } else if (parsedData.userRoadmap) {
-          // Handle single roadmap case
-          if (parsedData.userRoadmap.steps && parsedData.userRoadmap.steps.length > 0) {
-            const completed = parsedData.userRoadmap.steps.filter((step: any) => step.completed).length;
-            const roadmapProgress = Math.round((completed / parsedData.userRoadmap.steps.length) * 100);
-            
-            setProgress(roadmapProgress);
-            onUpdateField('career.progress', roadmapProgress);
-          }
+        } catch (error) {
+          console.error("Failed to fetch roadmaps progress:", error);
+          fallbackToLocalStorage();
         }
-      } catch (error) {
-        console.error("Failed to parse saved roadmaps:", error);
+      } else {
+        // If not logged in, fall back to localStorage
+        fallbackToLocalStorage();
       }
+    };
+    
+    // Fallback to localStorage if Supabase fails or user is not logged in
+    const fallbackToLocalStorage = () => {
+      // Load progress data from localStorage
+      const storedData = localStorage.getItem('userData');
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          if (parsedData.userRoadmaps && Array.isArray(parsedData.userRoadmaps)) {
+            // Calculate combined progress from all roadmaps
+            if (parsedData.userRoadmaps.length > 0) {
+              const averageProgress = parsedData.userRoadmaps.reduce((sum: number, roadmap: any) => {
+                if (roadmap.steps && roadmap.steps.length > 0) {
+                  const completed = roadmap.steps.filter((step: any) => step.completed).length;
+                  return sum + (completed / roadmap.steps.length * 100);
+                }
+                return sum;
+              }, 0) / parsedData.userRoadmaps.length;
+              
+              setProgress(Math.round(averageProgress));
+              onUpdateField('career.progress', Math.round(averageProgress));
+            } else {
+              setProgress(userData.career.progress);
+            }
+          } else if (parsedData.userRoadmap) {
+            // Handle single roadmap case
+            if (parsedData.userRoadmap.steps && parsedData.userRoadmap.steps.length > 0) {
+              const completed = parsedData.userRoadmap.steps.filter((step: any) => step.completed).length;
+              const roadmapProgress = Math.round((completed / parsedData.userRoadmap.steps.length) * 100);
+              
+              setProgress(roadmapProgress);
+              onUpdateField('career.progress', roadmapProgress);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to parse saved roadmaps:", error);
+        }
+      }
+    };
+    
+    fetchProgress();
+    
+    // Set up Supabase realtime subscription for user_roadmaps changes
+    if (user) {
+      const channel = supabase
+        .channel('roadmap-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_roadmap_steps',
+          },
+          () => {
+            // When steps change, refetch the progress data
+            fetchProgress();
+          }
+        )
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
-  }, [userData, onUpdateField]);
+  }, [userData, onUpdateField, user]);
   
   useEffect(() => {
     // Generate suggestions if none exist

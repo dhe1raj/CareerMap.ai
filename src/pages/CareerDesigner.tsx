@@ -1,248 +1,342 @@
-import { useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
-import { RoadmapTemplate } from "@/data/roadmapTemplates";
-import { roadmapTemplates } from "@/data/roadmapTemplates";
-import { useUserData } from "@/hooks/use-user-data";
-import CustomCareerBuilder from "@/components/CustomCareerBuilder";
-import { Sparkles, Clock, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { SEOMetadata } from '@/components/SEOMetadata';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Sparkles, Laptop, BookOpen, ChevronRight } from 'lucide-react';
+import { RoadmapForm } from '@/components/roadmap/RoadmapForm';
+import { RoadmapPreview } from '@/components/roadmap/RoadmapPreview';
+import { useGenerateRoadmap } from '@/hooks/use-generate-roadmap';
+import { useRoadmaps } from '@/hooks/use-roadmaps';
+import { RoadmapFormData, Roadmap } from '@/types/roadmap';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+
+// Sample templates
+const ROADMAP_TEMPLATES = [
+  {
+    id: 'frontend-dev',
+    title: 'Frontend Developer',
+    type: 'role' as const,
+    description: 'Master modern web development with HTML, CSS, JavaScript, and React',
+    icon: <Laptop className="h-10 w-10 text-purple-500" />,
+    sections: [
+      {
+        title: 'Fundamentals',
+        items: [
+          { 
+            id: 'html',
+            label: 'HTML5', 
+            tooltip: 'Learn semantic HTML and best practices', 
+            link: 'https://developer.mozilla.org/en-US/docs/Web/HTML'
+          },
+          { 
+            id: 'css',
+            label: 'CSS3', 
+            tooltip: 'Master layouts, flexbox, grid, and responsive design', 
+            link: 'https://developer.mozilla.org/en-US/docs/Web/CSS'
+          },
+          { 
+            id: 'javascript',
+            label: 'JavaScript', 
+            tooltip: 'Core concepts, DOM manipulation, ES6+ features', 
+            link: 'https://javascript.info/'
+          }
+        ]
+      },
+      {
+        title: 'Frameworks',
+        items: [
+          { 
+            id: 'react',
+            label: 'React', 
+            tooltip: 'Component-based UI library for building interfaces', 
+            link: 'https://react.dev/'
+          },
+          { 
+            id: 'nextjs',
+            label: 'Next.js', 
+            tooltip: 'React framework with server-side rendering and more', 
+            link: 'https://nextjs.org/'
+          }
+        ]
+      },
+      {
+        title: 'Tools',
+        items: [
+          { 
+            id: 'git',
+            label: 'Git & GitHub', 
+            tooltip: 'Version control and collaboration', 
+            link: 'https://github.com/features'
+          },
+          { 
+            id: 'webpack',
+            label: 'Webpack', 
+            tooltip: 'Modern JavaScript module bundler', 
+            link: 'https://webpack.js.org/'
+          }
+        ]
+      },
+      {
+        title: 'Advanced',
+        items: [
+          { 
+            id: 'typescript',
+            label: 'TypeScript', 
+            tooltip: 'JavaScript with syntax for types', 
+            link: 'https://www.typescriptlang.org/'
+          },
+          { 
+            id: 'testing',
+            label: 'Testing', 
+            tooltip: 'Jest, React Testing Library, and more', 
+            link: 'https://jestjs.io/'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'data-science',
+    title: 'Data Scientist',
+    type: 'role' as const,
+    description: 'Learn statistics, machine learning, and data visualization',
+    icon: <BookOpen className="h-10 w-10 text-purple-500" />,
+    sections: [
+      {
+        title: 'Fundamentals',
+        items: [
+          { 
+            id: 'python',
+            label: 'Python', 
+            tooltip: 'Programming language for data science', 
+            link: 'https://www.python.org/'
+          },
+          { 
+            id: 'statistics',
+            label: 'Statistics', 
+            tooltip: 'Probability, hypothesis testing, and statistical analysis', 
+            link: 'https://www.khanacademy.org/math/statistics-probability'
+          }
+        ]
+      },
+      {
+        title: 'Libraries',
+        items: [
+          { 
+            id: 'pandas',
+            label: 'Pandas', 
+            tooltip: 'Data manipulation and analysis', 
+            link: 'https://pandas.pydata.org/'
+          },
+          { 
+            id: 'numpy',
+            label: 'NumPy', 
+            tooltip: 'Scientific computing with Python', 
+            link: 'https://numpy.org/'
+          },
+          { 
+            id: 'matplotlib',
+            label: 'Matplotlib', 
+            tooltip: 'Data visualization library', 
+            link: 'https://matplotlib.org/'
+          }
+        ]
+      },
+      {
+        title: 'Machine Learning',
+        items: [
+          { 
+            id: 'scikit',
+            label: 'Scikit-learn', 
+            tooltip: 'Machine learning in Python', 
+            link: 'https://scikit-learn.org/'
+          },
+          { 
+            id: 'tensorflow',
+            label: 'TensorFlow', 
+            tooltip: 'Deep learning framework', 
+            link: 'https://www.tensorflow.org/'
+          }
+        ]
+      },
+      {
+        title: 'Advanced',
+        items: [
+          { 
+            id: 'nlp',
+            label: 'Natural Language Processing', 
+            tooltip: 'Processing and analyzing text data', 
+            link: 'https://www.nltk.org/'
+          },
+          { 
+            id: 'big-data',
+            label: 'Big Data', 
+            tooltip: 'Spark, Hadoop, and distributed computing', 
+            link: 'https://spark.apache.org/'
+          }
+        ]
+      }
+    ]
+  }
+];
 
 export default function CareerDesigner() {
-  const navigate = useNavigate();
-  const { userData, saveField } = useUserData();
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [customCareerOpen, setCustomCareerOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
   const { user } = useAuth();
-  
-  const handleSelectTemplate = (id: string) => {
-    setSelectedTemplate(id);
+  const navigate = useNavigate();
+  const { isGenerating, generatedRoadmap, generateRoadmap, resetGeneratedRoadmap } = useGenerateRoadmap();
+  const { createRoadmap } = useRoadmaps();
+  const [isCreating, setIsCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState('templates');
+
+  const handleFormSubmit = async (data: RoadmapFormData) => {
+    await generateRoadmap(data);
+    setActiveTab('preview');
   };
-  
-  const handleCreateRoadmap = async () => {
-    if (!selectedTemplate) return;
-    
-    const template = roadmapTemplates.find(t => t.id === selectedTemplate);
-    if (!template) return;
-    
+
+  const handleSelectTemplate = (template: Roadmap) => {
+    resetGeneratedRoadmap();
+    setActiveTab('preview');
+    setTimeout(() => {
+      // This setTimeout ensures the state update happens after the tab change
+      generateRoadmap({
+        role: template.title,
+        studentType: 'student',
+        learningPreference: 'video'
+      });
+    }, 0);
+  };
+
+  const handleSaveRoadmap = async (roadmap: Roadmap) => {
+    if (!user) {
+      toast.error('Please sign in to save your roadmap');
+      navigate('/login');
+      return;
+    }
+
     setIsCreating(true);
-    
     try {
-      // Generate a unique ID for the roadmap
-      const roadmapId = crypto.randomUUID();
-      
-      const newRoadmap = {
-        id: roadmapId,
-        title: template.title,
-        steps: template.steps.map(step => ({
-          ...step,
-          completed: false
-        })),
-        lastUpdated: new Date().toISOString()
-      };
-      
-      if (user) {
-        // Save to Supabase if the user is logged in
-        const { data: roadmapData, error: roadmapError } = await supabase
-          .from('user_roadmaps')
-          .insert({
-            id: roadmapId,
-            user_id: user.id,
-            title: template.title,
-            category: template.category || null,
-            is_custom: false,
-            updated_at: new Date().toISOString()
-          })
-          .select();
-        
-        if (roadmapError) {
-          throw new Error(`Failed to create roadmap: ${roadmapError.message}`);
-        }
-        
-        // Insert all the roadmap steps
-        const stepsToInsert = template.steps.map((step, index) => ({
-          roadmap_id: roadmapId,
-          label: step.label,
-          order_number: step.order,
-          est_time: step.estTime,
-          completed: false
-        }));
-        
-        const { error: stepsError } = await supabase
-          .from('user_roadmap_steps')
-          .insert(stepsToInsert);
-          
-        if (stepsError) {
-          throw new Error(`Failed to create roadmap steps: ${stepsError.message}`);
-        }
-        
-        toast.success("Roadmap created successfully!");
+      const savedRoadmap = await createRoadmap(roadmap);
+      if (savedRoadmap) {
+        toast.success('Roadmap created successfully');
+        navigate(`/roadmap/${savedRoadmap.id}`);
       }
-      
-      // Also save to localStorage as a fallback
-      saveField("userRoadmap", newRoadmap);
-      
-      // Update user roadmaps array in localStorage
-      const storedData = localStorage.getItem('userData') || '{}';
-      const parsedData = JSON.parse(storedData);
-      
-      if (!parsedData.userRoadmaps) {
-        parsedData.userRoadmaps = [];
-      }
-      
-      parsedData.userRoadmaps.push(newRoadmap);
-      localStorage.setItem('userData', JSON.stringify(parsedData));
-      
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Error creating roadmap:", error);
-      toast.error("Failed to create roadmap. Please try again.");
     } finally {
       setIsCreating(false);
     }
   };
-  
+
+  const handleCancel = () => {
+    resetGeneratedRoadmap();
+    setActiveTab('ai');
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gradient">Design Your Career</h1>
-            <p className="text-muted-foreground mt-2">
-              Select a career path or create your own custom roadmap
-            </p>
-          </div>
+      <SEOMetadata
+        title="Career Designer | CareerMap"
+        description="Design your career roadmap with AI-powered tools and templates."
+      />
+      
+      <div className="container py-8 max-w-7xl">
+        <h1 className="text-3xl font-bold mb-1">Career Designer</h1>
+        <p className="text-muted-foreground mb-6">Design your personalized career roadmap</p>
+        
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="templates">
+              <BookOpen className="h-4 w-4 mr-2" /> Templates
+            </TabsTrigger>
+            <TabsTrigger value="ai">
+              <Sparkles className="h-4 w-4 mr-2" /> AI Designer
+            </TabsTrigger>
+            {generatedRoadmap && (
+              <TabsTrigger value="preview">
+                Preview
+              </TabsTrigger>
+            )}
+          </TabsList>
           
-          <Button 
-            onClick={() => setCustomCareerOpen(true)}
-            className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Design Custom Role
-          </Button>
-        </div>
-        
-        <Card className="glass-morphism">
-          <CardHeader>
-            <CardTitle>Choose a Career Template</CardTitle>
-            <CardDescription>
-              Select from our pre-built career path templates
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              value={selectedTemplate || ""}
-              onValueChange={handleSelectTemplate}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {roadmapTemplates.map((template) => (
-                <div key={template.id} className="relative">
-                  <RadioGroupItem
-                    value={template.id}
-                    id={template.id}
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor={template.id}
-                    className="flex flex-col p-4 rounded-lg border border-white/10 hover:border-purple-400/50 hover:bg-white/5 transition-all cursor-pointer peer-data-[state=checked]:border-purple-400 peer-data-[state=checked]:bg-purple-400/10 peer-data-[state=checked]:shadow-[0_0_15px_rgba(168,85,247,0.3)]"
-                  >
-                    <span className="text-base font-medium">{template.title}</span>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      {template.steps.length} steps
-                    </span>
-                  </Label>
-                </div>
-              ))}
-              
-              {/* Custom career option */}
-              <div className="relative">
-                <RadioGroupItem
-                  value="custom-ai"
-                  id="custom-ai"
-                  className="peer sr-only"
-                  onClick={() => setCustomCareerOpen(true)}
-                />
-                <Label
-                  htmlFor="custom-ai"
-                  className="flex flex-col p-4 rounded-lg border border-dashed border-purple-400/50 hover:border-purple-400/70 hover:bg-white/5 transition-all cursor-pointer"
+          <TabsContent value="templates" className="space-y-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {ROADMAP_TEMPLATES.map((template) => (
+                <Card key={template.id} className="glass-morphism hover:border-purple-500/40 transition-all cursor-pointer"
+                  onClick={() => handleSelectTemplate(template)}
                 >
-                  <div className="flex items-center">
-                    <Sparkles className="h-4 w-4 text-purple-400 mr-2" />
-                    <span className="text-base font-medium">Create Your Own</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground mt-1">
-                    AI-powered custom roadmap
-                  </span>
-                </Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button 
-              onClick={handleCreateRoadmap} 
-              disabled={!selectedTemplate || selectedTemplate === 'custom-ai' || isCreating}
-            >
-              {isCreating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-t-white border-white/20 rounded-full animate-spin mr-2"></div>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  Create Roadmap
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-        
-        {selectedTemplate && selectedTemplate !== 'custom-ai' && (
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>Preview: {roadmapTemplates.find(t => t.id === selectedTemplate)?.title}</CardTitle>
-              <CardDescription>
-                Review the steps in this career roadmap
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {roadmapTemplates
-                  .find(t => t.id === selectedTemplate)
-                  ?.steps.map((step, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-start gap-3 p-3 rounded-lg bg-white/5"
-                    >
-                      <div className="flex-none w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-sm">
-                        {step.order}
+                  <CardHeader>
+                    <div className="flex justify-between">
+                      <div>
+                        {template.icon}
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{step.label}</div>
-                        <div className="flex items-center text-xs text-muted-foreground mt-1">
-                          <Clock className="h-3 w-3 mr-1" /> {step.estTime}
-                        </div>
+                      <div className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full">
+                        {template.type.charAt(0).toUpperCase() + template.type.slice(1)}
                       </div>
                     </div>
-                  ))}
+                    <CardTitle className="mt-4">{template.title}</CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center text-sm text-purple-400">
+                      <span>Use this template</span>
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              <Card className="glass-morphism border border-dashed border-purple-500/30 flex flex-col items-center justify-center p-6 h-full">
+                <Button 
+                  variant="ghost"
+                  className="flex flex-col h-full w-full gap-3"
+                  onClick={() => setActiveTab('ai')}
+                >
+                  <Sparkles className="h-16 w-16 text-purple-500/70" />
+                  <div className="text-lg font-medium">Create Custom Roadmap</div>
+                  <div className="text-sm text-muted-foreground">
+                    Design a custom roadmap with AI
+                  </div>
+                </Button>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="ai">
+            <Card className="glass-morphism">
+              <CardHeader>
+                <CardTitle>Generate AI Roadmap</CardTitle>
+                <CardDescription>
+                  Our AI will create a personalized career roadmap based on your inputs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RoadmapForm onSubmit={handleFormSubmit} isGenerating={isGenerating} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="preview">
+            {generatedRoadmap ? (
+              <RoadmapPreview 
+                roadmap={generatedRoadmap} 
+                onSave={handleSaveRoadmap}
+                onCancel={handleCancel}
+                isLoading={isCreating}
+              />
+            ) : (
+              <div className="text-center p-12">
+                <p>No roadmap generated yet. Go back to AI Designer to create one.</p>
+                <Button onClick={() => setActiveTab('ai')} className="mt-4">
+                  Back to AI Designer
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-      
-      <CustomCareerBuilder 
-        isOpen={customCareerOpen} 
-        onClose={() => setCustomCareerOpen(false)}
-        isDialog={true}
-      />
     </DashboardLayout>
   );
 }

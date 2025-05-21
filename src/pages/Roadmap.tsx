@@ -1,372 +1,288 @@
 
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useGeminiContext } from "@/context/GeminiContext";
-import { useGemini } from "@/lib/gemini";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
-
-// Mock data for the roadmaps
-const roadmapMockData = {
-  "cybersecurity-analyst": {
-    title: "Cybersecurity Analyst",
-    steps: [
-      {
-        title: "Learn Foundational Concepts",
-        description: "Master the basic principles of cybersecurity and networking.",
-        items: [
-          "Networking fundamentals (TCP/IP, DNS, routing)",
-          "Basic security concepts (CIA triad, authentication, authorization)",
-          "Operating system security (Windows, Linux)"
-        ]
-      },
-      {
-        title: "Recommended Courses",
-        description: "Take these courses to build your knowledge base.",
-        items: [
-          "CompTIA Security+ Certification Course",
-          "Cybersecurity Fundamentals by University of Maryland (Coursera)",
-          "Ethical Hacking by Troy Hunt (Pluralsight)"
-        ]
-      },
-      {
-        title: "Build These Projects",
-        description: "Gain practical experience by building these projects.",
-        items: [
-          "Set up a home lab with virtual machines to practice security tasks",
-          "Conduct vulnerability assessment on a test environment",
-          "Configure and monitor a basic firewall"
-        ]
-      },
-      {
-        title: "Certifications to Pursue",
-        description: "Industry-recognized certifications to boost your credibility.",
-        items: [
-          "CompTIA Security+",
-          "Certified Ethical Hacker (CEH)",
-          "GIAC Security Essentials (GSEC)"
-        ]
-      },
-      {
-        title: "Communities to Join",
-        description: "Connect with other professionals in your field.",
-        items: [
-          "OWASP (Open Web Application Security Project)",
-          "r/netsec on Reddit",
-          "Infosec Community on Discord"
-        ]
-      }
-    ]
-  },
-  "data-scientist": {
-    title: "Data Scientist",
-    steps: [
-      {
-        title: "Learn Foundational Concepts",
-        description: "Master the fundamental principles of data science.",
-        items: [
-          "Mathematics and statistics (probability, hypothesis testing, regression)",
-          "Programming in Python and R",
-          "Data manipulation and cleaning techniques"
-        ]
-      },
-      {
-        title: "Recommended Courses",
-        description: "Take these courses to build your knowledge base.",
-        items: [
-          "Data Science Specialization by Johns Hopkins University (Coursera)",
-          "Machine Learning by Andrew Ng (Stanford/Coursera)",
-          "Python for Data Science and Machine Learning Bootcamp (Udemy)"
-        ]
-      },
-      {
-        title: "Build These Projects",
-        description: "Gain practical experience by building these projects.",
-        items: [
-          "Exploratory data analysis on a public dataset",
-          "Predictive model for housing prices or stock market",
-          "Customer segmentation using clustering algorithms"
-        ]
-      },
-      {
-        title: "Certifications to Pursue",
-        description: "Industry-recognized certifications to boost your credibility.",
-        items: [
-          "IBM Data Science Professional Certificate",
-          "Microsoft Certified: Azure Data Scientist Associate",
-          "Google Professional Data Engineer"
-        ]
-      },
-      {
-        title: "Communities to Join",
-        description: "Connect with other professionals in your field.",
-        items: [
-          "Kaggle",
-          "r/datascience on Reddit",
-          "Data Science Community on Discord"
-        ]
-      }
-    ]
-  },
-  "ux-designer": {
-    title: "UX Designer",
-    steps: [
-      {
-        title: "Learn Foundational Concepts",
-        description: "Master the fundamental principles of UX design.",
-        items: [
-          "User-centered design principles",
-          "Interaction design basics",
-          "Information architecture"
-        ]
-      },
-      {
-        title: "Recommended Courses",
-        description: "Take these courses to build your knowledge base.",
-        items: [
-          "Google UX Design Professional Certificate (Coursera)",
-          "User Experience Design Fundamentals (Udemy)",
-          "Interaction Design Foundation courses"
-        ]
-      },
-      {
-        title: "Build These Projects",
-        description: "Gain practical experience by building these projects.",
-        items: [
-          "Redesign an existing app or website",
-          "Conduct user research and create personas",
-          "Design a complete app from scratch with proper user flows"
-        ]
-      },
-      {
-        title: "Certifications to Pursue",
-        description: "Industry-recognized certifications to boost your credibility.",
-        items: [
-          "Nielsen Norman Group UX Certification",
-          "Certified User Experience Professional (CUXP)",
-          "Interaction Design Foundation Certification"
-        ]
-      },
-      {
-        title: "Communities to Join",
-        description: "Connect with other professionals in your field.",
-        items: [
-          "Dribbble",
-          "UX Design Community on Behance",
-          "r/userexperience on Reddit"
-        ]
-      }
-    ]
-  }
-};
-
-interface RoadmapStep {
-  title: string;
-  description: string;
-  items: string[];
-}
-
-interface RoadmapData {
-  title: string;
-  steps: RoadmapStep[];
-}
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { SEOMetadata } from '@/components/SEOMetadata';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Download, Share2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { RoadmapTree } from '@/components/roadmap/RoadmapTree';
+import { useRoadmaps } from '@/hooks/use-roadmaps';
+import { useAuth } from '@/context/AuthContext';
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
 
 export default function Roadmap() {
-  const { id } = useParams<{ id: string }>();
-  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
+  const { roadmapId } = useParams<{ roadmapId: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { getRoadmap, updateItemStatus, resetProgress, toggleRoadmapPublic } = useRoadmaps();
+  const [roadmapData, setRoadmapData] = useState<any>(null);
+  const [progressData, setProgressData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { apiKey } = useGeminiContext();
-  const { callGemini } = useGemini();
-  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRoadmap = async () => {
+    async function fetchRoadmap() {
+      if (!roadmapId) return;
+      
       setIsLoading(true);
-      try {
-        // First check if we have a stored roadmap from CareerDesigner
-        const storedRoadmap = localStorage.getItem('careerRoadmap');
-        
-        if (storedRoadmap) {
-          try {
-            const parsedRoadmap = JSON.parse(storedRoadmap);
-            setRoadmapData(parsedRoadmap);
-            localStorage.removeItem('careerRoadmap'); // Clear it after use
-            setIsLoading(false);
-            return;
-          } catch (error) {
-            console.error("Error parsing stored roadmap:", error);
-            // Continue to fallback options if parsing fails
-          }
-        }
-        
-        // If no stored roadmap or parsing failed, check if we have API key to generate one
-        if (apiKey && id) {
-          const careerField = id.replace(/-/g, ' ');
-          
-          // Generate roadmap with Gemini
-          const prompt = `Create a detailed career roadmap for someone who wants to become a ${careerField}.
-          
-          Include the following sections:
-          1. Foundational concepts to learn
-          2. Recommended courses or learning resources
-          3. Practical projects to build
-          4. Certifications to pursue
-          5. Professional communities to join
-          
-          Format the response as a JSON object with this structure:
-          {
-            "title": "${careerField}",
-            "steps": [
-              {
-                "title": "Step Title",
-                "description": "Brief description of the step",
-                "items": ["Item 1", "Item 2", "Item 3"]
-              }
-            ]
-          }`;
-          
-          const geminiResponse = await callGemini(prompt, apiKey);
-          
-          if (geminiResponse) {
-            try {
-              const parsedResponse = JSON.parse(geminiResponse);
-              setRoadmapData(parsedResponse);
-              setIsLoading(false);
-              return;
-            } catch (error) {
-              console.error("Error parsing Gemini response:", error);
-              toast({
-                title: "Error",
-                description: "Failed to parse the roadmap data. Using default data instead.",
-                variant: "destructive"
-              });
-            }
-          }
-        }
-        
-        // If all else fails, use the mock data
-        setRoadmapData(roadmapMockData[id as keyof typeof roadmapMockData] || roadmapMockData["data-scientist"]);
-      } catch (error) {
-        console.error("Error fetching roadmap:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load the roadmap. Using default data instead.",
-          variant: "destructive"
-        });
-        setRoadmapData(roadmapMockData[id as keyof typeof roadmapMockData] || roadmapMockData["data-scientist"]);
-      } finally {
-        setIsLoading(false);
+      const { roadmap, progress } = await getRoadmap(roadmapId);
+      
+      if (!roadmap) {
+        navigate('/career-designer');
+        return;
       }
-    };
+      
+      setRoadmapData(roadmap);
+      setProgressData(progress);
+      setIsLoading(false);
+    }
     
     fetchRoadmap();
-  }, [id, apiKey, callGemini, toast]);
+  }, [roadmapId, getRoadmap, navigate]);
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh]">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
-          <p className="mt-4 text-lg">Generating your personalized career roadmap...</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
-  
-  if (!roadmapData) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Career Roadmap
-            </h1>
-            <p className="text-muted-foreground">
-              We need a Gemini API key to generate your personalized career roadmap
-            </p>
-          </div>
+  const handleItemStatusChange = async (itemId: string, completed: boolean) => {
+    if (!roadmapId || !user) return;
+    
+    const updatedProgress = await updateItemStatus(roadmapId, itemId, completed);
+    if (updatedProgress) {
+      setProgressData({
+        ...progressData,
+        ...updatedProgress
+      });
+      
+      if (completed) {
+        toast.success('Progress updated!');
+      }
+    }
+  };
+
+  const handleResetProgress = async () => {
+    if (!roadmapId || !user) return;
+    
+    await resetProgress(roadmapId);
+    // Reset progress data
+    setProgressData({
+      ...progressData,
+      completed_items: [],
+      progress_pct: 0
+    });
+  };
+
+  const handleTogglePublic = async () => {
+    if (!roadmapId || !user || !roadmapData) return;
+    
+    await toggleRoadmapPublic(roadmapId, !roadmapData.is_public);
+    
+    // Update local state
+    setRoadmapData({
+      ...roadmapData,
+      is_public: !roadmapData.is_public
+    });
+  };
+
+  const handleExportPDF = async () => {
+    if (!roadmapData) return;
+    
+    try {
+      const doc = new jsPDF();
+      
+      // Title
+      doc.setFontSize(22);
+      doc.text(`${roadmapData.title} Roadmap`, 20, 20);
+      
+      // Progress info
+      const progressPct = progressData ? Math.round(progressData.progress_pct) : 0;
+      doc.setFontSize(12);
+      doc.text(`Progress: ${progressPct}%`, 20, 30);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 40);
+      doc.text(`Career Map AI - careermapai.in`, 20, 50);
+      
+      // Create a spacer
+      let yPosition = 70;
+      
+      // Loop through sections and items
+      roadmapData.sections.forEach((section: any) => {
+        // Check if we need a new page
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        // Section title
+        doc.setFontSize(16);
+        doc.text(section.title, 20, yPosition);
+        yPosition += 10;
+        
+        // Section items
+        doc.setFontSize(12);
+        section.items.forEach((item: any) => {
+          // Check if we need a new page
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
           
-          <GeminiApiKeyInput />
-        </div>
-      </DashboardLayout>
-    );
-  }
-  
+          const checkmark = item.completed ? "✓" : "□";
+          doc.text(`${checkmark} ${item.label}`, 25, yPosition);
+          
+          // Add tooltip as a subtext if it exists
+          if (item.tooltip) {
+            yPosition += 6;
+            doc.setFontSize(10);
+            doc.text(`    ${item.tooltip}`, 25, yPosition);
+            doc.setFontSize(12);
+          }
+          
+          yPosition += 10;
+        });
+        
+        yPosition += 10;
+      });
+      
+      // Save the PDF
+      doc.save(`${roadmapData.title.toLowerCase().replace(/\s+/g, '-')}-roadmap.pdf`);
+      toast.success('PDF exported successfully');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
+
+  const handleCopyShareLink = () => {
+    if (!roadmapData || !roadmapData.is_public) {
+      toast.error('Make the roadmap public first to share it');
+      return;
+    }
+    
+    const url = `${window.location.origin}/roadmap/${roadmapId}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Share link copied to clipboard');
+  };
+
+  const isOwner = user && roadmapData?.user_id === user.id;
+  const progressPct = progressData ? Math.round(progressData.progress_pct) : 0;
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Your Career Roadmap to {roadmapData.title}
-          </h1>
-          <p className="text-muted-foreground">
-            Follow this step-by-step plan to achieve your career goal.
-          </p>
-        </div>
-        
-        <div className="relative">
-          <div className="absolute left-9 top-3 bottom-3 w-px bg-border/50" />
-          
+      <SEOMetadata 
+        title={roadmapData ? `${roadmapData.title} Roadmap | CareerMap` : 'Loading Roadmap | CareerMap'}
+        description={`Interactive step-by-step roadmap for ${roadmapData?.title || 'your career'}. Track your progress and complete your learning journey.`}
+      />
+      
+      <div className="container py-8 max-w-7xl">
+        {isLoading ? (
           <div className="space-y-6">
-            {roadmapData.steps.map((step, index) => (
-              <div key={index} className="relative">
-                <div className="absolute left-0 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-primary bg-background z-10 text-primary font-bold">
-                  {index + 1}
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+            <Skeleton className="h-[500px] w-full" />
+          </div>
+        ) : roadmapData ? (
+          <>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+              <div className="flex-grow">
+                <h1 className="text-3xl font-bold mb-1">{roadmapData.title}</h1>
+                <p className="text-muted-foreground">
+                  <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-1 rounded-full mr-2">
+                    {roadmapData.type.charAt(0).toUpperCase() + roadmapData.type.slice(1)}
+                  </span>
+                  {roadmapData.sections.length} sections • {roadmapData.sections.reduce((acc: number, section: any) => acc + section.items.length, 0)} skills
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-end">
+                <div className="text-2xl font-bold">{progressPct}%</div>
+                <div className="text-xs text-muted-foreground">Complete</div>
+              </div>
+            </div>
+            
+            <div className="mb-6 w-full">
+              <Progress value={progressPct} className="h-2" />
+            </div>
+            
+            {!user && (
+              <Alert className="mb-6 bg-yellow-500/10 border-yellow-500/50">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                <AlertDescription>
+                  Sign in to track your progress on this roadmap.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <Card className="glass-morphism mb-6">
+              <CardContent className="pt-6">
+                <RoadmapTree 
+                  roadmap={roadmapData} 
+                  onItemClick={user ? handleItemStatusChange : undefined}
+                  readonly={!user}
+                />
+              </CardContent>
+              <CardFooter className="border-t border-white/10 pt-4 flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </Button>
+                  
+                  {isOwner && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleTogglePublic}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      {roadmapData.is_public ? 'Make Private' : 'Make Public'}
+                    </Button>
+                  )}
+                  
+                  {roadmapData.is_public && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleCopyShareLink}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Copy Share Link
+                    </Button>
+                  )}
                 </div>
                 
-                <Card className="ml-16">
-                  <CardHeader className="pb-2">
-                    <CardTitle>{step.title}</CardTitle>
-                    <CardDescription>{step.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {step.items.map((item, itemIndex) => (
-                        <li key={itemIndex} className="flex items-start">
-                          <Badge variant="outline" className="mr-2 mt-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
-                            ✓
-                          </Badge>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  {index === 1 && ( // Only for courses section
-                    <CardFooter>
-                      <Button variant="outline" size="sm">
-                        Explore All Courses
-                      </Button>
-                    </CardFooter>
-                  )}
-                </Card>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader>
-            <CardTitle>Export or Share Your Roadmap</CardTitle>
-            <CardDescription>
-              Save your roadmap for later reference or share with others.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Button>
-                Export as PDF
+                {user && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleResetProgress}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset Progress
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </>
+        ) : (
+          <Card className="glass-morphism">
+            <CardHeader>
+              <CardTitle>Roadmap Not Found</CardTitle>
+              <CardDescription>
+                The roadmap you're looking for doesn't exist or you don't have access to it.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Button onClick={() => navigate('/career-designer')}>
+                Create a Roadmap
               </Button>
-              <Button variant="outline">
-                Email This Roadmap
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardFooter>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

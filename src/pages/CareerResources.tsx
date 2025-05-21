@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Link, Check, Video, FileText, Code } from "lucide-react";
 import "../styles/glassmorphism.css";
-import { ResourceRow, UserResourceProgressRow } from "@/utils/supabase-types-helper";
+import { ResourceRow, UserResourceProgressInsert, UserResourceProgressRow } from "@/utils/supabase-types-helper";
 
 // Resource type icons mapping
 const resourceTypeIcons: Record<string, React.ReactNode> = {
@@ -47,22 +47,59 @@ export default function CareerResources() {
       
       setIsLoading(true);
       try {
-        // Fetch resources
-        const { data: existingResources, error: resourcesError } = await supabase
-          .from('resources')
-          .select('*');
+        // Fetch resources using RPC
+        const { data: existingResources, error: resourcesError } = await supabase.rpc('get_all_resources');
         
-        if (resourcesError) throw resourcesError;
-        
-        if (existingResources && existingResources.length > 0) {
+        if (resourcesError) {
+          // Fallback to direct fetch
+          const { data: directResources, error: directError } = await supabase
+            .from('resources')
+            .select('*');
+            
+          if (directError) throw directError;
+          
+          if (directResources && directResources.length > 0) {
+            setResources(directResources as unknown as ResourceRow[]);
+            
+            // Fetch user progress
+            const { data: progressData, error: progressError } = await supabase.rpc('get_user_resource_progress', {
+              user_id_param: user.id
+            });
+            
+            if (progressError) {
+              // Fallback to direct fetch
+              const { data: directProgress, error: directProgressError } = await supabase
+                .from('user_resource_progress')
+                .select('*')
+                .eq('user_id', user.id);
+                
+              if (!directProgressError && directProgress) {
+                // Create a map of resource_id -> completed status
+                const progressMap: Record<string, boolean> = {};
+                (directProgress as unknown as UserResourceProgressRow[]).forEach(item => {
+                  progressMap[item.resource_id] = !!item.completed;
+                });
+                setUserProgress(progressMap);
+              }
+            } else if (progressData) {
+              // Create a map of resource_id -> completed status
+              const progressMap: Record<string, boolean> = {};
+              (progressData as unknown as UserResourceProgressRow[]).forEach(item => {
+                progressMap[item.resource_id] = !!item.completed;
+              });
+              setUserProgress(progressMap);
+            }
+          } else {
+            await createMockResources();
+          }
+        } else if (existingResources && existingResources.length > 0) {
           // Resources exist
           setResources(existingResources as unknown as ResourceRow[]);
           
           // Fetch user progress
-          const { data: progressData, error: progressError } = await supabase
-            .from('user_resource_progress')
-            .select('*')
-            .eq('user_id', user.id);
+          const { data: progressData, error: progressError } = await supabase.rpc('get_user_resource_progress', {
+            user_id_param: user.id
+          });
           
           if (!progressError && progressData) {
             // Create a map of resource_id -> completed status
@@ -145,19 +182,44 @@ export default function CareerResources() {
     ];
 
     try {
-      // Insert mock resources and get inserted data
+      // Insert mock resources using RPC
       const insertedResources: ResourceRow[] = [];
       
       for (const resource of mockResources) {
-        const { data, error } = await supabase
-          .from('resources')
-          .insert(resource)
-          .select();
-          
+        const { data, error } = await supabase.rpc('insert_resource', {
+          type_param: resource.type,
+          title_param: resource.title,
+          url_param: resource.url,
+          thumbnail_param: resource.thumbnail || null,
+          skill_tag_param: resource.skill_tag,
+          description_param: resource.description
+        });
+        
         if (error) {
-          console.error("Error inserting resource:", error);
-        } else if (data && data.length > 0) {
-          insertedResources.push(data[0] as unknown as ResourceRow);
+          console.error("RPC error:", error);
+          
+          // Fallback to direct insert
+          const { data: directData, error: directError } = await supabase
+            .from('resources')
+            .insert(resource as any)
+            .select();
+            
+          if (directError) {
+            console.error("Direct insert error:", directError);
+          } else if (directData && directData.length > 0) {
+            insertedResources.push(directData[0] as unknown as ResourceRow);
+          }
+        } else if (data) {
+          // If RPC successful, fetch the inserted resource
+          const { data: fetchData } = await supabase
+            .from('resources')
+            .select()
+            .eq('title', resource.title)
+            .single();
+            
+          if (fetchData) {
+            insertedResources.push(fetchData as unknown as ResourceRow);
+          }
         }
       }
       
@@ -174,17 +236,30 @@ export default function CareerResources() {
     try {
       const newStatus = !currentStatus;
       
-      // Update user progress in database
-      const { error } = await supabase
-        .from('user_resource_progress')
-        .upsert({
+      // Update user progress using RPC
+      const { error } = await supabase.rpc('upsert_user_resource_progress', {
+        user_id_param: user.id,
+        resource_id_param: resourceId,
+        completed_param: newStatus,
+        completed_at_param: newStatus ? new Date().toISOString() : null
+      });
+      
+      if (error) {
+        // Fallback to direct upsert
+        // Create a progress object to upsert
+        const progressData: UserResourceProgressInsert = {
           user_id: user.id,
           resource_id: resourceId,
           completed: newStatus,
-          completed_at: newStatus ? new Date().toISOString() : null
-        } as any); // Type assertion to bypass TS check temporarily
-      
-      if (error) throw error;
+          completed_at: newStatus ? new Date().toISOString() : undefined
+        };
+        
+        const { error: directError } = await supabase
+          .from('user_resource_progress')
+          .upsert(progressData as any);
+        
+        if (directError) throw directError;
+      }
       
       // Update local state
       setUserProgress(prev => ({

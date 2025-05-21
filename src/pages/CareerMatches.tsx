@@ -11,16 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGeminiCareer } from "@/hooks/use-gemini-career";
 import { Briefcase, BookOpen, ArrowRight } from "lucide-react";
 import "../styles/glassmorphism.css";
+import { MatchRow, UserMatchInsert } from "@/utils/supabase-types-helper";
 
-interface CareerMatch {
-  id: string;
-  role: string;
-  short_desc: string;
-  icon: string;
-  match_pct: number;
-  bullets: string[];
-  created_at: string;
-}
+type CareerMatch = MatchRow;
 
 export default function CareerMatches() {
   const [matches, setMatches] = useState<CareerMatch[]>([]);
@@ -44,7 +37,7 @@ export default function CareerMatches() {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Type assertion to ensure the data matches our interface
+          // We need to cast the data to our CareerMatch type
           setMatches(data as unknown as CareerMatch[]);
         } else {
           // Need to generate matches with AI
@@ -129,21 +122,45 @@ export default function CareerMatches() {
       const insertedMatches: CareerMatch[] = [];
       
       for (const match of mockMatches) {
-        const { data, error } = await supabase
-          .from('matches')
-          .insert({
-            role: match.role,
-            short_desc: match.short_desc,
-            icon: match.icon,
-            match_pct: match.match_pct,
-            bullets: match.bullets
-          })
-          .select();
-          
+        // Use a raw SQL query via rpc to insert the match with the custom type
+        const { data, error } = await supabase.rpc('insert_match', {
+          role_param: match.role,
+          short_desc_param: match.short_desc,
+          icon_param: match.icon,
+          match_pct_param: match.match_pct,
+          bullets_param: match.bullets
+        });
+        
         if (error) {
           console.error("Error inserting match:", error);
-        } else if (data && data.length > 0) {
-          insertedMatches.push(data[0] as unknown as CareerMatch);
+          // Fallback to direct insert with type assertions
+          const { data: directData, error: directError } = await supabase
+            .from('matches')
+            .insert({
+              role: match.role,
+              short_desc: match.short_desc,
+              icon: match.icon,
+              match_pct: match.match_pct,
+              bullets: match.bullets
+            } as any)
+            .select();
+            
+          if (directError) {
+            console.error("Direct insert error:", directError);
+          } else if (directData && directData.length > 0) {
+            insertedMatches.push(directData[0] as unknown as CareerMatch);
+          }
+        } else if (data) {
+          // If rpc successful, fetch the inserted match
+          const { data: fetchData } = await supabase
+            .from('matches')
+            .select()
+            .eq('role', match.role)
+            .single();
+            
+          if (fetchData) {
+            insertedMatches.push(fetchData as unknown as CareerMatch);
+          }
         }
       }
       
@@ -170,15 +187,26 @@ export default function CareerMatches() {
     }
     
     try {
-      // Store user-match relationship (use mock for now until types are updated)
-      const { error } = await supabase
-        .from('user_matches')
-        .insert({
-          user_id: user.id,
-          match_id: matchId
-        } as any);  // Type assertion to bypass TS check temporarily
+      // Create a user-match relationship object
+      const userMatch: UserMatchInsert = {
+        user_id: user.id,
+        match_id: matchId
+      };
       
-      if (error) throw error;
+      // Store user-match relationship using RPC
+      const { error } = await supabase.rpc('insert_user_match', {
+        user_id_param: user.id,
+        match_id_param: matchId
+      });
+      
+      if (error) {
+        // Fallback to direct insert
+        const { error: directError } = await supabase
+          .from('user_matches')
+          .insert(userMatch as any);
+          
+        if (directError) throw directError;
+      }
       
       toast({
         title: "Success!",

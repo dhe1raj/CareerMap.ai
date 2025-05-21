@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { GeminiProvider } from './context/GeminiContext';
 import { Toaster } from '@/components/ui/sonner';
+import Index from './pages/Index';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
@@ -75,7 +76,7 @@ function AppContent() {
       <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
-      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+      <Route path="/" element={<Index />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

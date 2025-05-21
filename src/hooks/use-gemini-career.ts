@@ -252,10 +252,65 @@ Format your response as a detailed JSON object with the following structure (wit
     }
   }, [callGemini, toast]);
 
+  // Generate learning resources for a career path
+  const generateLearningResources = useCallback(async (careerPath: string, skills: string[]): Promise<any> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `Generate a comprehensive list of learning resources for someone pursuing a career as a ${careerPath}.
+They want to focus on developing these skills: ${skills.join(', ')}.
+
+Format your response as a JSON array with the following structure (no explanation, just the JSON):
+[
+  {
+    "title": "Resource title",
+    "description": "Brief description of what this resource offers",
+    "type": "course/book/tool/video/article",
+    "skillCategory": "frontend/backend/design/ai/data/soft/other",
+    "url": "https://example.com/resource",
+    "skillName": "Specific skill this resource helps develop"
+  },
+  ... more resources (at least 15 total)
+]`;
+      
+      const result = await callGemini(prompt);
+      
+      if (!result) return null;
+      
+      // Parse the JSON response
+      try {
+        // Find JSON array in response
+        const match = result.match(/\[[\s\S]*\]/);
+        if (match) {
+          const jsonStr = match[0];
+          const resources = JSON.parse(jsonStr);
+          
+          return resources;
+        } else {
+          throw new Error("Could not find JSON array in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing learning resources:", parseError);
+        throw new Error("Failed to generate learning resources");
+      }
+    } catch (error) {
+      console.error("Error generating learning resources:", error);
+      toast({
+        title: "Failed to Generate Resources",
+        description: "There was an error creating your learning resources. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callGemini, toast]);
+
   return {
     isProcessing,
     generateSuggestions,
     analyzeResume,
-    generateCareerRoadmap
+    generateCareerRoadmap,
+    generateLearningResources
   };
 }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -44,11 +45,11 @@ export default function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png" 
-              alt="CareerForge Logo" 
+              src="/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png" 
+              alt="CareerMap Logo" 
               className="h-8" 
             />
-            <span className="text-xl font-bold">CareerForge</span>
+            <span className="text-xl font-bold">CareerMap</span>
           </Link>
         </div>
 
@@ -147,7 +148,7 @@ export default function Navbar() {
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
-              <SheetTitle>CareerForge</SheetTitle>
+              <SheetTitle>CareerMap</SheetTitle>
               <SheetDescription>
                 Navigate to different sections of the app.
               </SheetDescription>

@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import ProfileWizard from "@/components/ProfileWizard";
 import CustomCareerBuilder from "@/components/CustomCareerBuilder";
-import { RoadmapTemplate } from "@/data/roadmapTemplates";
 import { Check, FileDown, RefreshCcw, Clock, Sparkles, ArrowRight } from "lucide-react";
 
 export function RoadmapProgress() {
@@ -109,6 +108,14 @@ export function RoadmapProgress() {
             >
               <Sparkles className="mr-2 h-4 w-4 text-purple-300" />
               Design Your Own Career Role (AI)
+            </Button>
+            <Button 
+              onClick={viewAllRoadmaps}
+              variant="outline" 
+              className="w-full border border-purple-400/30 bg-purple-500/10 hover:bg-purple-500/20"
+            >
+              <ArrowRight className="mr-2 h-4 w-4 text-purple-300" />
+              View Career Progress
             </Button>
           </div>
         </CardContent>

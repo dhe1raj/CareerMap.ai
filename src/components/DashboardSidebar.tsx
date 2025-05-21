@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -80,6 +81,26 @@ export default function DashboardSidebar() {
                       <line x1="8" x2="16" y1="12" y2="12" />
                     </svg>
                     <span>Design My Career</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/career-progress">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 20v-6M6 20V10M18 20V4" />
+                    </svg>
+                    <span>Career Progress</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>

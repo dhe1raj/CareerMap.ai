@@ -26,6 +26,47 @@ export function CareerProgress({
   const { toast } = useToast();
   const { generateSuggestions, isProcessing } = useGeminiCareer();
   const [roadmapRef, setRoadmapRef] = useState<HTMLDivElement | null>(null);
+  const [progress, setProgress] = useState(userData.career.progress);
+  
+  // Get progress from the roadmaps
+  useEffect(() => {
+    // Load progress data from localStorage for now
+    // Later we'll replace this with Supabase queries
+    const storedData = localStorage.getItem('userData');
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        if (parsedData.userRoadmaps && Array.isArray(parsedData.userRoadmaps)) {
+          // Calculate combined progress from all roadmaps
+          if (parsedData.userRoadmaps.length > 0) {
+            const averageProgress = parsedData.userRoadmaps.reduce((sum: number, roadmap: any) => {
+              if (roadmap.steps && roadmap.steps.length > 0) {
+                const completed = roadmap.steps.filter((step: any) => step.completed).length;
+                return sum + (completed / roadmap.steps.length * 100);
+              }
+              return sum;
+            }, 0) / parsedData.userRoadmaps.length;
+            
+            setProgress(Math.round(averageProgress));
+            onUpdateField('career.progress', Math.round(averageProgress));
+          } else {
+            setProgress(userData.career.progress);
+          }
+        } else if (parsedData.userRoadmap) {
+          // Handle single roadmap case
+          if (parsedData.userRoadmap.steps && parsedData.userRoadmap.steps.length > 0) {
+            const completed = parsedData.userRoadmap.steps.filter((step: any) => step.completed).length;
+            const roadmapProgress = Math.round((completed / parsedData.userRoadmap.steps.length) * 100);
+            
+            setProgress(roadmapProgress);
+            onUpdateField('career.progress', roadmapProgress);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to parse saved roadmaps:", error);
+      }
+    }
+  }, [userData, onUpdateField]);
   
   useEffect(() => {
     // Generate suggestions if none exist
@@ -43,6 +84,10 @@ export function CareerProgress({
   
   const handleDesignCareer = () => {
     navigate('/career-designer');
+  };
+  
+  const handleViewProgress = () => {
+    navigate('/career-progress');
   };
   
   const handleExportRoadmap = async () => {
@@ -86,7 +131,7 @@ export function CareerProgress({
         <CardDescription>Your progress toward career goals</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <ProgressBar progress={userData.career.progress} />
+        <ProgressBar progress={progress} />
         
         <div className="space-y-4">
           <h4 className="text-sm font-medium text-white/70">Suggested Roles</h4>
@@ -127,13 +172,12 @@ export function CareerProgress({
         </Button>
         
         <Button 
-          onClick={handleExportRoadmap} 
+          onClick={handleViewProgress} 
           variant="outline" 
-          disabled={!userData.career.roadmap}
           className="ml-2"
         >
-          <Download className="mr-2 h-4 w-4" />
-          Export
+          View Progress
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>

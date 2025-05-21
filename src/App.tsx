@@ -16,6 +16,9 @@ import ResumeAnalysis from './pages/ResumeAnalysis';
 import CareerProgressPage from './pages/CareerProgress';
 import CareerResources from './pages/CareerResources';
 import NotFound from './pages/NotFound';
+import About from './pages/About';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import setupRoadmapTables from "./utils/supabase-setup";
@@ -76,7 +79,14 @@ function AppContent() {
       <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
+      
+      {/* Public pages that don't require authentication */}
       <Route path="/" element={<Index />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      
+      {/* Catch-all for 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

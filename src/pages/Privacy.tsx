@@ -1,10 +1,34 @@
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEOMetadata from "@/components/SEOMetadata";
 
 export default function Privacy() {
+  // JSON-LD schema for Privacy page
+  const privacyJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Privacy Policy | CareerMapAI",
+    "description": "CareerMapAI's privacy policy details how we collect, use, and protect your personal information when you use our AI-powered career platform.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CareerMapAI",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://careermapai.in/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png"
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOMetadata 
+        title="Privacy Policy | CareerMapAI"
+        description="CareerMapAI's privacy policy details how we collect, use, and protect your personal information when you use our AI-powered career platform."
+        keywords="careermapai privacy, career map ai privacy policy, data protection, user privacy, information security"
+        canonicalPath="/privacy"
+        jsonLd={privacyJsonLd}
+      />
       <Navbar />
       <main className="flex-grow py-16 container mx-auto px-4">
         <div className="max-w-4xl mx-auto">

@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -14,18 +15,46 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile, signOut } = useAuth();
 
-  const handleLogout = () => {
-    // In a real app, we would logout from a backend here
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Get user initials for avatar fallback
+  const getInitials = () => {
+    if (profile?.full_name) {
+      // Extract initials from full name
+      return profile.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    } else if (user?.email) {
+      // Use first letter of email
+      return user.email[0].toUpperCase();
+    }
+    return "U"; // Default fallback
   };
 
   return (
@@ -296,12 +325,14 @@ export default function DashboardSidebar() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              {profile?.avatar_url ? (
+                <AvatarImage src={profile.avatar_url} alt={profile?.full_name || user?.email || "User"} />
+              ) : null}
+              <AvatarFallback>{getInitials()}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium text-sm">John Doe</p>
-              <p className="text-xs text-muted-foreground">john@example.com</p>
+              <p className="font-medium text-sm">{profile?.full_name || user?.email?.split('@')[0] || "User"}</p>
+              <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
             </div>
           </div>
           <Button 

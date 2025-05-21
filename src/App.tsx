@@ -66,8 +66,17 @@ function AppContent() {
 
   return (
     <Routes>
+      {/* Public routes that are accessible to everyone */}
+      <Route path="/" element={<Index />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      
+      {/* Authentication routes */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+      
+      {/* Protected routes that require authentication */}
       <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
       <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/career-designer" element={user ? <CareerDesigner /> : <Navigate to="/login" />} />
@@ -77,14 +86,8 @@ function AppContent() {
       <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
       <Route path="/career-progress" element={user ? <CareerProgressPage /> : <Navigate to="/login" />} />
       <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
-      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
+      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to "/login" />} />
       <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
-      
-      {/* Public pages that don't require authentication */}
-      <Route path="/" element={<Index />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
       
       {/* Catch-all for 404 */}
       <Route path="*" element={<NotFound />} />

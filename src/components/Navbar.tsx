@@ -59,6 +59,12 @@ export default function Navbar() {
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center space-x-6">
           <Link
+            to="/"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Home
+          </Link>
+          <Link
             to="/features"
             className="text-sm font-medium text-muted-foreground hover:text-foreground"
           >

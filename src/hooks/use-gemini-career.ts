@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGeminiContext } from '@/context/GeminiContext';
@@ -37,7 +36,13 @@ export function useGeminiCareer() {
                 { text: prompt }
               ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 2048,
+          }
         })
       });
       
@@ -179,6 +184,62 @@ ${resumeText}`;
       setIsProcessing(false);
     }
   }, [callGemini]);
+  
+  // Generate GenZ career roadmap
+  const generateGenZRoadmap = useCallback(async (role: string): Promise<any> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `Generate a detailed roadmap in JSON format for a GenZ student in 1st year CSE at GITAM University who wants to become a ${role}. 
+Divide into sections like basics, tools, projects. Include tooltip and one resource link per item.
+Format your response as a structured JSON like this exact format without any explanation or markdown:
+{
+  "title": "${role}",
+  "sections": [
+    {
+      "title": "Basics",
+      "items": [
+        {
+          "label": "Python",
+          "tooltip": "Learn syntax and loops",
+          "link": "https://..."
+        }
+      ]
+    }
+  ]
+}`;
+
+      const result = await callGemini(prompt);
+      
+      if (!result) return null;
+      
+      // Parse the JSON response
+      try {
+        // Find JSON object in response
+        const match = result.match(/\{[\s\S]*\}/);
+        if (match) {
+          const jsonStr = match[0];
+          const roadmap = JSON.parse(jsonStr);
+          return roadmap;
+        } else {
+          throw new Error("Could not find JSON object in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing GenZ roadmap:", parseError);
+        throw new Error("Failed to generate career roadmap");
+      }
+    } catch (error) {
+      console.error("Error generating GenZ roadmap:", error);
+      toast({
+        title: "Failed to Generate Roadmap",
+        description: "There was an error creating your career roadmap. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callGemini, toast]);
 
   // Generate career roadmap based on selected career path
   const generateCareerRoadmap = useCallback(async (careerPath: string, userInterests: string[]): Promise<any> => {
@@ -311,6 +372,7 @@ Format your response as a JSON array with the following structure (no explanatio
     generateSuggestions,
     analyzeResume,
     generateCareerRoadmap,
-    generateLearningResources
+    generateLearningResources,
+    generateGenZRoadmap
   };
 }

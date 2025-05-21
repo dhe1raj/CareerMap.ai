@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 // Type to represent the RoadmapProgress structure expected from the database
 export interface SupabaseRoadmapProgress {
@@ -111,16 +112,41 @@ export const supabaseRpc = {
         if (typeof roadmap.sections === 'string') {
           // If it's a JSON string, parse it
           try {
-            parsedSections = JSON.parse(roadmap.sections);
+            parsedSections = JSON.parse(roadmap.sections) as RoadmapSection[];
           } catch (e) {
             console.warn('Failed to parse roadmap sections JSON string');
           }
         } else if (Array.isArray(roadmap.sections)) {
-          // If it's already an array
-          parsedSections = roadmap.sections;
+          // If it's already an array, map it to ensure type safety
+          parsedSections = (roadmap.sections as Json[]).map(section => {
+            // Safely convert the Json type to RoadmapSection
+            if (typeof section === 'object' && section !== null) {
+              return {
+                title: String(section.title || ''),
+                items: Array.isArray(section.items) 
+                  ? section.items.map(item => ({
+                      id: String(item.id || ''),
+                      label: String(item.label || '')
+                    }))
+                  : []
+              };
+            }
+            return { title: '', items: [] };
+          });
         } else if (typeof roadmap.sections === 'object' && roadmap.sections !== null) {
-          // If it's some other object, try to use it if it has sections property
-          parsedSections = [roadmap.sections as unknown as RoadmapSection];
+          // If it's some other object, try to convert it
+          const section = roadmap.sections as unknown as Json;
+          if (typeof section === 'object' && section !== null) {
+            parsedSections = [{
+              title: String(section.title || ''),
+              items: Array.isArray(section.items) 
+                ? section.items.map(item => ({
+                    id: String(item.id || ''),
+                    label: String(item.label || '')
+                  }))
+                : []
+            }];
+          }
         }
         
         // Count items from all sections

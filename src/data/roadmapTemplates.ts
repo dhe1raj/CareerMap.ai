@@ -10,6 +10,7 @@ export interface RoadmapTemplate {
   id: string;
   title: string;
   steps: RoadmapStep[];
+  category?: string; // Added category property as optional
 }
 
 export const roadmapTemplates: RoadmapTemplate[] = [

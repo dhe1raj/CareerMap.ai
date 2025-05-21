@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -33,7 +32,7 @@ export default function DashboardSidebar() {
     <Sidebar>
       <SidebarHeader className="py-6 px-3">
         <div className="flex items-center space-x-2">
-          <div className="text-xl font-bold text-gradient">CareerPath</div>
+          <div className="text-xl font-bold text-gradient">CareerMap</div>
         </div>
       </SidebarHeader>
       <SidebarContent>

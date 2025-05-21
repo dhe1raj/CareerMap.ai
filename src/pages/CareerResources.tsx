@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { RoadmapResource } from "@/utils/supabase-helpers";
 import { supabaseCustom } from "@/utils/supabase-helpers";
-import { ExternalLink, FileText, Tool, Book } from "lucide-react";
+import { ExternalLink, FileText, Settings, Book } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
@@ -49,7 +49,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
       case "video":
         return <ExternalLink className="h-5 w-5 text-purple-400" />;
       case "tool":
-        return <Tool className="h-5 w-5 text-blue-400" />;
+        return <Settings className="h-5 w-5 text-blue-400" />;
       case "book":
         return <Book className="h-5 w-5 text-amber-400" />;
       default:
@@ -158,6 +158,34 @@ export default function CareerResources() {
         
         // Map resources to component props
         if (resourcesData) {
+          const handleResourceComplete = async (id: string, completed: boolean) => {
+            try {
+              // Update the resource completion status in Supabase
+              const { error } = await supabaseCustom.resources.update({ id, completed }).eq('id', id);
+              
+              if (error) throw error;
+              
+              // Update local state
+              const updatedResources = resources.map(r => 
+                r.id === id ? { ...r, completed } : r
+              );
+              
+              setResources(updatedResources);
+              
+              // Update progress calculation
+              if (updatedResources.length > 0) {
+                const completedCount = updatedResources.filter(r => r.completed).length;
+                const newProgress = Math.round((completedCount / updatedResources.length) * 100);
+                setProgress(newProgress);
+              }
+              
+              toast.success(completed ? "Resource marked as completed!" : "Resource marked as incomplete");
+            } catch (error) {
+              console.error("Error updating resource:", error);
+              toast.error("Failed to update progress");
+            }
+          };
+
           const mappedResources = resourcesData.map(r => ({
             id: r.id,
             title: r.label,
@@ -167,6 +195,7 @@ export default function CareerResources() {
             url: r.url || "#",
             completed: r.completed,
             roadmapId: r.roadmap_id,
+            onComplete: handleResourceComplete
           }));
           
           setResources(mappedResources);

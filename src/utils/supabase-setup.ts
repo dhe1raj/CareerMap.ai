@@ -10,7 +10,7 @@ export async function setupRoadmapTables() {
       .limit(1);
     
     if (resourcesCheckError && resourcesCheckError.code === '42P01') {
-      // Create the roadmap_resources table
+      // Table doesn't exist, create it using the function
       const { error } = await supabase.rpc('create_roadmap_resources_table');
       if (error) throw error;
       console.log("Created roadmap_resources table");

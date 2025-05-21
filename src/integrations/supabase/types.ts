@@ -101,6 +101,73 @@ export type Database = {
         }
         Relationships: []
       }
+      roadmap_resources: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: string
+          label: string
+          roadmap_id: string
+          url: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          label: string
+          roadmap_id: string
+          url?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          label?: string
+          roadmap_id?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_resources_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "user_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_skills: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: string
+          label: string
+          roadmap_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          label: string
+          roadmap_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          label?: string
+          roadmap_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_skills_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "user_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadmap_steps: {
         Row: {
           category: string
@@ -144,6 +211,73 @@ export type Database = {
             columns: ["roadmap_id"]
             isOneToOne: false
             referencedRelation: "roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_timeline: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: string
+          order_number: number
+          roadmap_id: string
+          step: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          order_number: number
+          roadmap_id: string
+          step: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          order_number?: number
+          roadmap_id?: string
+          step?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_timeline_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "user_roadmaps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_tools: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: string
+          label: string
+          roadmap_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          label: string
+          roadmap_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: string
+          label?: string
+          roadmap_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_tools_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "user_roadmaps"
             referencedColumns: ["id"]
           },
         ]
@@ -368,7 +502,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_roadmap_resources_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_roadmap_skills_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_roadmap_timeline_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_roadmap_tools_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

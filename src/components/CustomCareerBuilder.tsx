@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, ArrowRight, Edit, Save, RefreshCw, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { supabaseCustom } from "@/utils/supabase-helpers";
 import { useAuth } from "@/context/AuthContext";
 
 interface CareerBuilderQuestion {
@@ -496,17 +497,17 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
           throw new Error(`Failed to create roadmap steps: ${stepsError.message}`);
         }
         
-        // Save detailed roadmap components separately
+        // Save detailed roadmap components separately using the custom helpers
         // Resources
         if (parsedRoadmap.resources.length > 0) {
-          const { error: resourcesError } = await supabase
-            .from('roadmap_resources')
-            .insert(parsedRoadmap.resources.map(resource => ({
-              roadmap_id: roadmapId,
-              label: resource.label,
-              url: resource.url || null,
-              completed: false
-            })));
+          const resourcesToInsert = parsedRoadmap.resources.map(resource => ({
+            roadmap_id: roadmapId,
+            label: resource.label,
+            url: resource.url || null,
+            completed: false
+          }));
+          
+          const { error: resourcesError } = await supabaseCustom.resources.insert(resourcesToInsert);
             
           if (resourcesError) {
             console.error("Error saving resources:", resourcesError);
@@ -515,13 +516,13 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
         
         // Skills
         if (parsedRoadmap.skills.length > 0) {
-          const { error: skillsError } = await supabase
-            .from('roadmap_skills')
-            .insert(parsedRoadmap.skills.map(skill => ({
-              roadmap_id: roadmapId,
-              label: skill.label,
-              completed: false
-            })));
+          const skillsToInsert = parsedRoadmap.skills.map(skill => ({
+            roadmap_id: roadmapId,
+            label: skill.label,
+            completed: false
+          }));
+          
+          const { error: skillsError } = await supabaseCustom.skills.insert(skillsToInsert);
             
           if (skillsError) {
             console.error("Error saving skills:", skillsError);
@@ -530,14 +531,14 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
         
         // Timeline
         if (parsedRoadmap.timeline.length > 0) {
-          const { error: timelineError } = await supabase
-            .from('roadmap_timeline')
-            .insert(parsedRoadmap.timeline.map((item, index) => ({
-              roadmap_id: roadmapId,
-              step: item.step,
-              order_number: index + 1,
-              completed: false
-            })));
+          const timelineToInsert = parsedRoadmap.timeline.map((item, index) => ({
+            roadmap_id: roadmapId,
+            step: item.step || "",
+            order_number: index + 1,
+            completed: false
+          }));
+          
+          const { error: timelineError } = await supabaseCustom.timeline.insert(timelineToInsert);
             
           if (timelineError) {
             console.error("Error saving timeline:", timelineError);
@@ -546,13 +547,13 @@ Return ONLY valid JSON without any explanation, formatting, or markdown.`;
         
         // Tools
         if (parsedRoadmap.tools.length > 0) {
-          const { error: toolsError } = await supabase
-            .from('roadmap_tools')
-            .insert(parsedRoadmap.tools.map(tool => ({
-              roadmap_id: roadmapId,
-              label: tool.label,
-              completed: false
-            })));
+          const toolsToInsert = parsedRoadmap.tools.map(tool => ({
+            roadmap_id: roadmapId,
+            label: tool.label,
+            completed: false
+          }));
+          
+          const { error: toolsError } = await supabaseCustom.tools.insert(toolsToInsert);
             
           if (toolsError) {
             console.error("Error saving tools:", toolsError);

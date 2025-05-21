@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import GeminiApiKeyInput from "@/components/GeminiApiKeyInput";
+import AccountProfileForm from "@/components/AccountProfileForm";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -35,18 +36,7 @@ export default function Settings() {
           </TabsList>
           
           <TabsContent value="account" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>
-                  Update your personal details and profile information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Account settings content would go here */}
-                <p>Account settings coming soon...</p>
-              </CardContent>
-            </Card>
+            <AccountProfileForm />
           </TabsContent>
           
           <TabsContent value="appearance" className="space-y-6">

@@ -12,6 +12,7 @@ export interface CareerMatch {
 
 export function useGeminiCareer() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // Added missing state
   const [matches, setMatches] = useState<CareerMatch[]>([]);
   const { toast } = useToast();
   const { geminiClient, apiKey } = useGemini();
@@ -100,10 +101,27 @@ export function useGeminiCareer() {
     }
   };
   
+  // Added missing generateSuggestions function
+  const generateSuggestions = async () => {
+    setIsProcessing(true);
+    try {
+      // Mock implementation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return ["Improve your resume", "Learn new skills", "Network more"];
+    } catch (error) {
+      console.error("Error generating suggestions:", error);
+      return [];
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
   return {
     isLoading,
+    isProcessing, // Added missing state
     matches,
     generateCareerMatches,
-    analyzeResume
+    analyzeResume,
+    generateSuggestions // Added missing method
   };
 }

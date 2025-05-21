@@ -1,292 +1,287 @@
+import React, { useState } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
+import SEOMetadata from '@/components/SEOMetadata';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useGeminiCareer } from '@/hooks/use-gemini-career';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CareerMatchCard } from '@/components/career/CareerMatchCard';
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Sparkles, Upload } from 'lucide-react';
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useGeminiCareer } from "@/hooks/use-gemini-career";
-import { Briefcase, BookOpen, ArrowRight } from "lucide-react";
-import "../styles/glassmorphism.css";
-import { 
-  MatchRow, 
-  UserMatchInsert, 
-  supabaseCustomHelpers,
-  callRPC
-} from "@/utils/supabase-types-helper";
-
-type CareerMatch = MatchRow;
-
-export default function CareerMatches() {
-  const [matches, setMatches] = useState<CareerMatch[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+const CareerMatches = () => {
+  const [skills, setSkills] = useState<string[]>([]);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [education, setEducation] = useState('');
+  const [skillInput, setSkillInput] = useState('');
+  const [interestInput, setInterestInput] = useState('');
+  const [resumeText, setResumeText] = useState('');
+  const [resumeAnalysis, setResumeAnalysis] = useState<{ summary: string; suggestions: string[] } | null>(null);
+  
+  const { isLoading, isProcessing, matches, generateCareerMatches, analyzeResume, generateSuggestions } = useGeminiCareer();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isProcessing, generateSuggestions } = useGeminiCareer();
-
+  
   useEffect(() => {
-    const fetchMatches = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      try {
-        // Check if matches already exist
-        const { data, error } = await supabaseCustomHelpers.matches.select();
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          // We need to cast the data to our CareerMatch type
-          setMatches(data);
-        } else {
-          // Need to generate matches with AI
-          await generateMatchesWithAI();
-        }
-      } catch (error) {
-        console.error("Error fetching career matches:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load career matches. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchMatches();
-  }, [user, toast]);
-  
-  // Generate matches using AI
-  const generateMatchesWithAI = async () => {
-    if (!user) return;
-    
-    try {
-      // Get user profile data
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileError) throw profileError;
-      
-      // Mock data for demonstration (replace with actual AI call later)
-      const mockMatches = [
-        {
-          role: "Software Engineer",
-          short_desc: "Develop applications and systems using various programming languages",
-          icon: "code",
-          match_pct: 95,
-          bullets: ["Strong coding skills", "Problem-solving aptitude", "Avg salary: $120K"],
-        },
-        {
-          role: "Data Scientist",
-          short_desc: "Extract insights from large datasets and create predictive models",
-          icon: "database",
-          match_pct: 92,
-          bullets: ["Statistical analysis", "Machine learning", "Avg salary: $130K"],
-        },
-        {
-          role: "UX Designer",
-          short_desc: "Design user interfaces and experiences for digital products",
-          icon: "layout",
-          match_pct: 88,
-          bullets: ["Creative thinking", "User empathy", "Avg salary: $110K"],
-        },
-        {
-          role: "Product Manager",
-          short_desc: "Lead development of products from conception to launch",
-          icon: "briefcase",
-          match_pct: 85,
-          bullets: ["Strategic planning", "Team leadership", "Avg salary: $140K"],
-        },
-        {
-          role: "DevOps Engineer",
-          short_desc: "Manage infrastructure and deployment pipelines",
-          icon: "server",
-          match_pct: 82,
-          bullets: ["CI/CD experience", "Cloud platforms", "Avg salary: $125K"],
-        },
-        {
-          role: "AI Engineer",
-          short_desc: "Build AI models and systems that can perform tasks requiring human intelligence",
-          icon: "cpu",
-          match_pct: 79,
-          bullets: ["Deep learning", "Neural networks", "Avg salary: $135K"],
-        }
-      ];
-      
-      // Insert mock matches into the database
-      const insertedMatches: CareerMatch[] = [];
-      
-      for (const match of mockMatches) {
-        try {
-          // Use our custom RPC function via the callRPC helper
-          const { error } = await callRPC('insert_match', {
-            role_param: match.role,
-            short_desc_param: match.short_desc,
-            icon_param: match.icon,
-            match_pct_param: match.match_pct,
-            bullets_param: match.bullets
-          });
-          
-          if (error) {
-            console.error("Error inserting match:", error);
-            // Fallback to direct insert
-            const { data: directData, error: directError } = await supabaseCustomHelpers.matches.insert({
-              role: match.role,
-              short_desc: match.short_desc,
-              icon: match.icon,
-              match_pct: match.match_pct,
-              bullets: match.bullets
-            });
-              
-            if (directError) {
-              console.error("Direct insert error:", directError);
-            } else if (directData && directData.length > 0) {
-              insertedMatches.push(directData[0]);
-            }
-          } else {
-            // If RPC successful, fetch the inserted match
-            const { data: fetchData } = await supabaseCustomHelpers.matches.select();
-            
-            const newMatch = fetchData?.find(m => m.role === match.role);
-            if (newMatch) {
-              insertedMatches.push(newMatch);
-            }
-          }
-        } catch (err) {
-          console.error("Error in match insertion:", err);
-        }
-      }
-      
-      setMatches(insertedMatches);
-    } catch (error) {
-      console.error("Error generating AI matches:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate career matches. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Add role to user's saved paths
-  const addToMyPaths = async (matchId: string) => {
     if (!user) {
-      toast({
-        title: "Not logged in",
-        description: "Please log in to save career paths",
-        variant: "destructive"
-      });
-      return;
+      navigate('/login');
     }
-    
-    try {
-      // Create a user-match relationship object
-      const userMatch: UserMatchInsert = {
-        user_id: user.id,
-        match_id: matchId
-      };
-      
-      // Store user-match relationship using RPC
-      const { error } = await callRPC('insert_user_match', {
-        user_id_param: user.id,
-        match_id_param: matchId
-      });
-      
-      if (error) {
-        // Fallback to direct insert
-        const { error: directError } = await supabaseCustomHelpers.userMatches.insert(userMatch);
-          
-        if (directError) throw directError;
-      }
-      
-      toast({
-        title: "Success!",
-        description: "Career path added to your saved paths",
-      });
-      
-      // Navigate to Career Designer with this role pre-selected
-      navigate(`/career-designer?role=${matchId}`);
-    } catch (error) {
-      console.error("Error saving career path:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save career path. Please try again.",
-        variant: "destructive"
-      });
+  }, [user, navigate]);
+  
+  const handleAddSkill = () => {
+    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
+      setSkills([...skills, skillInput.trim()]);
+      setSkillInput('');
     }
   };
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-lg">Finding your perfect career matches...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
+  
+  const handleRemoveSkill = (skill: string) => {
+    setSkills(skills.filter(s => s !== skill));
+  };
+  
+  const handleAddInterest = () => {
+    if (interestInput.trim() && !interests.includes(interestInput.trim())) {
+      setInterests([...interests, interestInput.trim()]);
+      setInterestInput('');
+    }
+  };
+  
+  const handleRemoveInterest = (interest: string) => {
+    setInterests(interests.filter(i => i !== interest));
+  };
+  
+  const handleGenerateMatches = async () => {
+    const results = await generateCareerMatches(skills, interests, education);
+    console.log("Generated matches:", results);
+  };
+  
+  const handleAnalyzeResume = async () => {
+    if (!resumeText.trim()) return;
+    
+    const analysis = await analyzeResume(resumeText);
+    setResumeAnalysis(analysis);
+  };
+  
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-2">Matched Roles for You</h1>
-        <p className="text-white/70 mb-8">These careers align with your skills, interests, and goals.</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {matches.map((match) => (
-            <Card key={match.id} className="card-hover glass-morphism">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <Badge variant="secondary" className="bg-primary/20 text-white">
-                    {match.match_pct}% match
-                  </Badge>
-                  <Briefcase className="h-6 w-6 text-purple-400" />
-                </div>
-                <CardTitle className="text-xl text-gradient-primary mt-2">{match.role}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-white/80 mb-4">{match.short_desc}</p>
-                <ul className="space-y-1 mb-4">
-                  {match.bullets.map((bullet, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <span className="text-purple-400">•</span>
-                      <span className="text-white/70">{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => navigate(`/role-details/${match.id}`)}
-                >
-                  Explore Role
-                </Button>
-                <Button 
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => addToMyPaths(match.id)}
-                >
-                  Add to My Paths
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+      <SEOMetadata 
+        title="Career Matches | CareerMap"
+        description="Discover career paths that match your skills and interests."
+        keywords="career matches, job recommendations, skills assessment"
+        canonicalPath="/career-matches"
+      />
+      
+      <div className="container py-8 max-w-7xl">
+        <h1 className="text-3xl font-bold mb-2">Career Matches</h1>
+        <p className="text-muted-foreground mb-6">Find career paths that match your skills and interests</p>
+        
+        <Tabs defaultValue="skills">
+          <TabsList className="mb-6">
+            <TabsTrigger value="skills">Skills & Interests</TabsTrigger>
+            <TabsTrigger value="resume">Resume Analysis</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="skills">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="glass-morphism">
+                <CardHeader>
+                  <CardTitle>Your Profile</CardTitle>
+                  <CardDescription>Enter your skills, interests, and education</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Skills</label>
+                    <div className="flex gap-2 mb-2">
+                      <Input 
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
+                        placeholder="Add a skill..."
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+                      />
+                      <Button onClick={handleAddSkill} type="button">Add</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {skills.map((skill) => (
+                        <div key={skill} className="bg-purple-500/20 text-purple-100 px-2 py-1 rounded-md flex items-center gap-2">
+                          {skill}
+                          <button 
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="text-purple-300 hover:text-white"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Interests</label>
+                    <div className="flex gap-2 mb-2">
+                      <Input 
+                        value={interestInput}
+                        onChange={(e) => setInterestInput(e.target.value)}
+                        placeholder="Add an interest..."
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddInterest()}
+                      />
+                      <Button onClick={handleAddInterest} type="button">Add</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {interests.map((interest) => (
+                        <div key={interest} className="bg-purple-500/20 text-purple-100 px-2 py-1 rounded-md flex items-center gap-2">
+                          {interest}
+                          <button 
+                            onClick={() => handleRemoveInterest(interest)}
+                            className="text-purple-300 hover:text-white"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Education</label>
+                    <Input 
+                      value={education}
+                      onChange={(e) => setEducation(e.target.value)}
+                      placeholder="Highest education level or field of study"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleGenerateMatches} 
+                    disabled={isLoading || skills.length === 0}
+                    className="w-full glowing-purple"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate Career Matches
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <div>
+                <h2 className="text-xl font-bold mb-4">Your Career Matches</h2>
+                
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Card key={i} className="glass-morphism">
+                        <CardHeader>
+                          <Skeleton className="h-6 w-3/4 mb-2" />
+                          <Skeleton className="h-4 w-1/2" />
+                        </CardHeader>
+                        <CardContent>
+                          <Skeleton className="h-4 w-full mb-2" />
+                          <Skeleton className="h-4 w-5/6" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : matches.length > 0 ? (
+                  <div className="space-y-4">
+                    {matches.map((match, index) => (
+                      <CareerMatchCard key={index} match={match} />
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="glass-morphism text-center p-6">
+                    <p className="text-muted-foreground">
+                      Enter your skills and interests, then generate matches to see career recommendations.
+                    </p>
+                  </Card>
+                )}
+                
+                {isProcessing ? (
+                  <div>Processing...</div>
+                ) : (
+                  <Button onClick={generateSuggestions}>Generate Suggestions</Button>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="resume">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="glass-morphism">
+                <CardHeader>
+                  <CardTitle>Resume Analysis</CardTitle>
+                  <CardDescription>Paste your resume to get career insights</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea 
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                    placeholder="Paste your resume text here..."
+                    className="min-h-[200px]"
+                  />
+                  
+                  <Button 
+                    onClick={handleAnalyzeResume} 
+                    disabled={isLoading || !resumeText.trim()}
+                    className="w-full"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Analyze Resume
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <div>
+                <h2 className="text-xl font-bold mb-4">Resume Analysis</h2>
+                
+                {isLoading ? (
+                  <Card className="glass-morphism">
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4 mb-2" />
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </CardContent>
+                  </Card>
+                ) : resumeAnalysis ? (
+                  <Card className="glass-morphism">
+                    <CardHeader>
+                      <CardTitle>Analysis Results</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h3 className="font-medium mb-2">Summary</h3>
+                        <p>{resumeAnalysis.summary}</p>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium mb-2">Suggestions</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {resumeAnalysis.suggestions.map((suggestion, index) => (
+                            <li key={index}>{suggestion}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="glass-morphism text-center p-6">
+                    <p className="text-muted-foreground">
+                      Paste your resume and analyze it to get personalized feedback and career suggestions.
+                    </p>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
-}
+};
+
+export default CareerMatches;

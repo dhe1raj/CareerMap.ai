@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SEOMetadata } from '@/components/SEOMetadata';
+import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -29,15 +28,16 @@ export default function Roadmap() {
       if (!roadmapId) return;
       
       setIsLoading(true);
-      const { roadmap, progress } = await getRoadmap(roadmapId);
+      const result = await getRoadmap(roadmapId);
       
-      if (!roadmap) {
+      // Fix for "expression of type 'void' cannot be tested for truthiness"
+      if (!result || !result.roadmap) {
         navigate('/career-designer');
         return;
       }
       
-      setRoadmapData(roadmap);
-      setProgressData(progress);
+      setRoadmapData(result.roadmap);
+      setProgressData(result.progress);
       setIsLoading(false);
     }
     
@@ -171,6 +171,8 @@ export default function Roadmap() {
       <SEOMetadata 
         title={roadmapData ? `${roadmapData.title} Roadmap | CareerMap` : 'Loading Roadmap | CareerMap'}
         description={`Interactive step-by-step roadmap for ${roadmapData?.title || 'your career'}. Track your progress and complete your learning journey.`}
+        keywords="roadmap, career path, skills, learning"
+        canonicalPath={`/roadmap/${roadmapId}`}
       />
       
       <div className="container py-8 max-w-7xl">

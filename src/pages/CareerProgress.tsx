@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import SEOMetadata from '@/components/SEOMetadata'; // Fix import here
+import SEOMetadata from '@/components/SEOMetadata'; // Fixed import
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -37,6 +37,7 @@ export default function CareerProgress() {
         },
         cancel: {
           label: "Cancel",
+          onClick: () => {} // Added onClick handler
         },
       }
     );

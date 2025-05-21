@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export default function Auth() {
     } else if (path === "/signup") {
       setActiveTab("signup");
     }
+    // Default to login tab for /auth path
   }, [location]);
 
   // If user is already logged in, redirect to dashboard

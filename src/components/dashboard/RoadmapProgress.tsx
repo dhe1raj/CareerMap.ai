@@ -1,33 +1,54 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useUserData } from "@/hooks/use-user-data";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import ProfileWizard from "@/components/ProfileWizard";
 import CustomCareerBuilder from "@/components/CustomCareerBuilder";
-import { Check, FileDown, RefreshCcw, Clock, Sparkles, ArrowRight } from "lucide-react";
+import { FileDown, RefreshCcw, Sparkles, ArrowRight } from "lucide-react";
+import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
+import { supabase } from "@/integrations/supabase/client";
 
 export function RoadmapProgress() {
   const { userData, saveField } = useUserData();
-  const [wizardOpen, setWizardOpen] = React.useState(false);
-  const [customCareerBuilderOpen, setCustomCareerBuilderOpen] = React.useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [customCareerBuilderOpen, setCustomCareerBuilderOpen] = useState(false);
   const navigate = useNavigate();
+  const [userRoadmaps, setUserRoadmaps] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const handleStepToggle = (index: number) => {
-    if (!userData.userRoadmap) return;
+  useEffect(() => {
+    const fetchUserRoadmaps = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch user's roadmaps from Supabase
+        const { user } = await supabase.auth.getUser();
+        if (user) {
+          const { data, error } = await supabase
+            .from('user_roadmaps')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('updated_at', { ascending: false })
+            .limit(1);
+          
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            setUserRoadmaps(data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user roadmaps:", error);
+        toast.error("Failed to load roadmap data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    const newCompleted = !userData.userRoadmap.steps[index].completed;
-    saveField(`userRoadmap.steps.${index}`, { completed: newCompleted });
-    
-    if (newCompleted) {
-      toast.success("Progress updated! Keep going!");
-    }
-  };
+    fetchUserRoadmaps();
+  }, []);
   
   const handleExportPDF = () => {
     try {
@@ -85,7 +106,11 @@ export function RoadmapProgress() {
     navigate("/career-progress");
   };
   
-  if (!userData.userRoadmap) {
+  const handleProgressUpdate = (progress: number) => {
+    saveField("career.progress", progress);
+  };
+  
+  if (!userData.userRoadmap && userRoadmaps.length === 0) {
     return (
       <Card className="glass-morphism">
         <CardHeader>
@@ -125,13 +150,70 @@ export function RoadmapProgress() {
     );
   }
   
+  // Display the first roadmap from Supabase if available
+  if (userRoadmaps.length > 0) {
+    const latestRoadmap = userRoadmaps[0];
+    
+    return (
+      <>
+        <Card className="glass-morphism">
+          <CardHeader>
+            <CardTitle>{latestRoadmap.title} Roadmap</CardTitle>
+            <CardDescription>Your step-by-step career plan</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RoadmapProgressTracker 
+              roadmapId={latestRoadmap.id} 
+              title={latestRoadmap.title}
+              onProgressUpdate={handleProgressUpdate}
+            />
+          </CardContent>
+          <CardFooter className="flex justify-between border-t border-white/10 pt-4">
+            <div className="space-x-2">
+              <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={viewAllRoadmaps}
+              >
+                All Roadmaps
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openCustomCareerBuilder}
+              >
+                <Sparkles className="h-4 w-4 mr-2 text-purple-300" />
+                Create Custom
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Reset Progress
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+        
+        <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
+        <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
+      </>
+    );
+  }
+  
+  // Fallback to local storage data if needed
   return (
     <>
       <Card className="glass-morphism">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle>{userData.userRoadmap.title} Roadmap</CardTitle>
+              <CardTitle>{userData.userRoadmap?.title} Roadmap</CardTitle>
               <CardDescription>Your step-by-step career plan</CardDescription>
             </div>
             <div className="text-right">
@@ -141,32 +223,46 @@ export function RoadmapProgress() {
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
-          <Progress value={userData.career.progress} className="h-2" />
+          {/* Use the system from local storage for now */}
+          {/* Add the new component here when Supabase integration is fully complete */}
+          {/* For now displaying legacy content */}
           
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-            {userData.userRoadmap.steps.map((step, index) => (
-              <div 
-                key={index} 
-                className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                  step.completed 
-                    ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                    : "bg-white/5"
-                }`}
-              >
-                <Checkbox 
-                  checked={step.completed} 
-                  onCheckedChange={() => handleStepToggle(index)}
-                  className={step.completed ? "text-brand-500" : ""}
-                />
-                <div className="flex-1">
-                  <div className="font-medium">{step.label}</div>
-                  <div className="flex items-center text-xs text-muted-foreground mt-1">
-                    <Clock className="h-3 w-3 mr-1" /> {step.estTime}
+          {userData.userRoadmap && userData.userRoadmap.steps && userData.userRoadmap.steps.length > 0 && (
+            <div>
+              {userData.userRoadmap.steps.map((step, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
+                    step.completed 
+                      ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                      : "bg-white/5"
+                  }`}
+                >
+                  <input 
+                    type="checkbox"
+                    checked={step.completed}
+                    onChange={() => {
+                      if (!userData.userRoadmap) return;
+                      
+                      const newCompleted = !step.completed;
+                      saveField(`userRoadmap.steps.${index}`, { completed: newCompleted });
+                      
+                      if (newCompleted) {
+                        toast.success("Progress updated! Keep going!");
+                      }
+                    }}
+                    className={step.completed ? "text-brand-500" : ""}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium">{step.label}</div>
+                    <div className="flex items-center text-xs text-muted-foreground mt-1">
+                      {step.estTime}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex justify-between border-t border-white/10 pt-4">
           <div className="space-x-2">

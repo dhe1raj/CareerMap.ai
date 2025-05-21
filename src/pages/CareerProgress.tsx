@@ -11,42 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { exportElementToPDF } from "@/utils/pdfExport";
 import { toast } from "sonner";
-import { ArrowRight, FileDown, Trash2, Calendar, CheckCircle, BookOpen, Wrench, Clock, ExternalLink } from "lucide-react";
+import { ArrowRight, FileDown, Trash2, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-
-interface RoadmapResource {
-  id: string;
-  label: string;
-  url: string | null;
-  completed: boolean;
-}
-
-interface RoadmapSkill {
-  id: string;
-  label: string;
-  completed: boolean;
-}
-
-interface RoadmapTool {
-  id: string;
-  label: string;
-  completed: boolean;
-}
-
-interface RoadmapTimelineItem {
-  id: string;
-  step: string;
-  order_number: number;
-  completed: boolean;
-}
-
-interface RoadmapDetails {
-  resources: RoadmapResource[];
-  skills: RoadmapSkill[];
-  tools: RoadmapTool[];
-  timeline: RoadmapTimelineItem[];
-}
+import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
 
 export default function CareerProgress() {
   const navigate = useNavigate();
@@ -54,7 +22,6 @@ export default function CareerProgress() {
   const { user } = useAuth();
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
   const [isRoadmapsLoading, setIsRoadmapsLoading] = useState(true);
-  const [roadmapDetails, setRoadmapDetails] = useState<Record<string, RoadmapDetails>>({});
   const [activeTab, setActiveTab] = useState<string>('main');
   
   useEffect(() => {
@@ -90,11 +57,6 @@ export default function CareerProgress() {
             }));
             
             setRoadmaps(formattedRoadmaps);
-            
-            // Fetch detailed roadmap data for each roadmap
-            formattedRoadmaps.forEach(roadmap => {
-              fetchRoadmapDetails(roadmap.id);
-            });
           } else {
             loadFromLocalStorage();
           }
@@ -108,57 +70,6 @@ export default function CareerProgress() {
         // If not logged in, fall back to localStorage
         loadFromLocalStorage();
         setIsRoadmapsLoading(false);
-      }
-    };
-    
-    const fetchRoadmapDetails = async (roadmapId: string) => {
-      if (!user) return;
-      
-      try {
-        // Fetch resources
-        const { data: resources, error: resourcesError } = await supabase
-          .from('roadmap_resources')
-          .select('*')
-          .eq('roadmap_id', roadmapId);
-          
-        if (resourcesError) throw resourcesError;
-        
-        // Fetch skills
-        const { data: skills, error: skillsError } = await supabase
-          .from('roadmap_skills')
-          .select('*')
-          .eq('roadmap_id', roadmapId);
-          
-        if (skillsError) throw skillsError;
-        
-        // Fetch tools
-        const { data: tools, error: toolsError } = await supabase
-          .from('roadmap_tools')
-          .select('*')
-          .eq('roadmap_id', roadmapId);
-          
-        if (toolsError) throw toolsError;
-        
-        // Fetch timeline
-        const { data: timeline, error: timelineError } = await supabase
-          .from('roadmap_timeline')
-          .select('*')
-          .eq('roadmap_id', roadmapId)
-          .order('order_number', { ascending: true });
-          
-        if (timelineError) throw timelineError;
-        
-        setRoadmapDetails(prev => ({
-          ...prev,
-          [roadmapId]: {
-            resources: resources || [],
-            skills: skills || [],
-            tools: tools || [],
-            timeline: timeline || []
-          }
-        }));
-      } catch (error) {
-        console.error(`Error fetching details for roadmap ${roadmapId}:`, error);
       }
     };
     
@@ -213,127 +124,18 @@ export default function CareerProgress() {
     return Math.round((completed / roadmap.steps.length) * 100);
   };
   
-  const calculateDetailedProgress = (roadmapId: string) => {
-    const details = roadmapDetails[roadmapId];
-    if (!details) return 0;
+  const handleProgressUpdate = (roadmapId: string, progress: number) => {
+    // Update local state if needed
+    setRoadmaps(prevRoadmaps => 
+      prevRoadmaps.map(roadmap => 
+        roadmap.id === roadmapId 
+          ? { ...roadmap, progress: progress }
+          : roadmap
+      )
+    );
     
-    let totalItems = 0;
-    let completedItems = 0;
-    
-    if (details.resources.length) {
-      totalItems += details.resources.length;
-      completedItems += details.resources.filter(r => r.completed).length;
-    }
-    
-    if (details.skills.length) {
-      totalItems += details.skills.length;
-      completedItems += details.skills.filter(s => s.completed).length;
-    }
-    
-    if (details.tools.length) {
-      totalItems += details.tools.length;
-      completedItems += details.tools.filter(t => t.completed).length;
-    }
-    
-    if (details.timeline.length) {
-      totalItems += details.timeline.length;
-      completedItems += details.timeline.filter(t => t.completed).length;
-    }
-    
-    return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-  };
-  
-  const handleToggleDetailItem = async (roadmapId: string, itemType: 'resources' | 'skills' | 'tools' | 'timeline', itemId: string) => {
-    if (!user) return;
-    
-    const details = roadmapDetails[roadmapId];
-    if (!details) return;
-    
-    const item = details[itemType].find(i => i.id === itemId);
-    if (!item) return;
-    
-    const newCompletedStatus = !item.completed;
-    
-    try {
-      // Update the item in Supabase
-      let tableName;
-      if (itemType === 'resources') tableName = 'roadmap_resources';
-      else if (itemType === 'skills') tableName = 'roadmap_skills';
-      else if (itemType === 'tools') tableName = 'roadmap_tools';
-      else if (itemType === 'timeline') tableName = 'roadmap_timeline';
-      
-      if (tableName) {
-        const { error } = await supabase
-          .from(tableName)
-          .update({ completed: newCompletedStatus })
-          .eq('id', itemId);
-          
-        if (error) throw error;
-      }
-      
-      // Update local state
-      setRoadmapDetails(prev => {
-        const updatedDetails = { ...prev };
-        const itemIndex = updatedDetails[roadmapId][itemType].findIndex(i => i.id === itemId);
-        if (itemIndex >= 0) {
-          updatedDetails[roadmapId][itemType][itemIndex].completed = newCompletedStatus;
-        }
-        return updatedDetails;
-      });
-      
-      // Show toast
-      if (newCompletedStatus) {
-        toast.success("Item marked as complete!");
-      } else {
-        toast.success("Item marked as incomplete");
-      }
-      
-    } catch (error) {
-      console.error("Error updating item status:", error);
-      toast.error("Failed to update item status");
-    }
-  };
-  
-  const handleToggleStep = async (roadmapId: string, stepId: string, completed: boolean) => {
-    try {
-      if (user) {
-        // Update in Supabase
-        const { error } = await supabase
-          .from('user_roadmap_steps')
-          .update({ completed: !completed })
-          .eq('id', stepId);
-          
-        if (error) throw error;
-      }
-      
-      // Update local state
-      setRoadmaps(prevRoadmaps => {
-        return prevRoadmaps.map(roadmap => {
-          if (roadmap.id === roadmapId) {
-            const updatedSteps = roadmap.steps.map((step: any) => {
-              if (step.id === stepId) {
-                return { ...step, completed: !completed };
-              }
-              return step;
-            });
-            return { ...roadmap, steps: updatedSteps };
-          }
-          return roadmap;
-        });
-      });
-      
-      if (!completed) {
-        toast.success("Step marked as complete!");
-      } else {
-        toast.success("Step marked as incomplete");
-      }
-      
-      // Refresh user data to update dashboard
-      fetchUserData();
-    } catch (error) {
-      console.error("Error updating step status:", error);
-      toast.error("Failed to update step status");
-    }
+    // Refresh user data to update dashboard
+    fetchUserData();
   };
   
   const handleExportPDF = (roadmap: any) => {
@@ -373,13 +175,6 @@ export default function CareerProgress() {
         // Update local state
         setRoadmaps(prevRoadmaps => prevRoadmaps.filter(roadmap => roadmap.id !== id));
         toast.success("Roadmap deleted");
-        
-        // Remove from roadmapDetails state
-        setRoadmapDetails(prev => {
-          const updated = { ...prev };
-          delete updated[id];
-          return updated;
-        });
         
         // Refresh user data to update dashboard
         fetchUserData();
@@ -477,204 +272,47 @@ export default function CareerProgress() {
                         )}
                       </div>
                     </div>
-                    <Badge className="bg-purple-500/20 text-white border-purple-500/30 backdrop-blur-sm">
-                      {calculateProgress(roadmap)}% Complete
-                    </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <Progress 
-                    value={roadmapDetails[roadmap.id] ? calculateDetailedProgress(roadmap.id) : calculateProgress(roadmap)} 
-                    className="h-2 mb-6" 
+                
+                <CardContent className="space-y-6">
+                  {/* Use our new component */}
+                  <RoadmapProgressTracker 
+                    roadmapId={roadmap.id}
+                    title=""
+                    onProgressUpdate={(progress) => handleProgressUpdate(roadmap.id, progress)}
                   />
                   
-                  <Tabs defaultValue="steps" className="w-full">
-                    <TabsList className="w-full grid grid-cols-5">
-                      <TabsTrigger value="steps">Steps</TabsTrigger>
-                      <TabsTrigger 
-                        value="timeline" 
-                        disabled={!roadmapDetails[roadmap.id]?.timeline?.length}
-                      >
-                        Timeline
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="skills" 
-                        disabled={!roadmapDetails[roadmap.id]?.skills?.length}
-                      >
-                        Skills
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="tools" 
-                        disabled={!roadmapDetails[roadmap.id]?.tools?.length}
-                      >
-                        Tools
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="resources" 
-                        disabled={!roadmapDetails[roadmap.id]?.resources?.length}
-                      >
-                        Resources
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="steps" className="space-y-4 mt-4">
-                      <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                        {roadmap.steps && roadmap.steps.map((step: any, stepIndex: number) => (
-                          <div 
-                            key={step.id || stepIndex} 
-                            className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                              step.completed 
-                                ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                                : "bg-white/5"
-                            }`}
-                          >
-                            <Checkbox 
-                              checked={step.completed} 
-                              onCheckedChange={() => handleToggleStep(roadmap.id, step.id, !!step.completed)}
-                              className={step.completed ? "text-brand-500" : ""}
-                            />
-                            <div className="flex-1">
-                              <div className="font-medium">{step.label}</div>
-                              {step.estTime && (
-                                <div className="flex items-center text-xs text-muted-foreground mt-1">
-                                  <Clock className="h-3 w-3 mr-1" /> {step.estTime}
-                                </div>
-                              )}
-                            </div>
+                  {/* Legacy content for fallback */}
+                  {(!roadmap.id || !user) && roadmap.steps && (
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                      {roadmap.steps.map((step: any, stepIndex: number) => (
+                        <div 
+                          key={stepIndex} 
+                          className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
+                            step.completed 
+                              ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                              : "bg-white/5"
+                          }`}
+                        >
+                          <Checkbox 
+                            checked={step.completed} 
+                            className={step.completed ? "text-brand-500" : ""}
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium">{step.label}</div>
+                            {step.estTime && (
+                              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                                <Clock className="h-3 w-3 mr-1" /> {step.estTime}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="timeline" className="space-y-4 mt-4">
-                      {roadmapDetails[roadmap.id]?.timeline?.length > 0 ? (
-                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                          {roadmapDetails[roadmap.id].timeline.map(item => (
-                            <div 
-                              key={item.id} 
-                              className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                                item.completed 
-                                  ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                                  : "bg-white/5"
-                              }`}
-                            >
-                              <Checkbox 
-                                checked={item.completed} 
-                                onCheckedChange={() => handleToggleDetailItem(roadmap.id, 'timeline', item.id)}
-                                className={item.completed ? "text-brand-500" : ""}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">
-                                  <Badge className="bg-blue-500/20 text-white border-blue-500/30 mr-2">
-                                    {item.order_number}
-                                  </Badge>
-                                  {item.step}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
                         </div>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">No timeline data available</p>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="skills" className="mt-4">
-                      {roadmapDetails[roadmap.id]?.skills?.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
-                          {roadmapDetails[roadmap.id].skills.map(skill => (
-                            <div 
-                              key={skill.id} 
-                              className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                                skill.completed 
-                                  ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                                  : "bg-white/5"
-                              }`}
-                            >
-                              <Checkbox 
-                                checked={skill.completed} 
-                                onCheckedChange={() => handleToggleDetailItem(roadmap.id, 'skills', skill.id)}
-                                className={skill.completed ? "text-brand-500" : ""}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">{skill.label}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">No skills data available</p>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="tools" className="mt-4">
-                      {roadmapDetails[roadmap.id]?.tools?.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
-                          {roadmapDetails[roadmap.id].tools.map(tool => (
-                            <div 
-                              key={tool.id} 
-                              className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                                tool.completed 
-                                  ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                                  : "bg-white/5"
-                              }`}
-                            >
-                              <Checkbox 
-                                checked={tool.completed} 
-                                onCheckedChange={() => handleToggleDetailItem(roadmap.id, 'tools', tool.id)}
-                                className={tool.completed ? "text-brand-500" : ""}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">{tool.label}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">No tools data available</p>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="resources" className="mt-4">
-                      {roadmapDetails[roadmap.id]?.resources?.length > 0 ? (
-                        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                          {roadmapDetails[roadmap.id].resources.map(resource => (
-                            <div 
-                              key={resource.id} 
-                              className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                                resource.completed 
-                                  ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                                  : "bg-white/5"
-                              }`}
-                            >
-                              <Checkbox 
-                                checked={resource.completed} 
-                                onCheckedChange={() => handleToggleDetailItem(roadmap.id, 'resources', resource.id)}
-                                className={resource.completed ? "text-brand-500" : ""}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium">{resource.label}</div>
-                                {resource.url && (
-                                  <a 
-                                    href={resource.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center text-xs text-blue-400 hover:text-blue-300 mt-1"
-                                  >
-                                    <ExternalLink className="h-3 w-3 mr-1" />
-                                    {resource.url}
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground text-center py-4">No resources data available</p>
-                      )}
-                    </TabsContent>
-                  </Tabs>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
+                
                 <CardFooter className="flex justify-between border-t border-white/10 pt-4">
                   <div>
                     <Button 

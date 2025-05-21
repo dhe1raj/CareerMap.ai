@@ -44,8 +44,30 @@ export function useRoadmaps() {
         throw progressError;
       }
 
-      setRoadmaps(roadmapsData || []);
-      setUserProgress(progressData || []);
+      // Convert database roadmap to our Roadmap type
+      const typedRoadmaps: Roadmap[] = roadmapsData?.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        type: item.type || 'role', // Default to 'role' if not specified
+        sections: item.sections || [],
+        created_at: item.created_at,
+        user_id: item.user_id,
+        is_public: item.is_public
+      })) || [];
+
+      // Convert database progress to our RoadmapProgress type
+      const typedProgress: RoadmapProgress[] = progressData?.map((item: any) => ({
+        id: item.id,
+        roadmap_id: item.roadmap_id,
+        user_id: item.user_id,
+        progress_pct: item.progress_pct || 0,
+        completed_items: item.completed_items || [],
+        started_at: item.started_at,
+        updated_at: item.updated_at
+      })) || [];
+
+      setRoadmaps(typedRoadmaps);
+      setUserProgress(typedProgress);
     } catch (error: any) {
       console.error('Error fetching roadmaps:', error.message);
       toast({
@@ -72,6 +94,17 @@ export function useRoadmaps() {
         throw error;
       }
 
+      // Convert to our Roadmap type
+      const roadmap: Roadmap = {
+        id: data.id,
+        title: data.title,
+        type: data.type || 'role',
+        sections: data.sections || [],
+        created_at: data.created_at,
+        user_id: data.user_id,
+        is_public: data.is_public
+      };
+
       // Fetch progress for this roadmap if user is logged in
       let progress = null;
       if (user) {
@@ -83,11 +116,10 @@ export function useRoadmaps() {
           .single();
 
         if (!progressError) {
-          progress = progressData;
+          progress = progressData as RoadmapProgress;
         }
       }
 
-      const roadmap = data as Roadmap;
       setSelectedRoadmap(roadmap);
 
       // If we have progress data, mark completed items
@@ -103,21 +135,20 @@ export function useRoadmaps() {
           }))
         }));
 
-        setSelectedRoadmap({
+        const updatedRoadmap = {
           ...roadmap,
           sections: updatedSections
-        });
+        };
+
+        setSelectedRoadmap(updatedRoadmap);
 
         return {
-          roadmap: {
-            ...roadmap,
-            sections: updatedSections
-          },
+          roadmap: updatedRoadmap,
           progress
         };
       }
 
-      return { roadmap: data as Roadmap, progress };
+      return { roadmap, progress };
     } catch (error: any) {
       console.error('Error fetching roadmap:', error.message);
       toast({
@@ -151,20 +182,36 @@ export function useRoadmaps() {
           ...section,
           items: section.items.map(item => ({
             ...item,
-            id: crypto.randomUUID()
+            id: item.id || crypto.randomUUID()
           }))
         }))
       };
 
       const { data, error } = await supabase
         .from('roadmaps')
-        .insert(roadmapWithIds)
+        .insert({
+          title: roadmapWithIds.title,
+          type: roadmapWithIds.type,
+          sections: roadmapWithIds.sections,
+          user_id: roadmapWithIds.user_id,
+          is_public: roadmapWithIds.is_public || false
+        })
         .select('*')
         .single();
 
       if (error) {
         throw error;
       }
+
+      const createdRoadmap: Roadmap = {
+        id: data.id,
+        title: data.title,
+        type: data.type,
+        sections: data.sections,
+        created_at: data.created_at,
+        user_id: data.user_id,
+        is_public: data.is_public
+      };
 
       // Initialize progress tracking for this roadmap
       await supabase
@@ -183,7 +230,7 @@ export function useRoadmaps() {
 
       // Refresh the roadmaps list
       fetchRoadmaps();
-      return data;
+      return createdRoadmap;
     } catch (error: any) {
       console.error('Error creating roadmap:', error.message);
       toast({
@@ -234,17 +281,18 @@ export function useRoadmaps() {
         throw roadmapError;
       }
 
-      const roadmap = roadmapData as Roadmap;
+      const roadmap = roadmapData as any;
+      const sections = roadmap.sections || [];
       
       // Calculate total items count
       let totalItems = 0;
-      roadmap.sections.forEach(section => {
+      sections.forEach((section: any) => {
         totalItems += section.items.length;
       });
       
       // Update completed items list
       let completedItems: string[] = existingProgress ? 
-        (existingProgress.completed_items as string[]) : [];
+        (existingProgress.completed_items as string[] || []) : [];
       
       if (completed) {
         if (!completedItems.includes(itemId)) {

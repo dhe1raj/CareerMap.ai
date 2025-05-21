@@ -41,7 +41,17 @@ export function RoadmapForm({ onSubmit, isGenerating = false }: RoadmapFormProps
   const studentType = form.watch('studentType');
 
   const handleSubmit = (values: z.infer<typeof FormSchema>) => {
-    onSubmit(values);
+    // Ensure all required fields are present for RoadmapFormData
+    const formData: RoadmapFormData = {
+      role: values.role,
+      studentType: values.studentType,
+      collegeTier: values.collegeTier,
+      degree: values.degree,
+      knownSkills: values.knownSkills,
+      learningPreference: values.learningPreference
+    };
+    
+    onSubmit(formData);
   };
 
   return (

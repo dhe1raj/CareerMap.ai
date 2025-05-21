@@ -21,6 +21,7 @@ export interface Roadmap {
   created_at?: string;
   user_id?: string;
   is_public?: boolean;
+  description?: string;
 }
 
 export interface RoadmapProgress {

@@ -22,6 +22,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Features from './pages/Features';
 import Founder from './pages/Founder';
+import GenZCareerDecider from './pages/GenZCareerDecider';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import setupRoadmapTables from "./utils/supabase-setup";
@@ -76,6 +77,7 @@ function AppContent() {
       <Route path="/terms" element={<Terms />} />
       <Route path="/features" element={<Features />} />
       <Route path="/founder" element={<Founder />} />
+      <Route path="/genz-career-decider" element={<GenZCareerDecider />} />
       
       {/* Authentication routes */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />

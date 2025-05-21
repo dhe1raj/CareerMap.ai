@@ -37,6 +37,11 @@ export default function Footer() {
                   Roadmap
                 </Link>
               </li>
+              <li>
+                <Link to="/genz-career-decider" className="text-muted-foreground hover:text-foreground transition-colors">
+                  GenZ Career Decider
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

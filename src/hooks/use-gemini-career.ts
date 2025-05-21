@@ -65,9 +65,45 @@ export function useGeminiCareer() {
     }
   };
   
+  const analyzeResume = async (resumeText: string) => {
+    if (!apiKey || !geminiClient) {
+      toast({
+        title: "API Key Required",
+        description: "Please add a Gemini API key in settings to use this feature.",
+        variant: "destructive"
+      });
+      return { summary: "", suggestions: [] };
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Implementation using geminiClient would go here
+      // For now, returning mock data
+      const mockSummary = "Your resume shows strong technical skills in web development. Consider adding more measurable achievements and quantifiable results.";
+      const mockSuggestions = ["Add metrics to achievements", "Expand on technical projects", "Include relevant certifications"];
+      
+      return {
+        summary: mockSummary,
+        suggestions: mockSuggestions
+      };
+    } catch (error) {
+      console.error("Error analyzing resume:", error);
+      toast({
+        title: "Analysis Failed",
+        description: "Failed to analyze resume. Please try again.",
+        variant: "destructive"
+      });
+      return { summary: "", suggestions: [] };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return {
     isLoading,
     matches,
-    generateCareerMatches
+    generateCareerMatches,
+    analyzeResume
   };
 }

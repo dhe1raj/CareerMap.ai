@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -307,8 +306,13 @@ export default function ProfileWizard({ isOpen, onClose }: ProfileWizardProps) {
       </Dialog>
       
       <RoadmapPickerModal 
-        isOpen={showRoadmapPicker}
+        open={showRoadmapPicker}
         onClose={() => setShowRoadmapPicker(false)}
+        onSelect={(roadmap) => {
+          // Handle roadmap selection
+          console.log('Selected roadmap:', roadmap);
+          setShowRoadmapPicker(false);
+        }}
       />
     </>
   );

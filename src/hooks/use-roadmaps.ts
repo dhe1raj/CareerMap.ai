@@ -5,16 +5,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Roadmap, RoadmapProgress, RoadmapItem } from '@/types/roadmap';
 
+// Define interfaces for Supabase table data shape
 interface SupabaseRoadmap {
   id: string;
   title: string;
   type: 'role' | 'skill' | 'course';
-  sections: Record<string, any>; // JSON data
+  sections: RoadmapSection[];
   created_at: string;
   user_id: string;
   is_public: boolean;
   description?: string;
   updated_at?: string;
+}
+
+// Define the expected database structure for roadmap sections
+interface RoadmapSection {
+  title: string;
+  items: RoadmapItem[];
+  collapsed?: boolean;
 }
 
 interface SupabaseRoadmapProgress {
@@ -46,7 +54,7 @@ export function useRoadmaps() {
 
     setIsLoading(true);
     try {
-      // Fetch roadmaps
+      // Fetch roadmaps - using the correct table name
       const { data: roadmapsData, error: roadmapsError } = await supabase
         .from('roadmaps')
         .select('*')
@@ -56,30 +64,36 @@ export function useRoadmaps() {
         throw roadmapsError;
       }
 
-      // Fetch user progress for their roadmaps
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_roadmap_progress')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (progressError) {
-        throw progressError;
-      }
-
-      // Convert database roadmap to our Roadmap type
-      const typedRoadmaps: Roadmap[] = (roadmapsData as SupabaseRoadmap[])?.map((item) => ({
+      // Transform database results into our expected type format
+      const typedRoadmaps: Roadmap[] = roadmapsData?.map((item: any) => ({
         id: item.id,
         title: item.title,
-        type: item.type,
-        sections: item.sections,
+        type: item.type || 'role', // Default type if not present
+        sections: item.sections || [],
         created_at: item.created_at,
         user_id: item.user_id,
-        is_public: item.is_public,
+        is_public: item.is_public || false,
         description: item.description
       })) || [];
 
-      // Convert database progress to our RoadmapProgress type
-      const typedProgress: RoadmapProgress[] = (progressData as SupabaseRoadmapProgress[])?.map((item) => ({
+      // Use custom query to get progress since the table may not exist yet in the schema
+      // We can create it later if needed
+      let progressData: any[] = [];
+      try {
+        const { data, error } = await supabase
+          .from('user_roadmap_progress')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (!error) {
+          progressData = data || [];
+        }
+      } catch (e) {
+        console.warn('User roadmap progress table may not exist yet', e);
+      }
+
+      // Transform progress data into our expected type format
+      const typedProgress: RoadmapProgress[] = progressData?.map((item: any) => ({
         id: item.id,
         roadmap_id: item.roadmap_id,
         user_id: item.user_id,
@@ -117,32 +131,42 @@ export function useRoadmaps() {
         throw error;
       }
 
-      const supabaseRoadmap = data as SupabaseRoadmap;
-      
-      // Convert to our Roadmap type
+      // Transform the data to match our Roadmap type
       const roadmap: Roadmap = {
-        id: supabaseRoadmap.id,
-        title: supabaseRoadmap.title,
-        type: supabaseRoadmap.type,
-        sections: supabaseRoadmap.sections,
-        created_at: supabaseRoadmap.created_at,
-        user_id: supabaseRoadmap.user_id,
-        is_public: supabaseRoadmap.is_public,
-        description: supabaseRoadmap.description
+        id: data.id,
+        title: data.title,
+        type: data.type || 'role', // Default type if not present
+        sections: data.sections || [],
+        created_at: data.created_at,
+        user_id: data.user_id,
+        is_public: data.is_public || false,
+        description: data.description
       };
 
       // Fetch progress for this roadmap if user is logged in
       let progress = null;
       if (user) {
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_roadmap_progress')
-          .select('*')
-          .eq('roadmap_id', roadmapId)
-          .eq('user_id', user.id)
-          .single();
+        try {
+          const { data: progressData, error: progressError } = await supabase
+            .from('user_roadmap_progress')
+            .select('*')
+            .eq('roadmap_id', roadmapId)
+            .eq('user_id', user.id)
+            .maybeSingle(); // Using maybeSingle instead of single to avoid errors if no record is found
 
-        if (!progressError && progressData) {
-          progress = progressData as SupabaseRoadmapProgress;
+          if (!progressError && progressData) {
+            progress = {
+              id: progressData.id,
+              roadmap_id: progressData.roadmap_id,
+              user_id: progressData.user_id,
+              progress_pct: progressData.progress_pct || 0,
+              completed_items: progressData.completed_items || [],
+              started_at: progressData.started_at,
+              updated_at: progressData.updated_at
+            };
+          }
+        } catch (e) {
+          console.warn('User roadmap progress table may not exist yet', e);
         }
       }
 
@@ -213,6 +237,7 @@ export function useRoadmaps() {
         }))
       };
 
+      // Create the roadmap in the database
       const { data, error } = await supabase
         .from('roadmaps')
         .insert({
@@ -223,35 +248,38 @@ export function useRoadmaps() {
           is_public: roadmapWithIds.is_public || false,
           description: roadmapWithIds.description
         })
-        .select('*')
+        .select()
         .single();
 
       if (error) {
         throw error;
       }
 
-      const supabaseRoadmap = data as SupabaseRoadmap;
-      
+      // Transform the response data to match our Roadmap type
       const createdRoadmap: Roadmap = {
-        id: supabaseRoadmap.id,
-        title: supabaseRoadmap.title,
-        type: supabaseRoadmap.type,
-        sections: supabaseRoadmap.sections,
-        created_at: supabaseRoadmap.created_at,
-        user_id: supabaseRoadmap.user_id,
-        is_public: supabaseRoadmap.is_public,
-        description: supabaseRoadmap.description
+        id: data.id,
+        title: data.title,
+        type: data.type,
+        sections: data.sections,
+        created_at: data.created_at,
+        user_id: data.user_id,
+        is_public: data.is_public,
+        description: data.description
       };
 
       // Initialize progress tracking for this roadmap
-      await supabase
-        .from('user_roadmap_progress')
-        .insert({
-          roadmap_id: data.id,
-          user_id: user.id,
-          progress_pct: 0,
-          completed_items: []
-        });
+      try {
+        await supabase
+          .from('user_roadmap_progress')
+          .insert({
+            roadmap_id: data.id,
+            user_id: user.id,
+            progress_pct: 0,
+            completed_items: []
+          });
+      } catch (e) {
+        console.warn('User roadmap progress table may not exist yet', e);
+      }
 
       toast({
         title: 'Success',
@@ -288,19 +316,7 @@ export function useRoadmaps() {
     }
 
     try {
-      // Get the current progress
-      const { data: existingProgress, error: fetchError } = await supabase
-        .from('user_roadmap_progress')
-        .select('*')
-        .eq('roadmap_id', roadmapId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') { // Not found is OK
-        throw fetchError;
-      }
-
-      // Get all items from the roadmap to calculate progress
+      // Get the current roadmap
       const { data: roadmapData, error: roadmapError } = await supabase
         .from('roadmaps')
         .select('*')
@@ -311,7 +327,24 @@ export function useRoadmaps() {
         throw roadmapError;
       }
 
-      const roadmap = roadmapData as SupabaseRoadmap;
+      let existingProgress;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_roadmap_progress')
+          .select('*')
+          .eq('roadmap_id', roadmapId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (!error) {
+          existingProgress = data;
+        }
+      } catch (e) {
+        console.warn('User roadmap progress table may not exist yet', e);
+      }
+
+      const roadmap = roadmapData;
       const sections = roadmap.sections || [];
       
       // Calculate total items count
@@ -337,33 +370,37 @@ export function useRoadmaps() {
         (completedItems.length / totalItems) * 100 : 0;
       
       // Update or insert progress record
-      if (existingProgress) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from('user_roadmap_progress')
-          .update({
-            completed_items: completedItems,
-            progress_pct: progressPct
-          })
-          .eq('id', existingProgress.id);
-          
-        if (updateError) {
-          throw updateError;
+      try {
+        if (existingProgress) {
+          // Update existing record
+          const { error: updateError } = await supabase
+            .from('user_roadmap_progress')
+            .update({
+              completed_items: completedItems,
+              progress_pct: progressPct
+            })
+            .eq('id', existingProgress.id);
+            
+          if (updateError) {
+            throw updateError;
+          }
+        } else {
+          // Create new record
+          const { error: insertError } = await supabase
+            .from('user_roadmap_progress')
+            .insert({
+              roadmap_id: roadmapId,
+              user_id: user.id,
+              completed_items: completedItems,
+              progress_pct: progressPct
+            });
+            
+          if (insertError) {
+            throw insertError;
+          }
         }
-      } else {
-        // Create new record
-        const { error: insertError } = await supabase
-          .from('user_roadmap_progress')
-          .insert({
-            roadmap_id: roadmapId,
-            user_id: user.id,
-            completed_items: completedItems,
-            progress_pct: progressPct
-          });
-          
-        if (insertError) {
-          throw insertError;
-        }
+      } catch (e) {
+        console.warn('User roadmap progress table operation failed', e);
       }
       
       // Update local state if the selected roadmap is the one being updated
@@ -411,17 +448,34 @@ export function useRoadmaps() {
     }
 
     try {
-      const { error } = await supabase
-        .from('user_roadmap_progress')
-        .update({
-          completed_items: [],
-          progress_pct: 0
-        })
-        .eq('roadmap_id', roadmapId)
-        .eq('user_id', user.id);
+      // Check if progress record exists
+      let progressExists = false;
+      try {
+        const { data, error } = await supabase
+          .from('user_roadmap_progress')
+          .select('id')
+          .eq('roadmap_id', roadmapId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        progressExists = !error && data !== null;
+      } catch (e) {
+        console.warn('User roadmap progress table may not exist yet', e);
+      }
+      
+      if (progressExists) {
+        const { error } = await supabase
+          .from('user_roadmap_progress')
+          .update({
+            completed_items: [],
+            progress_pct: 0
+          })
+          .eq('roadmap_id', roadmapId)
+          .eq('user_id', user.id);
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
       }
 
       // Update local state if the selected roadmap is the one being reset

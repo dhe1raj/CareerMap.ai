@@ -71,6 +71,36 @@ export type Database = {
           },
         ]
       }
+      matches: {
+        Row: {
+          bullets: Json
+          created_at: string | null
+          icon: string
+          id: string
+          match_pct: number
+          role: string
+          short_desc: string
+        }
+        Insert: {
+          bullets: Json
+          created_at?: string | null
+          icon: string
+          id?: string
+          match_pct: number
+          role: string
+          short_desc: string
+        }
+        Update: {
+          bullets?: Json
+          created_at?: string | null
+          icon?: string
+          id?: string
+          match_pct?: number
+          role?: string
+          short_desc?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -98,6 +128,39 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      resources: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          skill_tag: string
+          thumbnail: string | null
+          title: string
+          type: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          skill_tag: string
+          thumbnail?: string | null
+          title: string
+          type: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          skill_tag?: string
+          thumbnail?: string | null
+          title?: string
+          type?: string
+          url?: string
         }
         Relationships: []
       }
@@ -386,6 +449,67 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      user_matches: {
+        Row: {
+          id: string
+          match_id: string
+          saved_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          match_id: string
+          saved_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          match_id?: string
+          saved_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_matches_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_resource_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          id: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          id?: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          id?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_resource_progress_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roadmap_steps: {
         Row: {

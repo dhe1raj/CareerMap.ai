@@ -11,7 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGeminiCareer } from "@/hooks/use-gemini-career";
 import { Briefcase, BookOpen, ArrowRight } from "lucide-react";
 import "../styles/glassmorphism.css";
-import { MatchRow, UserMatchInsert } from "@/utils/supabase-types-helper";
+import { 
+  MatchRow, 
+  UserMatchInsert, 
+  supabaseCustomHelpers,
+  callRPC
+} from "@/utils/supabase-types-helper";
 
 type CareerMatch = MatchRow;
 
@@ -30,15 +35,13 @@ export default function CareerMatches() {
       setIsLoading(true);
       try {
         // Check if matches already exist
-        const { data, error } = await supabase
-          .from('matches')
-          .select('*');
+        const { data, error } = await supabaseCustomHelpers.matches.select();
         
         if (error) throw error;
         
         if (data && data.length > 0) {
           // We need to cast the data to our CareerMatch type
-          setMatches(data as unknown as CareerMatch[]);
+          setMatches(data);
         } else {
           // Need to generate matches with AI
           await generateMatchesWithAI();
@@ -122,45 +125,43 @@ export default function CareerMatches() {
       const insertedMatches: CareerMatch[] = [];
       
       for (const match of mockMatches) {
-        // Use a raw SQL query via rpc to insert the match with the custom type
-        const { data, error } = await supabase.rpc('insert_match', {
-          role_param: match.role,
-          short_desc_param: match.short_desc,
-          icon_param: match.icon,
-          match_pct_param: match.match_pct,
-          bullets_param: match.bullets
-        });
-        
-        if (error) {
-          console.error("Error inserting match:", error);
-          // Fallback to direct insert with type assertions
-          const { data: directData, error: directError } = await supabase
-            .from('matches')
-            .insert({
+        try {
+          // Use our custom RPC function via the callRPC helper
+          const { error } = await callRPC('insert_match', {
+            role_param: match.role,
+            short_desc_param: match.short_desc,
+            icon_param: match.icon,
+            match_pct_param: match.match_pct,
+            bullets_param: match.bullets
+          });
+          
+          if (error) {
+            console.error("Error inserting match:", error);
+            // Fallback to direct insert
+            const { data: directData, error: directError } = await supabaseCustomHelpers.matches.insert({
               role: match.role,
               short_desc: match.short_desc,
               icon: match.icon,
               match_pct: match.match_pct,
               bullets: match.bullets
-            } as any)
-            .select();
+            });
+              
+            if (directError) {
+              console.error("Direct insert error:", directError);
+            } else if (directData && directData.length > 0) {
+              insertedMatches.push(directData[0]);
+            }
+          } else {
+            // If RPC successful, fetch the inserted match
+            const { data: fetchData } = await supabaseCustomHelpers.matches.select();
             
-          if (directError) {
-            console.error("Direct insert error:", directError);
-          } else if (directData && directData.length > 0) {
-            insertedMatches.push(directData[0] as unknown as CareerMatch);
+            const newMatch = fetchData?.find(m => m.role === match.role);
+            if (newMatch) {
+              insertedMatches.push(newMatch);
+            }
           }
-        } else if (data) {
-          // If rpc successful, fetch the inserted match
-          const { data: fetchData } = await supabase
-            .from('matches')
-            .select()
-            .eq('role', match.role)
-            .single();
-            
-          if (fetchData) {
-            insertedMatches.push(fetchData as unknown as CareerMatch);
-          }
+        } catch (err) {
+          console.error("Error in match insertion:", err);
         }
       }
       
@@ -194,16 +195,14 @@ export default function CareerMatches() {
       };
       
       // Store user-match relationship using RPC
-      const { error } = await supabase.rpc('insert_user_match', {
+      const { error } = await callRPC('insert_user_match', {
         user_id_param: user.id,
         match_id_param: matchId
       });
       
       if (error) {
         // Fallback to direct insert
-        const { error: directError } = await supabase
-          .from('user_matches')
-          .insert(userMatch as any);
+        const { error: directError } = await supabaseCustomHelpers.userMatches.insert(userMatch);
           
         if (directError) throw directError;
       }

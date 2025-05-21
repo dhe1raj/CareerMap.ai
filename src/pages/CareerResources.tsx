@@ -6,10 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Link, Check, Video, FileText, Code } from "lucide-react";
 import "../styles/glassmorphism.css";
-import { ResourceRow, UserResourceProgressInsert, UserResourceProgressRow } from "@/utils/supabase-types-helper";
+import { 
+  ResourceRow, 
+  UserResourceProgressInsert, 
+  UserResourceProgressRow,
+  supabaseCustomHelpers,
+  callRPC
+} from "@/utils/supabase-types-helper";
 
 // Resource type icons mapping
 const resourceTypeIcons: Record<string, React.ReactNode> = {
@@ -48,43 +53,38 @@ export default function CareerResources() {
       setIsLoading(true);
       try {
         // Fetch resources using RPC
-        const { data: existingResources, error: resourcesError } = await supabase.rpc('get_all_resources');
+        const { data: existingResources, error: resourcesError } = await callRPC('get_all_resources');
         
-        if (resourcesError) {
+        if (resourcesError || !existingResources) {
           // Fallback to direct fetch
-          const { data: directResources, error: directError } = await supabase
-            .from('resources')
-            .select('*');
+          const { data: directResources, error: directError } = await supabaseCustomHelpers.resources.select();
             
           if (directError) throw directError;
           
           if (directResources && directResources.length > 0) {
-            setResources(directResources as unknown as ResourceRow[]);
+            setResources(directResources);
             
             // Fetch user progress
-            const { data: progressData, error: progressError } = await supabase.rpc('get_user_resource_progress', {
+            const { data: progressData, error: progressError } = await callRPC('get_user_resource_progress', {
               user_id_param: user.id
             });
             
-            if (progressError) {
+            if (progressError || !progressData) {
               // Fallback to direct fetch
-              const { data: directProgress, error: directProgressError } = await supabase
-                .from('user_resource_progress')
-                .select('*')
-                .eq('user_id', user.id);
+              const { data: directProgress, error: directProgressError } = await supabaseCustomHelpers.userResourceProgress.select(user.id);
                 
               if (!directProgressError && directProgress) {
                 // Create a map of resource_id -> completed status
                 const progressMap: Record<string, boolean> = {};
-                (directProgress as unknown as UserResourceProgressRow[]).forEach(item => {
+                directProgress.forEach(item => {
                   progressMap[item.resource_id] = !!item.completed;
                 });
                 setUserProgress(progressMap);
               }
-            } else if (progressData) {
+            } else {
               // Create a map of resource_id -> completed status
               const progressMap: Record<string, boolean> = {};
-              (progressData as unknown as UserResourceProgressRow[]).forEach(item => {
+              progressData.forEach(item => {
                 progressMap[item.resource_id] = !!item.completed;
               });
               setUserProgress(progressMap);
@@ -94,17 +94,17 @@ export default function CareerResources() {
           }
         } else if (existingResources && existingResources.length > 0) {
           // Resources exist
-          setResources(existingResources as unknown as ResourceRow[]);
+          setResources(existingResources);
           
           // Fetch user progress
-          const { data: progressData, error: progressError } = await supabase.rpc('get_user_resource_progress', {
+          const { data: progressData, error: progressError } = await callRPC('get_user_resource_progress', {
             user_id_param: user.id
           });
           
           if (!progressError && progressData) {
             // Create a map of resource_id -> completed status
             const progressMap: Record<string, boolean> = {};
-            (progressData as unknown as UserResourceProgressRow[]).forEach(item => {
+            progressData.forEach(item => {
               progressMap[item.resource_id] = !!item.completed;
             });
             setUserProgress(progressMap);
@@ -186,40 +186,38 @@ export default function CareerResources() {
       const insertedResources: ResourceRow[] = [];
       
       for (const resource of mockResources) {
-        const { data, error } = await supabase.rpc('insert_resource', {
-          type_param: resource.type,
-          title_param: resource.title,
-          url_param: resource.url,
-          thumbnail_param: resource.thumbnail || null,
-          skill_tag_param: resource.skill_tag,
-          description_param: resource.description
-        });
-        
-        if (error) {
-          console.error("RPC error:", error);
+        try {
+          const { error } = await callRPC('insert_resource', {
+            type_param: resource.type,
+            title_param: resource.title,
+            url_param: resource.url,
+            thumbnail_param: resource.thumbnail || null,
+            skill_tag_param: resource.skill_tag,
+            description_param: resource.description
+          });
           
-          // Fallback to direct insert
-          const { data: directData, error: directError } = await supabase
-            .from('resources')
-            .insert(resource as any)
-            .select();
+          if (error) {
+            console.error("RPC error:", error);
             
-          if (directError) {
-            console.error("Direct insert error:", directError);
-          } else if (directData && directData.length > 0) {
-            insertedResources.push(directData[0] as unknown as ResourceRow);
-          }
-        } else if (data) {
-          // If RPC successful, fetch the inserted resource
-          const { data: fetchData } = await supabase
-            .from('resources')
-            .select()
-            .eq('title', resource.title)
-            .single();
+            // Fallback to direct insert
+            const { data: directData, error: directError } = await supabaseCustomHelpers.resources.insert(resource);
+              
+            if (directError) {
+              console.error("Direct insert error:", directError);
+            } else if (directData && directData.length > 0) {
+              insertedResources.push(directData[0]);
+            }
+          } else {
+            // If RPC successful, fetch the inserted resource
+            const { data: fetchData } = await supabaseCustomHelpers.resources.select();
             
-          if (fetchData) {
-            insertedResources.push(fetchData as unknown as ResourceRow);
+            const newResource = fetchData?.find(r => r.title === resource.title);
+            if (newResource) {
+              insertedResources.push(newResource);
+            }
           }
+        } catch (err) {
+          console.error("Error in resource insertion:", err);
         }
       }
       
@@ -237,7 +235,7 @@ export default function CareerResources() {
       const newStatus = !currentStatus;
       
       // Update user progress using RPC
-      const { error } = await supabase.rpc('upsert_user_resource_progress', {
+      const { error } = await callRPC('upsert_user_resource_progress', {
         user_id_param: user.id,
         resource_id_param: resourceId,
         completed_param: newStatus,
@@ -254,9 +252,7 @@ export default function CareerResources() {
           completed_at: newStatus ? new Date().toISOString() : undefined
         };
         
-        const { error: directError } = await supabase
-          .from('user_resource_progress')
-          .upsert(progressData as any);
+        const { error: directError } = await supabaseCustomHelpers.userResourceProgress.upsert(progressData);
         
         if (directError) throw directError;
       }

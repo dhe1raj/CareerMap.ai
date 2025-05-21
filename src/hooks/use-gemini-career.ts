@@ -20,7 +20,7 @@ export function useGeminiCareer() {
     skills: string[],
     interests: string[], 
     education: string
-  ) => {
+  ): Promise<CareerMatch[]> => {
     if (!apiKey || !geminiClient) {
       toast({
         title: "API Key Required",

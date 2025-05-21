@@ -1,5 +1,6 @@
+
 import React, { useEffect } from 'react';
-import { SEOMetadata } from '@/components/SEOMetadata';
+import SEOMetadata from '@/components/SEOMetadata'; // Fix the import statement
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -52,9 +53,14 @@ export default function CareerProgress() {
   // Filter roadmaps to only show the user's roadmaps
   const userRoadmaps = roadmaps.filter((roadmap) => roadmap.user_id === user?.id);
 
-  const handleGenerateSuggestions = async () => {
-    const matches = await generateCareerMatches([], [], "");
-    console.log("Career matches:", matches);
+  const handleGenerateCareerMatches = async () => {
+    try {
+      const matches = await generateCareerMatches([], [], "");
+      console.log("Career matches:", matches);
+    } catch (error) {
+      console.error("Error generating career matches:", error);
+      toast.error("Failed to generate career matches");
+    }
   };
 
   return (
@@ -62,6 +68,8 @@ export default function CareerProgress() {
       <SEOMetadata 
         title="Career Progress | CareerMap"
         description="Track your learning progress across all your career roadmaps and skills."
+        keywords="career progress, roadmaps, learning progress"
+        canonicalPath="/career-progress"
       />
       
       <div className="container py-8 max-w-7xl">

@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { SEOMetadata } from '@/components/SEOMetadata';
+import SEOMetadata from '@/components/SEOMetadata'; // Fix import here
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -56,6 +56,8 @@ export default function CareerProgress() {
       <SEOMetadata 
         title="Career Progress | CareerMap"
         description="Track your learning progress across all your career roadmaps and skills."
+        keywords="career progress, roadmaps, learning progress"
+        canonicalPath="/career-progress"
       />
       
       <div className="container py-8 max-w-7xl">

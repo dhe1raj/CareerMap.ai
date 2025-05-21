@@ -3,10 +3,32 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, HelpCircle, Contact } from "lucide-react";
+import { Helmet } from 'react-helmet-async';
 
 export default function About() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyber-deeper via-brand-900 to-cyber-dark">
+      <Helmet>
+        <title>About CareerMap | AI-Powered Career Planning Platform</title>
+        <meta name="description" content="Learn about CareerMap's mission to help people discover their ideal career paths through AI-powered guidance and personalized roadmaps." />
+        <meta name="keywords" content="career guidance, AI career planning, about CareerMap, career path platform, professional development" />
+        <link rel="canonical" href="https://careermap.ai/about" />
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "CareerMap",
+              "url": "https://careermap.ai",
+              "logo": "https://careermap.ai/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png",
+              "description": "AI-powered career planning and roadmap generator.",
+              "foundingDate": "2023",
+              "email": "contact@careermap.ai"
+            }
+          `}
+        </script>
+      </Helmet>
+      
       {/* Animated background elements */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-brand-400/10 blur-[130px] animate-pulse-glow"></div>
@@ -22,7 +44,7 @@ export default function About() {
         {/* Hero section */}
         <section className="bg-gradient-to-br from-brand-500/30 to-brand-700/30 backdrop-blur-md text-white py-16 md:py-24 border-b border-white/10">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in text-glow">About CareerPath</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in text-glow">About CareerMap</h1>
             <p className="text-xl md:text-2xl max-w-3xl">
               We're on a mission to help people discover and pursue their ideal career paths using the power of AI.
             </p>
@@ -35,7 +57,7 @@ export default function About() {
             <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-white text-glow-sm">Our Mission</h2>
             <div className="max-w-3xl mx-auto glass-card p-8 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]">
               <p className="text-lg mb-6 text-white/90">
-                At CareerPath, we believe everyone deserves a fulfilling career that aligns with their skills, interests, and life goals.
+                At CareerMap, we believe everyone deserves a fulfilling career that aligns with their skills, interests, and life goals.
               </p>
               <p className="text-lg mb-6 text-white/90">
                 Our AI-powered platform breaks down the barriers to career discovery and development, making personalized guidance accessible to all.
@@ -48,14 +70,14 @@ export default function About() {
         </section>
 
         {/* Team */}
-        <section className="py-16">
+        <section className="py-16" id="team">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-white text-glow-sm">Our Team</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <Card className="glass-card hover:scale-105 transition-transform duration-300">
                 <CardContent className="pt-6 flex flex-col items-center text-center">
                   <div className="w-24 h-24 bg-gradient-to-br from-brand-400/30 to-brand-600/30 backdrop-blur-md rounded-full flex items-center justify-center mb-4 neon-border">
-                    <Users className="w-12 h-12 text-brand-300" />
+                    <Users className="w-12 h-12 text-brand-300" aria-hidden="true" />
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-white">Leadership</h3>
                   <p className="text-white/70">
@@ -67,7 +89,7 @@ export default function About() {
               <Card className="glass-card hover:scale-105 transition-transform duration-300">
                 <CardContent className="pt-6 flex flex-col items-center text-center">
                   <div className="w-24 h-24 bg-gradient-to-br from-brand-400/30 to-brand-600/30 backdrop-blur-md rounded-full flex items-center justify-center mb-4 neon-border">
-                    <HelpCircle className="w-12 h-12 text-brand-300" />
+                    <HelpCircle className="w-12 h-12 text-brand-300" aria-hidden="true" />
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-white">AI Experts</h3>
                   <p className="text-white/70">
@@ -79,7 +101,7 @@ export default function About() {
               <Card className="glass-card hover:scale-105 transition-transform duration-300">
                 <CardContent className="pt-6 flex flex-col items-center text-center">
                   <div className="w-24 h-24 bg-gradient-to-br from-brand-400/30 to-brand-600/30 backdrop-blur-md rounded-full flex items-center justify-center mb-4 neon-border">
-                    <Contact className="w-12 h-12 text-brand-300" />
+                    <Contact className="w-12 h-12 text-brand-300" aria-hidden="true" />
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-white">Support</h3>
                   <p className="text-white/70">
@@ -92,7 +114,7 @@ export default function About() {
         </section>
 
         {/* Our Values */}
-        <section className="py-16">
+        <section className="py-16" id="values">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-white text-glow-sm">Our Values</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -128,15 +150,16 @@ export default function About() {
         </section>
 
         {/* Contact */}
-        <section className="py-16">
+        <section className="py-16" id="contact">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white text-glow-sm">Get in Touch</h2>
             <p className="text-lg mb-8 max-w-2xl mx-auto text-white/70">
               Have questions about our platform or want to learn more about how we can help with your career journey?
             </p>
             <a 
-              href="mailto:contact@careerpath.ai" 
+              href="mailto:contact@careermap.ai" 
               className="inline-flex items-center px-6 py-3 rounded-md neon-button hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] transition-all"
+              aria-label="Contact CareerMap via email"
             >
               Contact Us
             </a>

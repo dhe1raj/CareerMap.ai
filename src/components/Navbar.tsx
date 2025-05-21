@@ -43,11 +43,14 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2" aria-label="CareerMap Home">
             <img 
               src="/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png" 
               alt="CareerMap Logo" 
               className="h-8" 
+              loading="eager" 
+              width="32" 
+              height="32" 
             />
             <span className="text-xl font-bold">CareerMap</span>
           </Link>
@@ -75,11 +78,12 @@ export default function Navbar() {
                   <Button
                     variant="ghost"
                     className="relative h-8 w-8 rounded-full"
+                    aria-label="User menu"
                   >
                     <Avatar className="h-9 w-9">
                       <AvatarImage 
                         src={profile?.avatar_url}
-                        alt={profile?.full_name || user.email} 
+                        alt={profile?.full_name || user.email || "User profile"} 
                       />
                       <AvatarFallback>
                         {profile?.full_name ? getInitials(profile.full_name) : "U"}
@@ -141,8 +145,9 @@ export default function Navbar() {
               variant="ghost"
               className="md:hidden"
               onClick={() => setIsMenuOpen(true)}
+              aria-label="Open menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" aria-hidden="true" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
@@ -175,7 +180,7 @@ export default function Navbar() {
                     <Avatar className="h-9 w-9 mr-2">
                       <AvatarImage 
                         src={profile?.avatar_url}
-                        alt={profile?.full_name || user.email} 
+                        alt={profile?.full_name || user.email || "User profile"} 
                       />
                       <AvatarFallback>
                         {profile?.full_name ? getInitials(profile.full_name) : "U"}

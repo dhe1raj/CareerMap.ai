@@ -13,6 +13,7 @@ import { CareerChat } from "@/components/dashboard/CareerChat";
 import { RoadmapProgress } from "@/components/dashboard/RoadmapProgress";
 import { ChevronRight, BookMarked, FileText, Briefcase } from "lucide-react";
 import ProfileWizard from "@/components/ProfileWizard";
+import SEOMetadata from "@/components/SEOMetadata";
 
 // Check if this is the first login
 const isFirstLogin = () => {
@@ -50,8 +51,29 @@ export default function Dashboard() {
     navigate('/career-designer', { state: { profile } });
   };
   
+  // Define SEO JSON-LD
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "CareerMap Dashboard",
+    "description": "Your personal career development dashboard with AI-powered tools and insights.",
+    "isPartOf": {
+      "@type": "WebApplication",
+      "name": "CareerMap",
+      "url": "https://careermap.ai"
+    }
+  };
+  
   return (
     <DashboardLayout>
+      <SEOMetadata
+        title="Dashboard | CareerMap"
+        description="Track your career progress, explore personalized roadmaps, and access AI-powered career guidance tools in your CareerMap dashboard."
+        keywords="career dashboard, career progress, roadmap tracking, AI career guidance, professional development"
+        canonicalPath="/dashboard"
+        jsonLd={jsonLd}
+      />
+      
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -108,7 +130,7 @@ export default function Dashboard() {
               onUpdateField={saveField}
             />
             
-            {/* Career Roadmap Card */}
+            {/* Career Resources Card */}
             <Card className="glass-morphism card-hover">
               <CardHeader>
                 <CardTitle>Career Resources</CardTitle>
@@ -127,9 +149,9 @@ export default function Dashboard() {
                   className="w-full"
                   variant="outline"
                 >
-                  <BookMarked className="mr-2 h-4 w-4" />
+                  <BookMarked className="mr-2 h-4 w-4" aria-hidden="true" />
                   Explore Resources
-                  <ChevronRight className="ml-auto h-4 w-4" />
+                  <ChevronRight className="ml-auto h-4 w-4" aria-hidden="true" />
                 </Button>
               </CardFooter>
             </Card>
@@ -153,9 +175,9 @@ export default function Dashboard() {
                   className="w-full"
                   variant="outline"
                 >
-                  <Briefcase className="mr-2 h-4 w-4" />
+                  <Briefcase className="mr-2 h-4 w-4" aria-hidden="true" />
                   View Matches
-                  <ChevronRight className="ml-auto h-4 w-4" />
+                  <ChevronRight className="ml-auto h-4 w-4" aria-hidden="true" />
                 </Button>
               </CardFooter>
             </Card>
@@ -179,9 +201,9 @@ export default function Dashboard() {
                   className="w-full"
                   variant="outline"
                 >
-                  <FileText className="mr-2 h-4 w-4" />
+                  <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
                   Full Analysis
-                  <ChevronRight className="ml-auto h-4 w-4" />
+                  <ChevronRight className="ml-auto h-4 w-4" aria-hidden="true" />
                 </Button>
               </CardFooter>
             </Card>
@@ -196,7 +218,6 @@ export default function Dashboard() {
         onCancel={() => setShowOnboarding(false)}
         initialProfile={userData ? {
           roleStatus: userData.profile.fullName
-          // Removed email property as it's not part of the OnboardingProfile type
         } : {}}
       />
       

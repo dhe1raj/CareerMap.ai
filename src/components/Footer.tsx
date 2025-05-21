@@ -85,13 +85,13 @@ export default function Footer() {
             © {new Date().getFullYear()} CareerMap. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="https://twitter.com/careermap" aria-label="Twitter" className="text-muted-foreground hover:text-foreground transition-colors">
               Twitter
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="https://linkedin.com/company/careermap" aria-label="LinkedIn" className="text-muted-foreground hover:text-foreground transition-colors">
               LinkedIn
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="https://github.com/careermap" aria-label="GitHub" className="text-muted-foreground hover:text-foreground transition-colors">
               GitHub
             </a>
           </div>

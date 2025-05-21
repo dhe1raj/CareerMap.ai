@@ -6,18 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Signup() {
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { signUp, signInWithGoogle } = useAuth();
 
@@ -27,10 +25,7 @@ export default function Signup() {
     
     try {
       await signUp(email, password, fullName);
-      toast({
-        title: "Account created",
-        description: "Welcome to CareerPath! Please verify your email to continue.",
-      });
+      toast.success("Account created! Please check your email to confirm your account.");
     } catch (error: any) {
       // Error is handled in the signUp function
     } finally {
@@ -51,26 +46,38 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyber-deeper via-brand-900 to-cyber-dark">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-brand-400/10 blur-[130px] animate-pulse-glow"></div>
+        <div className="absolute bottom-20 right-1/4 w-72 h-72 rounded-full bg-brand-500/10 blur-[100px] animate-pulse-glow"></div>
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 rounded-full bg-brand-600/10 blur-[120px] animate-pulse-glow"></div>
+        
+        {/* Subtle grid overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDBoNjB2NjBIMHoiLz48cGF0aCBkPSJNNjAgMEgwdjYwaDYwVjB6TTMwIDYwVjBtMzAgMzBIMCIgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDMpIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+      </div>
+      
       <Navbar />
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <Card className="mx-auto max-w-md w-full">
+      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="mx-auto max-w-md w-full backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(168,85,247,0.2)] transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-            <CardDescription>
-              Enter your information to get started with CareerPath
+            <CardTitle className="text-2xl font-bold text-white">Sign Up</CardTitle>
+            <CardDescription className="text-white/70">
+              Create an account to unlock personalized career guidance
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="full-name">Full Name</Label>
                 <Input
-                  id="fullName"
+                  id="full-name"
                   placeholder="John Doe"
+                  type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
+                  className="glass-input"
                 />
               </div>
               <div className="space-y-2">
@@ -82,6 +89,7 @@ export default function Signup() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="glass-input"
                 />
               </div>
               <div className="space-y-2">
@@ -92,38 +100,27 @@ export default function Signup() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="glass-input"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters long
+                <p className="text-xs text-white/60">
+                  Password must be at least 6 characters long
                 </p>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="terms" />
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  I agree to the{" "}
-                  <Link to="/terms" className="text-primary hover:underline underline-offset-4">
-                    Terms of Service
-                  </Link>
-                  {" "}and{" "}
-                  <Link to="/privacy" className="text-primary hover:underline underline-offset-4">
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign Up"}
+              <Button 
+                type="submit" 
+                className="w-full neon-button"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
             
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
+                <Separator className="w-full bg-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-brand-900/70 px-2 text-white/60 backdrop-blur-md">
                   Or continue with
                 </span>
               </div>
@@ -131,7 +128,7 @@ export default function Signup() {
             
             <div className="grid grid-cols-1 gap-4">
               <Button 
-                variant="outline" 
+                variant="secondary" 
                 className="w-full"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
@@ -163,11 +160,11 @@ export default function Signup() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 text-center">
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-white/70">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-primary underline-offset-4 hover:underline"
+                className="text-brand-300 hover:text-brand-200 transition-colors"
               >
                 Log in
               </Link>

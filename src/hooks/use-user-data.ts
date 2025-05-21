@@ -99,18 +99,20 @@ export function useUserData() {
         return;
       }
 
-      // Map Supabase profile to our userData structure
+      // Type assertion to handle the potentially missing properties
+      // This is necessary because the TypeScript types don't match the actual database schema yet
+      // The database now has these fields, but the TypeScript types don't reflect that
       setUserData(prev => ({
         ...prev,
         profile: {
           fullName: profile.full_name || '',
           email: profile.email || '',
-          username: profile.username || '',
-          bio: profile.bio || '',
-          user_role: profile.user_role || '',
-          interests: profile.interests || [],
-          isPublic: profile.is_public || false,
-          enableNotifications: profile.enable_notifications !== false, // default to true
+          username: (profile as any).username || '',
+          bio: (profile as any).bio || '',
+          user_role: (profile as any).user_role || '',
+          interests: (profile as any).interests || [],
+          isPublic: (profile as any).is_public || false,
+          enableNotifications: (profile as any).enable_notifications !== false, // default to true
           avatarUrl: profile.avatar_url || null,
         }
       }));

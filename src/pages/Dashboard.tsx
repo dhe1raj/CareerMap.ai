@@ -10,7 +10,9 @@ import { useUserData } from "@/hooks/use-user-data";
 import { CareerProgress } from "@/components/dashboard/CareerProgress";
 import { ResumeAnalysis } from "@/components/dashboard/ResumeAnalysis";
 import { CareerChat } from "@/components/dashboard/CareerChat";
+import { RoadmapProgress } from "@/components/dashboard/RoadmapProgress";
 import { ChevronRight, BookMarked, FileText, Briefcase } from "lucide-react";
+import ProfileWizard from "@/components/ProfileWizard";
 
 // Check if this is the first login
 const isFirstLogin = () => {
@@ -26,6 +28,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(isFirstLogin());
+  const [showProfileWizard, setShowProfileWizard] = useState(false);
   const { userData, isLoading, fetchUserData, saveField } = useUserData();
   
   // Fetch user data on mount
@@ -58,8 +61,8 @@ export default function Dashboard() {
             </p>
           </div>
           
-          <Button onClick={() => setShowOnboarding(true)} variant="outline">
-            Edit Profile
+          <Button onClick={() => setShowProfileWizard(true)} variant="outline">
+            Design My Career
           </Button>
         </div>
 
@@ -82,13 +85,16 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Career Progress Card */}
+            {/* Roadmap Progress Card - New and primary component */}
             <div className="md:col-span-2 lg:col-span-2">
-              <CareerProgress 
-                userData={userData} 
-                onUpdateField={saveField}
-              />
+              <RoadmapProgress />
             </div>
+            
+            {/* Career Progress Card */}
+            <CareerProgress 
+              userData={userData} 
+              onUpdateField={saveField}
+            />
             
             {/* Resume Analysis Card */}
             <ResumeAnalysis 
@@ -105,14 +111,14 @@ export default function Dashboard() {
             {/* Career Roadmap Card */}
             <Card className="glass-morphism card-hover">
               <CardHeader>
-                <CardTitle>Career Roadmap</CardTitle>
+                <CardTitle>Career Resources</CardTitle>
                 <CardDescription>
-                  Your personalized learning path
+                  Learn more about your chosen career path
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-white/70">
-                  Follow a step-by-step roadmap to achieve your career goals with curated resources.
+                  Access specialized resources and learning materials tailored to your career goals.
                 </p>
               </CardContent>
               <CardFooter>
@@ -122,7 +128,7 @@ export default function Dashboard() {
                   variant="outline"
                 >
                   <BookMarked className="mr-2 h-4 w-4" />
-                  View Roadmap
+                  Explore Resources
                   <ChevronRight className="ml-auto h-4 w-4" />
                 </Button>
               </CardFooter>
@@ -192,6 +198,12 @@ export default function Dashboard() {
           roleStatus: userData.profile.fullName
           // Removed email property as it's not part of the OnboardingProfile type
         } : {}}
+      />
+      
+      {/* Profile Wizard */}
+      <ProfileWizard 
+        isOpen={showProfileWizard}
+        onClose={() => setShowProfileWizard(false)}
       />
     </DashboardLayout>
   );

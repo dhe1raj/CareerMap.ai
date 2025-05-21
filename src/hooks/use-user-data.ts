@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { RoadmapStep, RoadmapTemplate } from '@/data/roadmapTemplates';
 
 // Define types for our user data
 export interface UserProfile {
@@ -15,6 +16,11 @@ export interface UserProfile {
   isPublic?: boolean;
   enableNotifications?: boolean;
   avatarUrl?: string;
+  age?: number;
+  status?: 'Student' | 'Working' | 'Experienced' | 'Intern';
+  degree?: string;
+  stream?: string;
+  goal?: 'job' | 'switch' | 'promotion' | 'startup';
 }
 
 export interface CareerData {
@@ -26,10 +32,18 @@ export interface CareerData {
 export interface ResumeData {
   fileURL: string | null;
   aiSummary: string | null;
+  rawText?: string | null;
 }
 
 export interface ChatData {
   latestThreadId: string | null;
+}
+
+export interface UserRoadmap {
+  id: string;
+  title: string;
+  steps: RoadmapStep[];
+  lastUpdated: string;
 }
 
 export interface UserData {
@@ -37,6 +51,7 @@ export interface UserData {
   career: CareerData;
   resume: ResumeData;
   chat: ChatData;
+  userRoadmap?: UserRoadmap | null;
 }
 
 // Initial state
@@ -60,10 +75,12 @@ const initialUserData: UserData = {
   resume: {
     fileURL: null,
     aiSummary: null,
+    rawText: null,
   },
   chat: {
     latestThreadId: null,
   },
+  userRoadmap: null,
 };
 
 export function useUserData() {
@@ -114,6 +131,11 @@ export function useUserData() {
           isPublic: (profile as any).is_public || false,
           enableNotifications: (profile as any).enable_notifications !== false, // default to true
           avatarUrl: profile.avatar_url || null,
+          age: (profile as any).age || undefined,
+          status: (profile as any).status || undefined,
+          degree: (profile as any).degree || '',
+          stream: (profile as any).stream || '',
+          goal: (profile as any).goal || undefined,
         }
       }));
 
@@ -126,6 +148,7 @@ export function useUserData() {
           career: parsedData.career || prev.career,
           resume: parsedData.resume || prev.resume,
           chat: parsedData.chat || prev.chat,
+          userRoadmap: parsedData.userRoadmap || null,
         }));
       }
     } catch (error) {
@@ -139,6 +162,16 @@ export function useUserData() {
       setIsLoading(false);
     }
   }, [user, toast]);
+
+  // Calculate career progress based on completed roadmap steps
+  const calculateProgress = useCallback((userRoadmap: UserRoadmap | null) => {
+    if (!userRoadmap || !userRoadmap.steps || userRoadmap.steps.length === 0) {
+      return 0;
+    }
+    
+    const completedSteps = userRoadmap.steps.filter(step => step.completed).length;
+    return Math.round((completedSteps / userRoadmap.steps.length) * 100);
+  }, []);
 
   // Function to save a specific field to Supabase
   const saveField = useCallback(async <T extends keyof UserData>(
@@ -155,12 +188,116 @@ export function useUserData() {
     }
 
     const pathParts = path.split('.');
-    if (pathParts.length !== 2) {
+    if (pathParts.length < 2) {
       console.error('Invalid field path', path);
       return;
     }
 
-    const [section, field] = pathParts as [keyof UserData, string];
+    const [section, field, subField] = pathParts as [keyof UserData, string, string?];
+    
+    // Special case for userRoadmap.steps to handle toggling step completion
+    if (section === 'userRoadmap' && field === 'steps' && subField) {
+      const stepIndex = parseInt(subField);
+      if (!isNaN(stepIndex) && userData.userRoadmap && Array.isArray(userData.userRoadmap.steps)) {
+        const updatedSteps = [...userData.userRoadmap.steps];
+        updatedSteps[stepIndex] = { ...updatedSteps[stepIndex], ...value };
+        
+        const updatedRoadmap = {
+          ...userData.userRoadmap,
+          steps: updatedSteps,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        setUserData(prev => ({
+          ...prev,
+          userRoadmap: updatedRoadmap,
+          career: {
+            ...prev.career,
+            progress: calculateProgress(updatedRoadmap)
+          }
+        }));
+        
+        // Save to localStorage for now
+        const storedData = localStorage.getItem('userData') || '{}';
+        const parsedData = JSON.parse(storedData);
+        localStorage.setItem('userData', JSON.stringify({
+          ...parsedData,
+          userRoadmap: updatedRoadmap,
+          career: {
+            ...parsedData.career,
+            progress: calculateProgress(updatedRoadmap)
+          }
+        }));
+        
+        return;
+      }
+    } else if (section === 'userRoadmap' && field === 'reset') {
+      // Handle roadmap reset
+      if (userData.userRoadmap) {
+        const resetSteps = userData.userRoadmap.steps.map(step => ({
+          ...step,
+          completed: false
+        }));
+        
+        const updatedRoadmap = {
+          ...userData.userRoadmap,
+          steps: resetSteps,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        setUserData(prev => ({
+          ...prev,
+          userRoadmap: updatedRoadmap,
+          career: {
+            ...prev.career,
+            progress: 0
+          }
+        }));
+        
+        // Save to localStorage for now
+        const storedData = localStorage.getItem('userData') || '{}';
+        const parsedData = JSON.parse(storedData);
+        localStorage.setItem('userData', JSON.stringify({
+          ...parsedData,
+          userRoadmap: updatedRoadmap,
+          career: {
+            ...parsedData.career,
+            progress: 0
+          }
+        }));
+        
+        toast({
+          title: 'Roadmap Reset',
+          description: 'Your progress has been reset successfully',
+        });
+        
+        return;
+      }
+    } else if (section === 'userRoadmap' && !field) {
+      // Handle setting the entire roadmap
+      setUserData(prev => ({
+        ...prev,
+        userRoadmap: value,
+        career: {
+          ...prev.career,
+          progress: calculateProgress(value)
+        }
+      }));
+      
+      // Save to localStorage for now
+      const storedData = localStorage.getItem('userData') || '{}';
+      const parsedData = JSON.parse(storedData);
+      localStorage.setItem('userData', JSON.stringify({
+        ...parsedData,
+        userRoadmap: value,
+        career: {
+          ...parsedData.career,
+          progress: calculateProgress(value)
+        }
+      }));
+      
+      return;
+    }
     
     setUserData(prev => {
       const newData = { 
@@ -191,6 +328,21 @@ export function useUserData() {
             break;
           case 'enableNotifications':
             profileUpdate = { enable_notifications: value };
+            break;
+          case 'age':
+            profileUpdate = { age: value };
+            break;
+          case 'status':
+            profileUpdate = { status: value };
+            break;
+          case 'degree':
+            profileUpdate = { degree: value };
+            break;
+          case 'stream':
+            profileUpdate = { stream: value };
+            break;
+          case 'goal':
+            profileUpdate = { goal: value };
             break;
           default:
             // For fields that have the same name in our app and database
@@ -232,7 +384,7 @@ export function useUserData() {
         variant: 'destructive'
       });
     }
-  }, [user, toast]);
+  }, [user, toast, userData.userRoadmap, calculateProgress]);
 
   // Initialize data on mount
   useEffect(() => {

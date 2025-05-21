@@ -5,6 +5,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Roadmap, RoadmapProgress, RoadmapItem } from '@/types/roadmap';
 
+interface SupabaseRoadmap {
+  id: string;
+  title: string;
+  type: 'role' | 'skill' | 'course';
+  sections: Record<string, any>; // JSON data
+  created_at: string;
+  user_id: string;
+  is_public: boolean;
+  description?: string;
+  updated_at?: string;
+}
+
+interface SupabaseRoadmapProgress {
+  id: string;
+  roadmap_id: string;
+  user_id: string;
+  progress_pct: number;
+  completed_items: string[];
+  started_at: string;
+  updated_at: string;
+}
+
 export function useRoadmaps() {
   const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [userProgress, setUserProgress] = useState<RoadmapProgress[]>([]);
@@ -45,18 +67,19 @@ export function useRoadmaps() {
       }
 
       // Convert database roadmap to our Roadmap type
-      const typedRoadmaps: Roadmap[] = roadmapsData?.map((item: any) => ({
+      const typedRoadmaps: Roadmap[] = (roadmapsData as SupabaseRoadmap[])?.map((item) => ({
         id: item.id,
         title: item.title,
-        type: item.type || 'role', // Default to 'role' if not specified
-        sections: item.sections || [],
+        type: item.type,
+        sections: item.sections,
         created_at: item.created_at,
         user_id: item.user_id,
-        is_public: item.is_public
+        is_public: item.is_public,
+        description: item.description
       })) || [];
 
       // Convert database progress to our RoadmapProgress type
-      const typedProgress: RoadmapProgress[] = progressData?.map((item: any) => ({
+      const typedProgress: RoadmapProgress[] = (progressData as SupabaseRoadmapProgress[])?.map((item) => ({
         id: item.id,
         roadmap_id: item.roadmap_id,
         user_id: item.user_id,
@@ -94,15 +117,18 @@ export function useRoadmaps() {
         throw error;
       }
 
+      const supabaseRoadmap = data as SupabaseRoadmap;
+      
       // Convert to our Roadmap type
       const roadmap: Roadmap = {
-        id: data.id,
-        title: data.title,
-        type: data.type || 'role',
-        sections: data.sections || [],
-        created_at: data.created_at,
-        user_id: data.user_id,
-        is_public: data.is_public
+        id: supabaseRoadmap.id,
+        title: supabaseRoadmap.title,
+        type: supabaseRoadmap.type,
+        sections: supabaseRoadmap.sections,
+        created_at: supabaseRoadmap.created_at,
+        user_id: supabaseRoadmap.user_id,
+        is_public: supabaseRoadmap.is_public,
+        description: supabaseRoadmap.description
       };
 
       // Fetch progress for this roadmap if user is logged in
@@ -115,8 +141,8 @@ export function useRoadmaps() {
           .eq('user_id', user.id)
           .single();
 
-        if (!progressError) {
-          progress = progressData as RoadmapProgress;
+        if (!progressError && progressData) {
+          progress = progressData as SupabaseRoadmapProgress;
         }
       }
 
@@ -194,7 +220,8 @@ export function useRoadmaps() {
           type: roadmapWithIds.type,
           sections: roadmapWithIds.sections,
           user_id: roadmapWithIds.user_id,
-          is_public: roadmapWithIds.is_public || false
+          is_public: roadmapWithIds.is_public || false,
+          description: roadmapWithIds.description
         })
         .select('*')
         .single();
@@ -203,14 +230,17 @@ export function useRoadmaps() {
         throw error;
       }
 
+      const supabaseRoadmap = data as SupabaseRoadmap;
+      
       const createdRoadmap: Roadmap = {
-        id: data.id,
-        title: data.title,
-        type: data.type,
-        sections: data.sections,
-        created_at: data.created_at,
-        user_id: data.user_id,
-        is_public: data.is_public
+        id: supabaseRoadmap.id,
+        title: supabaseRoadmap.title,
+        type: supabaseRoadmap.type,
+        sections: supabaseRoadmap.sections,
+        created_at: supabaseRoadmap.created_at,
+        user_id: supabaseRoadmap.user_id,
+        is_public: supabaseRoadmap.is_public,
+        description: supabaseRoadmap.description
       };
 
       // Initialize progress tracking for this roadmap
@@ -281,7 +311,7 @@ export function useRoadmaps() {
         throw roadmapError;
       }
 
-      const roadmap = roadmapData as any;
+      const roadmap = roadmapData as SupabaseRoadmap;
       const sections = roadmap.sections || [];
       
       // Calculate total items count

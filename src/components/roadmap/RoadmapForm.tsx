@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,7 +40,7 @@ export function RoadmapForm({ onSubmit, isGenerating = false }: RoadmapFormProps
   const studentType = form.watch('studentType');
 
   const handleSubmit = (values: z.infer<typeof FormSchema>) => {
-    // Ensure all required fields are present for RoadmapFormData
+    // Convert form values to RoadmapFormData type
     const formData: RoadmapFormData = {
       role: values.role,
       studentType: values.studentType,

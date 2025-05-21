@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useGemini } from '@/context/GeminiContext';
+import { useGemini, useGeminiContext } from '@/context/GeminiContext';
 import { Roadmap, RoadmapFormData } from '@/types/roadmap';
 
 export function useGenerateRoadmap() {

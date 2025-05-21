@@ -120,6 +120,22 @@ export default function CareerChat() {
         });
 
         setMessages(prevMessages => [...prevMessages, aiMessage]);
+      } else {
+        // Add fallback response if AI fails
+        const fallbackMessage: Message = {
+          id: crypto.randomUUID(),
+          sender: "ai",
+          content: "I'm having trouble processing your request right now. Could you try asking your question differently, or try again later?",
+          timestamp: new Date()
+        };
+        
+        await supabase.from('chat_messages').insert({
+          user_id: user.id,
+          content: fallbackMessage.content,
+          is_ai: true
+        });
+        
+        setMessages(prevMessages => [...prevMessages, fallbackMessage]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -129,6 +145,16 @@ export default function CareerChat() {
         description: "Failed to send message. Please try again.",
         className: "bg-red-500/10 border-red-500/20 backdrop-blur-md"
       });
+      
+      // Add fallback response if error occurs
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        sender: "ai",
+        content: "Sorry, I encountered an error while processing your message. Please try again later.",
+        timestamp: new Date()
+      };
+      
+      setMessages(prevMessages => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }

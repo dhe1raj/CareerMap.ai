@@ -107,7 +107,6 @@ export default function GeminiApiKeyInput() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="gemini-2.0-flash">gemini-2.0-flash (Recommended)</SelectItem>
-              <SelectItem value="gemini-pro">gemini-pro</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">

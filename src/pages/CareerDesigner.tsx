@@ -107,8 +107,8 @@ ${JSON.stringify(userProfile, null, 2)}`;
         }
       };
       
-      // Call the Gemini API
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=${apiKey}`;
+      // Call the Gemini API with updated endpoint and model
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -151,6 +151,23 @@ ${JSON.stringify(userProfile, null, 2)}`;
         });
         setRetryCount(0);
         setIsLoading(false);
+        
+        // Add fallback message when AI fails completely
+        setMarkdownResult(`## AI Generation Failed
+
+Unfortunately, we couldn't generate your personalized career report at this time. Here are some general suggestions:
+
+## Suggested Career Paths
+1. Explore roles that match your current skills
+2. Consider upskilling in trending areas
+3. Connect with professionals in your field of interest
+
+## Next Steps
+1. Complete your profile with more details
+2. Upload your resume for better personalization
+3. Try again later when our AI service is fully operational
+
+If this issue persists, please contact support.`);
       }
     }
   };

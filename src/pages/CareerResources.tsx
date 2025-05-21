@@ -83,24 +83,12 @@ export default function CareerResources() {
         return;
       }
       
-      // Get resources for the roadmap
-      // Pull from 'resources' table where the skill tags match the roadmap skills
-      const { data: roadmapData, error: roadmapError } = await supabase
-        .from('user_roadmaps')
-        .select(`
-          id,
-          title,
-          user_roadmap_steps (*)
-        `)
-        .eq('id', targetRoadmapId)
-        .single();
+      // Check if resources exist in the database
+      const { data: existingResources, error: resourcesError } = await supabase
+        .from('resources')
+        .select('*');
       
-      if (roadmapError) throw roadmapError;
-      
-      // Extract skills from roadmap steps
-      const skillTags = roadmapData.user_roadmap_steps.map((step: any) => 
-        step.label.toLowerCase().replace(/[^a-z0-9]/g, '')
-      );
+      if (resourcesError) throw resourcesError;
       
       // Fetch user's completed resources
       const { data: userProgress, error: progressError } = await supabase
@@ -110,96 +98,105 @@ export default function CareerResources() {
       
       if (progressError) throw progressError;
       
-      // For demo purposes, let's use mock data
-      const mockResources: Resource[] = [
-        {
-          id: "1",
-          type: "video",
-          title: "Introduction to React",
-          url: "https://www.youtube.com/watch?v=reactintro",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "react",
-          description: "Learn the basics of React framework for modern web development",
-          completed: false
-        },
-        {
-          id: "2",
-          type: "course",
-          title: "Advanced JavaScript Patterns",
-          url: "https://www.coursera.org/js-patterns",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "javascript",
-          description: "Master advanced JavaScript patterns and techniques",
-          completed: false
-        },
-        {
-          id: "3",
-          type: "book",
-          title: "Clean Code: A Handbook of Agile Software",
-          url: "https://www.amazon.com/clean-code",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "coding",
-          description: "Learn principles of writing clean, maintainable code",
-          completed: true
-        },
-        {
-          id: "4",
-          type: "tool",
-          title: "Figma for Developers",
-          url: "https://www.figma.com/developers",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "design",
-          description: "Learn how to use Figma as a developer",
-          completed: false
-        },
-        {
-          id: "5",
-          type: "video",
-          title: "CSS Grid Layout Mastery",
-          url: "https://www.youtube.com/watch?v=css-grid",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "css",
-          description: "Master CSS Grid for complex layouts",
-          completed: false
-        },
-        {
-          id: "6",
-          type: "community",
-          title: "Frontend Developers Community",
-          url: "https://discord.gg/frontend",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "networking",
-          description: "Join a community of frontend developers",
-          completed: false
-        },
-        {
-          id: "7",
-          type: "book",
-          title: "System Design Interview",
-          url: "https://www.amazon.com/system-design",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "architecture",
-          description: "Prepare for system design interviews",
-          completed: true
-        },
-        {
-          id: "8",
-          type: "tool",
-          title: "VSCode Setup for Full-Stack Development",
-          url: "https://code.visualstudio.com/docs",
-          thumbnail: "https://via.placeholder.com/150",
-          skill_tag: "tools",
-          description: "Optimize VSCode for full-stack development",
-          completed: false
-        }
-      ];
+      let resourcesData = existingResources || [];
       
-      // Mark resources as completed based on user progress
-      const resourcesWithProgress = mockResources.map(resource => {
-        const progressItem = userProgress?.find(p => p.resource_id === resource.id);
+      // If no resources in database, create mock resources
+      if (resourcesData.length === 0) {
+        const mockResources = [
+          {
+            type: "video",
+            title: "Introduction to React",
+            url: "https://www.youtube.com/watch?v=reactintro",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "react",
+            description: "Learn the basics of React framework for modern web development"
+          },
+          {
+            type: "course",
+            title: "Advanced JavaScript Patterns",
+            url: "https://www.coursera.org/js-patterns",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "javascript",
+            description: "Master advanced JavaScript patterns and techniques"
+          },
+          {
+            type: "book",
+            title: "Clean Code: A Handbook of Agile Software",
+            url: "https://www.amazon.com/clean-code",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "coding",
+            description: "Learn principles of writing clean, maintainable code"
+          },
+          {
+            type: "tool",
+            title: "Figma for Developers",
+            url: "https://www.figma.com/developers",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "design",
+            description: "Learn how to use Figma as a developer"
+          },
+          {
+            type: "video",
+            title: "CSS Grid Layout Mastery",
+            url: "https://www.youtube.com/watch?v=css-grid",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "css",
+            description: "Master CSS Grid for complex layouts"
+          },
+          {
+            type: "community",
+            title: "Frontend Developers Community",
+            url: "https://discord.gg/frontend",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "networking",
+            description: "Join a community of frontend developers"
+          },
+          {
+            type: "book",
+            title: "System Design Interview",
+            url: "https://www.amazon.com/system-design",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "architecture",
+            description: "Prepare for system design interviews"
+          },
+          {
+            type: "tool",
+            title: "VSCode Setup for Full-Stack Development",
+            url: "https://code.visualstudio.com/docs",
+            thumbnail: "https://via.placeholder.com/150",
+            skill_tag: "tools",
+            description: "Optimize VSCode for full-stack development"
+          }
+        ];
+        
+        // Insert mock resources
+        for (const resource of mockResources) {
+          const { data, error } = await supabase
+            .from('resources')
+            .insert(resource)
+            .select();
+            
+          if (error) {
+            console.error("Error inserting resource:", error);
+          }
+        }
+        
+        // Fetch the newly inserted resources
+        const { data: newResources, error: fetchError } = await supabase
+          .from('resources')
+          .select('*');
+          
+        if (fetchError) throw fetchError;
+        
+        resourcesData = newResources || [];
+      }
+      
+      // Map resources with user progress
+      const resourcesWithProgress = resourcesData.map(resource => {
+        const progressRecord = userProgress?.find(p => p.resource_id === resource.id);
         return {
           ...resource,
-          completed: progressItem ? progressItem.completed : resource.completed
+          completed: progressRecord ? progressRecord.completed : false
         };
       });
       
@@ -207,9 +204,11 @@ export default function CareerResources() {
       setFilteredResources(resourcesWithProgress);
       
       // Calculate progress
-      const completedCount = resourcesWithProgress.filter(r => r.completed).length;
-      const progressPercentage = Math.round((completedCount / resourcesWithProgress.length) * 100);
-      setProgress(progressPercentage);
+      if (resourcesWithProgress.length > 0) {
+        const completedCount = resourcesWithProgress.filter(r => r.completed).length;
+        const progressPercentage = Math.round((completedCount / resourcesWithProgress.length) * 100);
+        setProgress(progressPercentage);
+      }
       
     } catch (error) {
       console.error("Error fetching resources:", error);

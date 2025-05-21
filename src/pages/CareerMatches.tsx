@@ -37,19 +37,14 @@ export default function CareerMatches() {
       setIsLoading(true);
       try {
         // Check if user already has matches
-        const { data: userMatches, error: matchesError } = await supabase
-          .from('user_matches')
-          .select(`
-            match_id,
-            matches (*)
-          `)
-          .eq('user_id', user.id);
+        const { data: existingMatches, error: matchError } = await supabase
+          .from('matches')
+          .select('*');
         
-        if (matchesError) throw matchesError;
+        if (matchError) throw matchError;
         
-        if (userMatches && userMatches.length > 0) {
-          const formattedMatches = userMatches.map(item => item.matches);
-          setMatches(formattedMatches);
+        if (existingMatches && existingMatches.length > 0) {
+          setMatches(existingMatches);
         } else {
           // Need to generate matches with AI
           await generateMatchesWithAI();
@@ -86,62 +81,74 @@ export default function CareerMatches() {
       // Mock data for demonstration (replace with actual AI call)
       const mockMatches = [
         {
-          id: "1",
           role: "Software Engineer",
           short_desc: "Develop applications and systems using various programming languages",
           icon: "code",
           match_pct: 95,
           bullets: ["Strong coding skills", "Problem-solving aptitude", "Avg salary: $120K"],
-          created_at: new Date().toISOString()
         },
         {
-          id: "2",
           role: "Data Scientist",
           short_desc: "Extract insights from large datasets and create predictive models",
           icon: "database",
           match_pct: 92,
           bullets: ["Statistical analysis", "Machine learning", "Avg salary: $130K"],
-          created_at: new Date().toISOString()
         },
         {
-          id: "3",
           role: "UX Designer",
           short_desc: "Design user interfaces and experiences for digital products",
           icon: "layout",
           match_pct: 88,
           bullets: ["Creative thinking", "User empathy", "Avg salary: $110K"],
-          created_at: new Date().toISOString()
         },
         {
-          id: "4",
           role: "Product Manager",
           short_desc: "Lead development of products from conception to launch",
           icon: "briefcase",
           match_pct: 85,
           bullets: ["Strategic planning", "Team leadership", "Avg salary: $140K"],
-          created_at: new Date().toISOString()
         },
         {
-          id: "5",
           role: "DevOps Engineer",
           short_desc: "Manage infrastructure and deployment pipelines",
           icon: "server",
           match_pct: 82,
           bullets: ["CI/CD experience", "Cloud platforms", "Avg salary: $125K"],
-          created_at: new Date().toISOString()
         },
         {
-          id: "6",
           role: "AI Engineer",
           short_desc: "Build AI models and systems that can perform tasks requiring human intelligence",
           icon: "cpu",
           match_pct: 79,
           bullets: ["Deep learning", "Neural networks", "Avg salary: $135K"],
-          created_at: new Date().toISOString()
         }
       ];
       
-      setMatches(mockMatches);
+      // Insert mock matches into the database
+      for (const match of mockMatches) {
+        const { error } = await supabase
+          .from('matches')
+          .insert({
+            role: match.role,
+            short_desc: match.short_desc,
+            icon: match.icon,
+            match_pct: match.match_pct,
+            bullets: match.bullets
+          });
+          
+        if (error) {
+          console.error("Error inserting match:", error);
+        }
+      }
+      
+      // Fetch inserted matches
+      const { data: insertedMatches, error: fetchError } = await supabase
+        .from('matches')
+        .select('*');
+        
+      if (fetchError) throw fetchError;
+      
+      setMatches(insertedMatches || []);
       
       // In a real implementation, we would:
       // 1. Call Gemini API with user profile data
@@ -172,10 +179,9 @@ export default function CareerMatches() {
       // Insert into user_matches table
       const { error } = await supabase
         .from('user_matches')
-        .upsert({
+        .insert({
           user_id: user.id,
           match_id: matchId,
-          saved_at: new Date().toISOString()
         });
       
       if (error) throw error;

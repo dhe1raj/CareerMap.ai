@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -13,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 const roles = [
   "Student",
@@ -48,7 +51,7 @@ const profileSchema = z.object({
   username: z.string().min(3, { message: "Username must be at least 3 characters." }).optional(),
   email: z.string().email({ message: "Please enter a valid email address." }),
   bio: z.string().max(300, { message: "Bio must not exceed 300 characters." }).optional(),
-  currentRole: z.string().optional(),
+  user_role: z.string().optional(),
   interests: z.array(z.string()).optional(),
   isPublic: z.boolean().default(false),
   enableNotifications: z.boolean().default(true),
@@ -58,9 +61,11 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function AccountProfileForm() {
   const { userData, saveField } = useUserData();
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   
   // Mock creation date for demo
   const creationDate = new Date(2023, 5, 15);
@@ -70,12 +75,12 @@ export default function AccountProfileForm() {
     defaultValues: {
       fullName: userData.profile.fullName || "",
       email: userData.profile.email || "",
-      username: "",
-      bio: "",
-      currentRole: "",
-      interests: [],
-      isPublic: false,
-      enableNotifications: true,
+      username: userData.profile.username || "",
+      bio: userData.profile.bio || "",
+      user_role: userData.profile.user_role || "",
+      interests: userData.profile.interests || [],
+      isPublic: userData.profile.isPublic || false,
+      enableNotifications: userData.profile.enableNotifications !== false,
     },
   });
 
@@ -83,20 +88,46 @@ export default function AccountProfileForm() {
     form.reset({
       fullName: userData.profile.fullName || "",
       email: userData.profile.email || "",
-      username: "",
-      bio: "",
-      currentRole: "",
-      interests: [],
-      isPublic: false,
-      enableNotifications: true,
+      username: userData.profile.username || "",
+      bio: userData.profile.bio || "",
+      user_role: userData.profile.user_role || "",
+      interests: userData.profile.interests || [],
+      isPublic: userData.profile.isPublic || false,
+      enableNotifications: userData.profile.enableNotifications !== false,
     });
+    
+    if (userData.profile.interests?.length) {
+      setSelectedInterests(userData.profile.interests);
+    }
+    
+    if (userData.profile.avatarUrl) {
+      setAvatarUrl(userData.profile.avatarUrl);
+    }
   }, [userData, form]);
 
-  function onSubmit(data: ProfileFormValues) {
+  async function onSubmit(data: ProfileFormValues) {
     try {
-      // In a real app, we would update all fields in the profile
-      // Here we just update the fullName as an example
-      saveField("profile.fullName", data.fullName);
+      // Update the form fields in Supabase through our hook
+      await saveField("profile.fullName", data.fullName);
+      
+      if (data.username) {
+        await saveField("profile.username", data.username);
+      }
+      
+      if (data.bio) {
+        await saveField("profile.bio", data.bio);
+      }
+      
+      if (data.user_role) {
+        await saveField("profile.user_role", data.user_role);
+      }
+      
+      if (selectedInterests.length > 0) {
+        await saveField("profile.interests", selectedInterests);
+      }
+      
+      await saveField("profile.isPublic", data.isPublic);
+      await saveField("profile.enableNotifications", data.enableNotifications);
       
       // Show success toast
       toast.success("Profile updated successfully");
@@ -116,20 +147,32 @@ export default function AccountProfileForm() {
     );
   };
 
-  // Upload avatar handler - in a real app this would handle file uploads
-  const handleAvatarUpload = () => {
-    // Simulate file upload
-    toast.info("Avatar upload feature coming soon");
+  // Upload avatar handler
+  const handleAvatarUpload = async () => {
+    if (!user) {
+      toast.error("You must be logged in to upload an avatar");
+      return;
+    }
+
+    // This is where we would normally use a file input, but for demo we'll simulate
+    try {
+      setIsUploading(true);
+      toast.info("Avatar upload feature coming soon");
+      setIsUploading(false);
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload avatar");
+      setIsUploading(false);
+    }
   };
 
-  // Handle password change - in a real app this would open a modal
+  // Handle password change
   const handlePasswordChange = () => {
     toast.info("Password change feature coming soon");
   };
 
   // Delete account handler
   const handleDeleteAccount = () => {
-    // In a real app, this would show a confirmation dialog
     toast.error("This action cannot be undone. Account deletion coming soon.");
   };
 
@@ -161,8 +204,9 @@ export default function AccountProfileForm() {
                   size="sm"
                   onClick={handleAvatarUpload}
                   className="mt-2"
+                  disabled={isUploading || !isEditing}
                 >
-                  Upload Photo
+                  {isUploading ? "Uploading..." : "Upload Photo"}
                 </Button>
               </div>
               
@@ -267,7 +311,7 @@ export default function AccountProfileForm() {
 
                 <FormField
                   control={form.control}
-                  name="currentRole"
+                  name="user_role"
                   render={({ field }) => (
                     <FormItem className="group">
                       <FormLabel className="text-white/80 font-medium group-focus-within:text-brand-400">Current Role</FormLabel>

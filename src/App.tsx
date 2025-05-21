@@ -29,8 +29,8 @@ function App() {
       <GeminiProvider>
         <Router>
           <AppContent />
+          <Toaster position="top-right" />
         </Router>
-        <Toaster position="top-right" />
       </GeminiProvider>
     </AuthProvider>
   );
@@ -86,7 +86,7 @@ function AppContent() {
       <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
       <Route path="/career-progress" element={user ? <CareerProgressPage /> : <Navigate to="/login" />} />
       <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
-      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to "/login" />} />
+      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
       
       {/* Catch-all for 404 */}

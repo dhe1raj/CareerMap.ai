@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useGemini } from "@/context/GeminiContext";
+import { useGeminiContext } from "@/context/GeminiContext";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Check, Info } from "lucide-react";
 
 export default function GeminiApiKeyInput() {
-  const { apiKey, modelName, setApiKey, setModelName } = useGemini();
+  const { apiKey, modelName, setApiKey, setModelName } = useGeminiContext();
   const [inputApiKey, setInputApiKey] = useState(apiKey || "");
   const [isEditingKey, setIsEditingKey] = useState(false);
   const { toast } = useToast();

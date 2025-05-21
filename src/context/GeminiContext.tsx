@@ -1,46 +1,50 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface GeminiContextType {
-  geminiClient: any | null;
-  isGeminiConfigured: boolean;
-  apiKey: string | null;
+  apiKey: string;
   modelName: string;
-  setGeminiClient: (client: any) => void;
   setApiKey: (key: string) => void;
   setModelName: (model: string) => void;
 }
 
-const GeminiContext = createContext<GeminiContextType>({
-  geminiClient: null,
-  isGeminiConfigured: false,
-  apiKey: null,
-  modelName: 'gemini-2.0-flash',
-  setGeminiClient: () => {},
-  setApiKey: () => {},
-  setModelName: () => {}
-});
+// Default API key provided by the developer
+const DEFAULT_API_KEY = "AIzaSyDyQdvgf5_-VztpZIdyhRNiTFE94o2fSf4";
 
-export const GeminiProvider = ({ children }: { children: ReactNode }) => {
-  const [geminiClient, setGeminiClient] = useState<any | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [modelName, setModelName] = useState<string>('gemini-2.0-flash');
+const GeminiContext = createContext<GeminiContextType | undefined>(undefined);
+
+export function GeminiProvider({ children }: { children: ReactNode }) {
+  const [apiKey, setApiKey] = useState<string>(localStorage.getItem("gemini_api_key") || DEFAULT_API_KEY);
+  const [modelName, setModelName] = useState<string>(localStorage.getItem("gemini_model_name") || "gemini-2.0-flash");
+
+  const handleSetApiKey = (key: string) => {
+    localStorage.setItem("gemini_api_key", key);
+    setApiKey(key);
+  };
+
+  const handleSetModelName = (model: string) => {
+    localStorage.setItem("gemini_model_name", model);
+    setModelName(model);
+  };
 
   return (
-    <GeminiContext.Provider value={{
-      geminiClient,
-      isGeminiConfigured: !!geminiClient,
-      apiKey,
-      modelName,
-      setGeminiClient,
-      setApiKey,
-      setModelName
-    }}>
+    <GeminiContext.Provider 
+      value={{ 
+        apiKey, 
+        modelName, 
+        setApiKey: handleSetApiKey,
+        setModelName: handleSetModelName 
+      }}
+    >
       {children}
     </GeminiContext.Provider>
   );
-};
+}
 
-// Export both names for compatibility
-export const useGemini = () => useContext(GeminiContext);
-export const useGeminiContext = () => useContext(GeminiContext);
+export function useGeminiContext() {
+  const context = useContext(GeminiContext);
+  if (context === undefined) {
+    throw new Error("useGeminiContext must be used within a GeminiProvider");
+  }
+  return context;
+}

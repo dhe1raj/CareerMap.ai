@@ -350,9 +350,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          is_public: boolean | null
           role_id: string
-          sections: Json | null
           title: string
           updated_at: string | null
           user_id: string
@@ -361,9 +359,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          is_public?: boolean | null
           role_id: string
-          sections?: Json | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -372,9 +368,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
-          is_public?: boolean | null
           role_id?: string
-          sections?: Json | null
           title?: string
           updated_at?: string | null
           user_id?: string
@@ -623,44 +617,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      users_roadmap_progress: {
-        Row: {
-          completed_items: Json | null
-          id: string
-          progress_pct: number | null
-          roadmap_id: string
-          started_at: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completed_items?: Json | null
-          id?: string
-          progress_pct?: number | null
-          roadmap_id: string
-          started_at?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completed_items?: Json | null
-          id?: string
-          progress_pct?: number | null
-          roadmap_id?: string
-          started_at?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "users_roadmap_progress_roadmap_id_fkey"
-            columns: ["roadmap_id"]
-            isOneToOne: false
-            referencedRelation: "roadmaps"
             referencedColumns: ["id"]
           },
         ]

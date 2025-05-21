@@ -1,39 +1,28 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { cn } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export interface SuggestionChipProps {
+interface SuggestionChipProps {
   label: string;
-  href?: string;
-  onClick?: () => void;
-  className?: string;
 }
 
-export const SuggestionChip: React.FC<SuggestionChipProps> = ({
-  label,
-  href,
-  onClick,
-  className
-}) => {
-  const chipClasses = cn(
-    "inline-flex rounded-full px-3 py-1 text-sm bg-purple-500/20 text-purple-100 hover:bg-purple-500/40 transition-colors cursor-pointer",
-    className
-  );
+export function SuggestionChip({ label }: SuggestionChipProps) {
+  const navigate = useNavigate();
   
-  if (href) {
-    return (
-      <Link to={href} className={chipClasses}>
-        {label}
-      </Link>
-    );
-  }
+  const handleClick = () => {
+    navigate(`/career-matches?role=${encodeURIComponent(label)}`);
+  };
   
   return (
-    <div onClick={onClick} className={chipClasses}>
-      {label}
-    </div>
+    <button 
+      onClick={handleClick}
+      className="flex items-center gap-2 py-2 px-4 rounded-full bg-white/10 backdrop-blur-md 
+                border border-white/20 hover:bg-white/15 hover:border-brand-400/50 
+                hover:shadow-[0_0_12px_rgba(168,85,247,0.4)] transition-all duration-300 
+                animate-pulse-slow group"
+    >
+      <span className="text-sm text-white/90">{label}</span>
+      <ArrowRight className="h-4 w-4 text-brand-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+    </button>
   );
-};
-
-export default SuggestionChip;
+}

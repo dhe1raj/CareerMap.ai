@@ -1,250 +1,316 @@
 
 import { useState, useCallback } from 'react';
-import { geminiGenerate } from '@/lib/gemini';
-import { CareerMatch } from '@/components/career/CareerMatchCard';
+import { useToast } from '@/hooks/use-toast';
+import { useGeminiContext } from '@/context/GeminiContext';
+import { UserData } from './use-user-data';
 
 export function useGeminiCareer() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [matches, setMatches] = useState<CareerMatch[]>([]);
-
-  const generateCareerMatches = useCallback(async (skills: string[], interests: string[], education: string): Promise<CareerMatch[]> => {
-    setIsLoading(true);
-    
-    try {
-      // Format input for the prompt
-      const skillsText = skills.length > 0 ? `Skills: ${skills.join(', ')}` : '';
-      const interestsText = interests.length > 0 ? `Interests: ${interests.join(', ')}` : '';
-      const educationText = education ? `Education: ${education}` : '';
-      
-      // Prepare prompt for Gemini
-      const prompt = `
-      I need personalized career recommendations based on the following information:
-      
-      ${skillsText}
-      ${interestsText}
-      ${educationText}
-      
-      Please suggest 6 career paths that match this profile. For each career, provide:
-      1. Job title
-      2. A brief description (1-2 sentences)
-      3. A match percentage (between 60% and 95%)
-      4. 3 bullet points highlighting key aspects of this career
-      
-      Return the response as a JSON array of objects with the following structure:
-      [
-        {
-          "role": "Career Title",
-          "short_desc": "Brief description of the career",
-          "match_pct": 85,
-          "bullets": ["Bullet point 1", "Bullet point 2", "Bullet point 3"]
-        },
-        // more career objects
-      ]
-      
-      Only provide the JSON with no additional text.
-      `;
-      
-      // Get response from Gemini
-      const response = await geminiGenerate(prompt);
-      
-      // Extract JSON from the response (response might contain markdown code blocks)
-      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
-                         response.match(/\[([\s\S]*)\]/);
-      
-      let parsedData: CareerMatch[] = [];
-      
-      if (jsonMatch && jsonMatch[1]) {
-        // Try to parse the extracted JSON
-        try {
-          parsedData = JSON.parse(`[${jsonMatch[1]}]`.replace(/^\[+|\]+$/g, '[').replace(/\]\[/g, ',') + ']');
-        } catch (error) {
-          console.error("Error parsing JSON from Gemini response:", error);
-          throw new Error("Failed to parse career matches data");
-        }
-      } else {
-        // If no JSON found in code blocks, try parsing the whole response
-        try {
-          parsedData = JSON.parse(response);
-        } catch (error) {
-          console.error("Error parsing raw response as JSON:", error);
-          throw new Error("Failed to parse career matches data");
-        }
-      }
-      
-      // Validate the data structure
-      const validatedData = parsedData.map(item => ({
-        role: item.role || "Unknown Career",
-        short_desc: item.short_desc || "No description available",
-        icon: item.icon || undefined,
-        match_pct: typeof item.match_pct === 'number' ? item.match_pct : 75,
-        bullets: Array.isArray(item.bullets) ? item.bullets : ["No details available"]
-      }));
-      
-      setMatches(validatedData);
-      return validatedData;
-    } catch (error) {
-      console.error("Error generating career matches:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+  const { apiKey } = useGeminiContext();
+  
+  const callGemini = useCallback(async (
+    prompt: string,
+    retryCount = 0,
+    maxRetries = 2
+  ): Promise<string | null> => {
+    if (!apiKey) {
+      toast({
+        title: 'API Key Missing',
+        description: 'Please add your Gemini API key in settings.',
+        variant: 'destructive'
+      });
+      return null;
     }
-  }, []);
-
-  const generateSuggestions = useCallback(async (userInput: string): Promise<CareerMatch[]> => {
-    setIsLoading(true);
     
     try {
-      // Prepare prompt for Gemini
-      const prompt = `
-      Based on this career-related query or description from a user:
-      "${userInput}"
-      
-      Please suggest 4-6 career paths that might be relevant. For each career, provide:
-      1. Job title
-      2. A brief description (1-2 sentences)
-      3. A match percentage (between 60% and 95%)
-      4. 3 bullet points highlighting key aspects of this career
-      
-      Return the response as a JSON array of objects with the following structure:
-      [
-        {
-          "role": "Career Title",
-          "short_desc": "Brief description of the career",
-          "match_pct": 85,
-          "bullets": ["Bullet point 1", "Bullet point 2", "Bullet point 3"]
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         },
-        // more career objects
-      ]
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ]
+        })
+      });
       
-      Only provide the JSON with no additional text.
-      `;
-      
-      // Get response from Gemini
-      const response = await geminiGenerate(prompt);
-      
-      // Extract JSON from the response
-      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
-                         response.match(/\[([\s\S]*)\]/);
-      
-      let parsedData: CareerMatch[] = [];
-      
-      if (jsonMatch && jsonMatch[1]) {
-        try {
-          parsedData = JSON.parse(`[${jsonMatch[1]}]`.replace(/^\[+|\]+$/g, '[').replace(/\]\[/g, ',') + ']');
-        } catch (error) {
-          console.error("Error parsing JSON from Gemini response:", error);
-          throw new Error("Failed to parse career matches data");
-        }
-      } else {
-        try {
-          parsedData = JSON.parse(response);
-        } catch (error) {
-          console.error("Error parsing raw response as JSON:", error);
-          throw new Error("Failed to parse career matches data");
-        }
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
       }
       
-      // Validate the data structure
-      const validatedData = parsedData.map(item => ({
-        role: item.role || "Unknown Career",
-        short_desc: item.short_desc || "No description available",
-        icon: item.icon || undefined,
-        match_pct: typeof item.match_pct === 'number' ? item.match_pct : 75,
-        bullets: Array.isArray(item.bullets) ? item.bullets : ["No details available"]
-      }));
+      const data = await response.json();
       
-      setMatches(validatedData);
-      return validatedData;
+      if (!data.candidates || 
+          !data.candidates[0] || 
+          !data.candidates[0].content || 
+          !data.candidates[0].content.parts || 
+          !data.candidates[0].content.parts[0].text) {
+        throw new Error("Invalid response format from Gemini API");
+      }
+      
+      return data.candidates[0].content.parts[0].text;
     } catch (error) {
-      console.error("Error generating career suggestions:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const analyzeResume = useCallback(async (resumeText: string) => {
-    setIsLoading(true);
-    
-    try {
-      // Prepare prompt for Gemini
-      const prompt = `
-      Analyze this resume text and provide insights:
+      console.error("Error calling Gemini API:", error);
       
-      ${resumeText}
-      
-      Please return a JSON object with the following structure:
-      {
-        "skills": ["skill1", "skill2", ...],
-        "experience_level": "entry_level|mid_level|senior_level",
-        "education_level": "high_school|associates|bachelors|masters|phd|none",
-        "career_matches": [
-          {
-            "role": "Career Title",
-            "short_desc": "Brief description of why this matches their background",
-            "match_pct": 85,
-            "bullets": ["Reason 1", "Reason 2", "Reason 3"]
-          },
-          // more career matches
-        ],
-        "improvement_suggestions": ["suggestion1", "suggestion2", ...]
-      }
-      
-      Only provide the JSON with no additional text.
-      `;
-      
-      // Get response from Gemini
-      const response = await geminiGenerate(prompt);
-      
-      // Extract JSON from the response
-      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || 
-                         response.match(/\{([\s\S]*)\}/);
-      
-      let parsedData;
-      
-      if (jsonMatch && jsonMatch[1]) {
-        try {
-          parsedData = JSON.parse(`{${jsonMatch[1]}}`.replace(/^\{+|\}+$/g, '{').replace(/\}\{/g, ',') + '}');
-        } catch (error) {
-          console.error("Error parsing JSON from Gemini response:", error);
-          throw new Error("Failed to parse resume analysis data");
-        }
-      } else {
-        try {
-          parsedData = JSON.parse(response);
-        } catch (error) {
-          console.error("Error parsing raw response as JSON:", error);
-          throw new Error("Failed to parse resume analysis data");
-        }
-      }
-      
-      // Update career matches state if present in the response
-      if (parsedData.career_matches && Array.isArray(parsedData.career_matches)) {
-        const validatedMatches = parsedData.career_matches.map((item: any) => ({
-          role: item.role || "Unknown Career",
-          short_desc: item.short_desc || "No description available",
-          icon: item.icon || undefined,
-          match_pct: typeof item.match_pct === 'number' ? item.match_pct : 75,
-          bullets: Array.isArray(item.bullets) ? item.bullets : ["No details available"]
-        }));
+      if (retryCount < maxRetries) {
+        toast({
+          title: "AI busy, retrying...",
+          description: `Attempt ${retryCount + 1} of ${maxRetries + 1}...`,
+        });
         
-        setMatches(validatedMatches);
+        // Retry after a 2-second delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return callGemini(prompt, retryCount + 1, maxRetries);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to generate data after multiple attempts.",
+          variant: "destructive"
+        });
+        return null;
+      }
+    }
+  }, [apiKey, toast]);
+
+  // Generate career suggestions based on user profile
+  const generateSuggestions = useCallback(async (userData: UserData): Promise<string[]> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `User profile: ${JSON.stringify(userData.profile)}
+Current progress: ${userData.career.progress}.
+Return three best-fit career roles in an array, no prose.`;
+      
+      const result = await callGemini(prompt);
+      
+      if (!result) return [];
+      
+      // Parse the array from text response
+      try {
+        // First try to parse it as a direct JSON array
+        let parsedResult: string[];
+        
+        if (result.trim().startsWith('[') && result.trim().endsWith(']')) {
+          parsedResult = JSON.parse(result);
+        } else {
+          // Try to extract array if embedded in markdown or text
+          const match = result.match(/\[(.*)\]/s);
+          if (match && match[1]) {
+            parsedResult = JSON.parse(`[${match[1]}]`);
+          } else {
+            // Fallback: split by lines and clean up
+            parsedResult = result.split('\n')
+              .map(line => line.replace(/^\d+\.\s*|^-\s*|^•\s*|"/g, '').trim())
+              .filter(line => line.length > 0)
+              .slice(0, 3);
+          }
+        }
+        
+        return parsedResult.slice(0, 3); // Ensure only 3 suggestions
+      } catch (error) {
+        console.error("Error parsing suggestions:", error);
+        // Fallback: Just take the first three lines
+        return result.split('\n')
+          .map(line => line.replace(/^\d+\.\s*|^-\s*|^•\s*|"/g, '').trim())
+          .filter(line => line.length > 0)
+          .slice(0, 3);
+      }
+    } catch (error) {
+      console.error("Error generating suggestions:", error);
+      return [];
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callGemini]);
+
+  // Analyze resume text and generate summary and skills
+  const analyzeResume = useCallback(async (resumeText: string): Promise<{summary: string, suggestions: string[]}> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `You are a professional resume analyzer. Provide a concise, 120-word summary of this resume, followed by identifying the top 3 career roles that would be a good fit based on the resume. Format your response as: 
+SUMMARY: [your 120-word summary]
+ROLES: ["Role 1", "Role 2", "Role 3"]
+
+Resume text:
+${resumeText}`;
+      
+      const result = await callGemini(prompt);
+      
+      if (!result) return { summary: '', suggestions: [] };
+      
+      // Parse the response to extract summary and roles
+      const summaryMatch = result.match(/SUMMARY:\s*([\s\S]*?)(?=ROLES:|$)/i);
+      const rolesMatch = result.match(/ROLES:\s*(\[[\s\S]*?\])/i);
+      
+      let summary = '';
+      let suggestions: string[] = [];
+      
+      if (summaryMatch && summaryMatch[1]) {
+        summary = summaryMatch[1].trim();
       }
       
-      return parsedData;
+      if (rolesMatch && rolesMatch[1]) {
+        try {
+          suggestions = JSON.parse(rolesMatch[1]);
+        } catch (error) {
+          console.error("Error parsing roles:", error);
+          // Extract any role-like text
+          suggestions = rolesMatch[1]
+            .split('\n')
+            .map(line => line.replace(/^\d+\.\s*|^-\s*|^•\s*|"|^\[|^\]/g, '').trim())
+            .filter(line => line.length > 0)
+            .slice(0, 3);
+        }
+      }
+      
+      return { summary, suggestions };
     } catch (error) {
       console.error("Error analyzing resume:", error);
-      throw error;
+      return { summary: '', suggestions: [] };
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
-  }, []);
+  }, [callGemini]);
+
+  // Generate career roadmap based on selected career path
+  const generateCareerRoadmap = useCallback(async (careerPath: string, userInterests: string[]): Promise<any> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `Create a detailed career roadmap for someone interested in becoming a ${careerPath}.
+Their main interests are: ${userInterests.join(', ')}.
+
+Format your response as a detailed JSON object with the following structure (with no explanation, just the JSON):
+{
+  "title": "${careerPath} Career Path",
+  "overview": "A concise overview of this career path...",
+  "salary": {
+    "entry": "Entry-level salary range",
+    "mid": "Mid-level salary range",
+    "senior": "Senior-level salary range"
+  },
+  "workLifeBalance": {
+    "stress": "Low/Medium/High",
+    "workHours": "Typical work hours",
+    "flexibility": "Description of flexibility"
+  },
+  "growthPotential": "Description of growth potential and advancement",
+  "steps": [
+    {
+      "title": "Step 1 Title",
+      "description": "Description of this step",
+      "items": ["Item 1", "Item 2", "Item 3"],
+      "timeframe": "Estimated timeframe"
+    },
+    ... more steps (5-7 total)
+  ],
+  "recommendedCompanies": ["Company 1", "Company 2", "Company 3", "Company 4", "Company 5"],
+  "jobPlatforms": ["Platform 1", "Platform 2", "Platform 3"]
+}`;
+      
+      const result = await callGemini(prompt);
+      
+      if (!result) return null;
+      
+      // Parse the JSON response
+      try {
+        // Find JSON object in response
+        const match = result.match(/\{[\s\S]*\}/);
+        if (match) {
+          const jsonStr = match[0];
+          const roadmap = JSON.parse(jsonStr);
+          
+          // Store in localStorage for now (will move to database later)
+          localStorage.setItem("careerRoadmap", JSON.stringify(roadmap));
+          
+          return roadmap;
+        } else {
+          throw new Error("Could not find JSON object in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing career roadmap:", parseError);
+        throw new Error("Failed to generate career roadmap");
+      }
+    } catch (error) {
+      console.error("Error generating career roadmap:", error);
+      toast({
+        title: "Failed to Generate Roadmap",
+        description: "There was an error creating your career roadmap. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callGemini, toast]);
+
+  // Generate learning resources for a career path
+  const generateLearningResources = useCallback(async (careerPath: string, skills: string[]): Promise<any> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `Generate a comprehensive list of learning resources for someone pursuing a career as a ${careerPath}.
+They want to focus on developing these skills: ${skills.join(', ')}.
+
+Format your response as a JSON array with the following structure (no explanation, just the JSON):
+[
+  {
+    "title": "Resource title",
+    "description": "Brief description of what this resource offers",
+    "type": "course/book/tool/video/article",
+    "skillCategory": "frontend/backend/design/ai/data/soft/other",
+    "url": "https://example.com/resource",
+    "skillName": "Specific skill this resource helps develop"
+  },
+  ... more resources (at least 15 total)
+]`;
+      
+      const result = await callGemini(prompt);
+      
+      if (!result) return null;
+      
+      // Parse the JSON response
+      try {
+        // Find JSON array in response
+        const match = result.match(/\[[\s\S]*\]/);
+        if (match) {
+          const jsonStr = match[0];
+          const resources = JSON.parse(jsonStr);
+          
+          return resources;
+        } else {
+          throw new Error("Could not find JSON array in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing learning resources:", parseError);
+        throw new Error("Failed to generate learning resources");
+      }
+    } catch (error) {
+      console.error("Error generating learning resources:", error);
+      toast({
+        title: "Failed to Generate Resources",
+        description: "There was an error creating your learning resources. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callGemini, toast]);
 
   return {
-    isLoading,
-    matches,
-    generateCareerMatches,
+    isProcessing,
     generateSuggestions,
-    analyzeResume
+    analyzeResume,
+    generateCareerRoadmap,
+    generateLearningResources
   };
 }

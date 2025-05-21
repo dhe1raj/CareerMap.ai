@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format } from "date-fns";
 import { useUserData } from "@/hooks/use-user-data";
-import { useToast } from "@/hooks/use-toast";
 import { User, Edit, Lock, Trash2, Check, X, Bell, Link, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -59,7 +57,6 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export default function AccountProfileForm() {
-  const { toast } = useToast();
   const { userData, saveField } = useUserData();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);

@@ -180,9 +180,82 @@ ${resumeText}`;
     }
   }, [callGemini]);
 
+  // Generate career roadmap based on selected career path
+  const generateCareerRoadmap = useCallback(async (careerPath: string, userInterests: string[]): Promise<any> => {
+    setIsProcessing(true);
+    
+    try {
+      const prompt = `Create a detailed career roadmap for someone interested in becoming a ${careerPath}.
+Their main interests are: ${userInterests.join(', ')}.
+
+Format your response as a detailed JSON object with the following structure (with no explanation, just the JSON):
+{
+  "title": "${careerPath} Career Path",
+  "overview": "A concise overview of this career path...",
+  "salary": {
+    "entry": "Entry-level salary range",
+    "mid": "Mid-level salary range",
+    "senior": "Senior-level salary range"
+  },
+  "workLifeBalance": {
+    "stress": "Low/Medium/High",
+    "workHours": "Typical work hours",
+    "flexibility": "Description of flexibility"
+  },
+  "growthPotential": "Description of growth potential and advancement",
+  "steps": [
+    {
+      "title": "Step 1 Title",
+      "description": "Description of this step",
+      "items": ["Item 1", "Item 2", "Item 3"],
+      "timeframe": "Estimated timeframe"
+    },
+    ... more steps (5-7 total)
+  ],
+  "recommendedCompanies": ["Company 1", "Company 2", "Company 3", "Company 4", "Company 5"],
+  "jobPlatforms": ["Platform 1", "Platform 2", "Platform 3"]
+}`;
+      
+      const result = await callGemini(prompt);
+      
+      if (!result) return null;
+      
+      // Parse the JSON response
+      try {
+        // Find JSON object in response
+        const match = result.match(/\{[\s\S]*\}/);
+        if (match) {
+          const jsonStr = match[0];
+          const roadmap = JSON.parse(jsonStr);
+          
+          // Store in localStorage for now (will move to database later)
+          localStorage.setItem("careerRoadmap", JSON.stringify(roadmap));
+          
+          return roadmap;
+        } else {
+          throw new Error("Could not find JSON object in response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing career roadmap:", parseError);
+        throw new Error("Failed to generate career roadmap");
+      }
+    } catch (error) {
+      console.error("Error generating career roadmap:", error);
+      toast({
+        title: "Failed to Generate Roadmap",
+        description: "There was an error creating your career roadmap. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [callGemini, toast]);
+
   return {
     isProcessing,
     generateSuggestions,
-    analyzeResume
+    analyzeResume,
+    generateCareerRoadmap
   };
 }

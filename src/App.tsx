@@ -13,6 +13,7 @@ import Roadmap from './pages/Roadmap';
 import CareerMatches from './pages/CareerMatches';
 import ResumeAnalysis from './pages/ResumeAnalysis';
 import CareerProgressPage from './pages/CareerProgress';
+import CareerResources from './pages/CareerResources';
 import NotFound from './pages/NotFound';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './integrations/supabase/client';
@@ -70,6 +71,8 @@ function AppContent() {
       <Route path="/career-matches" element={user ? <CareerMatches /> : <Navigate to="/login" />} />
       <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
       <Route path="/career-progress" element={user ? <CareerProgressPage /> : <Navigate to="/login" />} />
+      <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
+      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/roadmap/:roadmapId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
       <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="*" element={<NotFound />} />

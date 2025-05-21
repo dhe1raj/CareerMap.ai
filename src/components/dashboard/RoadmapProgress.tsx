@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import ProfileWizard from "@/components/ProfileWizard";
 import CustomCareerBuilder from "@/components/CustomCareerBuilder";
-import { FileDown, RefreshCcw, Sparkles, ArrowRight } from "lucide-react";
+import { FileDown, RefreshCcw, Sparkles, ArrowRight, Book } from "lucide-react";
 import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -106,6 +106,14 @@ export function RoadmapProgress() {
   const viewAllRoadmaps = () => {
     navigate("/career-progress");
   };
+
+  const viewResources = (roadmapId?: string) => {
+    if (roadmapId) {
+      navigate(`/career-resources/${roadmapId}`);
+    } else {
+      navigate("/career-resources");
+    }
+  };
   
   const handleProgressUpdate = (progress: number) => {
     saveField("career.progress", progress);
@@ -169,11 +177,19 @@ export function RoadmapProgress() {
               onProgressUpdate={handleProgressUpdate}
             />
           </CardContent>
-          <CardFooter className="flex justify-between border-t border-white/10 pt-4">
-            <div className="space-x-2">
+          <CardFooter className="flex flex-wrap justify-between border-t border-white/10 pt-4 gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={handleExportPDF}>
                 <FileDown className="h-4 w-4 mr-2" />
                 Export PDF
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => viewResources(latestRoadmap.id)}
+              >
+                <Book className="h-4 w-4 mr-2" />
+                Learning Resources
               </Button>
               <Button 
                 variant="outline" 
@@ -184,7 +200,7 @@ export function RoadmapProgress() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
-            <div className="space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -265,11 +281,19 @@ export function RoadmapProgress() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-between border-t border-white/10 pt-4">
-          <div className="space-x-2">
+        <CardFooter className="flex flex-wrap justify-between border-t border-white/10 pt-4 gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
               <FileDown className="h-4 w-4 mr-2" />
               Export PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => viewResources()}
+            >
+              <Book className="h-4 w-4 mr-2" />
+              Learning Resources
             </Button>
             <Button 
               variant="outline" 
@@ -280,7 +304,7 @@ export function RoadmapProgress() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
-          <div className="space-x-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"

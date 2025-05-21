@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import CareerDesigner from './pages/CareerDesigner';
@@ -75,6 +76,7 @@ function AppContent() {
       {/* Authentication routes */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+      <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
       
       {/* Protected routes that require authentication */}
       <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />

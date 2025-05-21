@@ -12,6 +12,12 @@ export interface SupabaseRoadmapProgress {
   updated_at: string;
 }
 
+// Type to represent section and item structure from the database
+interface RoadmapSection {
+  title: string;
+  items: Array<{ id: string; label: string; }>;
+}
+
 /**
  * Helper functions for working with Supabase
  */
@@ -99,12 +105,27 @@ export const supabaseRpc = {
     let totalItems = 0;
     try {
       if (roadmap.sections) {
-        // Safely access sections data
-        const sections = typeof roadmap.sections === 'object' ? 
-          (Array.isArray(roadmap.sections) ? roadmap.sections : []) : [];
-              
-        for (const section of sections) {
-          if (section && section.items && Array.isArray(section.items)) {
+        // Parse the JSON data safely
+        let parsedSections: RoadmapSection[] = [];
+        
+        if (typeof roadmap.sections === 'string') {
+          // If it's a JSON string, parse it
+          try {
+            parsedSections = JSON.parse(roadmap.sections);
+          } catch (e) {
+            console.warn('Failed to parse roadmap sections JSON string');
+          }
+        } else if (Array.isArray(roadmap.sections)) {
+          // If it's already an array
+          parsedSections = roadmap.sections;
+        } else if (typeof roadmap.sections === 'object' && roadmap.sections !== null) {
+          // If it's some other object, try to use it if it has sections property
+          parsedSections = [roadmap.sections as unknown as RoadmapSection];
+        }
+        
+        // Count items from all sections
+        for (const section of parsedSections) {
+          if (section && Array.isArray(section.items)) {
             totalItems += section.items.length;
           }
         }

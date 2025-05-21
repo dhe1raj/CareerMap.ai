@@ -1,528 +1,339 @@
 
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { ExternalLink, BookOpen, Book, Video, File, Users, Briefcase, Search, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import confetti from 'canvas-confetti';
+import { BookOpen, Link, Check, Video, FileText, Code } from "lucide-react";
 import "../styles/glassmorphism.css";
+import { ResourceRow, UserResourceProgressRow } from "@/utils/supabase-types-helper";
 
-interface Resource {
-  id: string;
-  type: string;
-  title: string;
-  url: string;
-  thumbnail?: string;
-  skill_tag: string;
-  description: string;
-  completed: boolean;
-}
+// Resource type icons mapping
+const resourceTypeIcons: Record<string, React.ReactNode> = {
+  "video": <Video className="h-5 w-5" />,
+  "article": <FileText className="h-5 w-5" />,
+  "course": <BookOpen className="h-5 w-5" />,
+  "tool": <Code className="h-5 w-5" />
+};
 
-type FilterType = 'all' | 'skills' | 'tools' | 'books' | 'videos' | 'communities';
+// Helper function to get color class based on skill tag
+const getSkillTagColor = (tag: string): string => {
+  const tagMap: Record<string, string> = {
+    "frontend": "bg-blue-500/20 text-blue-200",
+    "backend": "bg-green-500/20 text-green-200",
+    "design": "bg-pink-500/20 text-pink-200",
+    "ai": "bg-purple-500/20 text-purple-200",
+    "soft": "bg-yellow-500/20 text-yellow-200",
+    "data": "bg-orange-500/20 text-orange-200"
+  };
+
+  return tagMap[tag.toLowerCase()] || "bg-gray-500/20 text-gray-200";
+};
 
 export default function CareerResources() {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [resources, setResources] = useState<ResourceRow[]>([]);
+  const [userProgress, setUserProgress] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCounts, setFilterCounts] = useState({
-    all: 0,
-    skills: 0,
-    tools: 0,
-    books: 0,
-    videos: 0,
-    communities: 0
-  });
-  const [progress, setProgress] = useState(0);
-  const { roadmapId } = useParams<{ roadmapId?: string }>();
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchResources();
-  }, [user, roadmapId]);
-
-  useEffect(() => {
-    if (resources.length > 0) {
-      applyFilters();
-      updateCounts();
-    }
-  }, [resources, activeFilter, searchQuery]);
-
-  const fetchResources = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      // Get user's active roadmap if not provided in URL
-      let targetRoadmapId = roadmapId;
+    const fetchResources = async () => {
+      if (!user) return;
       
-      if (!targetRoadmapId) {
-        const { data: userRoadmaps, error: roadmapError } = await supabase
-          .from('user_roadmaps')
-          .select('id')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false })
-          .limit(1);
-        
-        if (roadmapError) throw roadmapError;
-        if (userRoadmaps && userRoadmaps.length > 0) {
-          targetRoadmapId = userRoadmaps[0].id;
-        }
-      }
-      
-      if (!targetRoadmapId) {
-        setIsLoading(false);
-        return;
-      }
-      
-      // Check if resources exist in the database
-      const { data: existingResources, error: resourcesError } = await supabase
-        .from('resources')
-        .select('*');
-      
-      if (resourcesError) throw resourcesError;
-      
-      // Fetch user's completed resources
-      const { data: userProgress, error: progressError } = await supabase
-        .from('user_resource_progress')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      if (progressError) throw progressError;
-      
-      let resourcesData = existingResources || [];
-      
-      // If no resources in database, create mock resources
-      if (resourcesData.length === 0) {
-        const mockResources = [
-          {
-            type: "video",
-            title: "Introduction to React",
-            url: "https://www.youtube.com/watch?v=reactintro",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "react",
-            description: "Learn the basics of React framework for modern web development"
-          },
-          {
-            type: "course",
-            title: "Advanced JavaScript Patterns",
-            url: "https://www.coursera.org/js-patterns",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "javascript",
-            description: "Master advanced JavaScript patterns and techniques"
-          },
-          {
-            type: "book",
-            title: "Clean Code: A Handbook of Agile Software",
-            url: "https://www.amazon.com/clean-code",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "coding",
-            description: "Learn principles of writing clean, maintainable code"
-          },
-          {
-            type: "tool",
-            title: "Figma for Developers",
-            url: "https://www.figma.com/developers",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "design",
-            description: "Learn how to use Figma as a developer"
-          },
-          {
-            type: "video",
-            title: "CSS Grid Layout Mastery",
-            url: "https://www.youtube.com/watch?v=css-grid",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "css",
-            description: "Master CSS Grid for complex layouts"
-          },
-          {
-            type: "community",
-            title: "Frontend Developers Community",
-            url: "https://discord.gg/frontend",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "networking",
-            description: "Join a community of frontend developers"
-          },
-          {
-            type: "book",
-            title: "System Design Interview",
-            url: "https://www.amazon.com/system-design",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "architecture",
-            description: "Prepare for system design interviews"
-          },
-          {
-            type: "tool",
-            title: "VSCode Setup for Full-Stack Development",
-            url: "https://code.visualstudio.com/docs",
-            thumbnail: "https://via.placeholder.com/150",
-            skill_tag: "tools",
-            description: "Optimize VSCode for full-stack development"
-          }
-        ];
-        
-        // Insert mock resources
-        for (const resource of mockResources) {
-          const { data, error } = await supabase
-            .from('resources')
-            .insert(resource)
-            .select();
-            
-          if (error) {
-            console.error("Error inserting resource:", error);
-          }
-        }
-        
-        // Fetch the newly inserted resources
-        const { data: newResources, error: fetchError } = await supabase
+      setIsLoading(true);
+      try {
+        // Fetch resources
+        const { data: existingResources, error: resourcesError } = await supabase
           .from('resources')
           .select('*');
-          
-        if (fetchError) throw fetchError;
         
-        resourcesData = newResources || [];
+        if (resourcesError) throw resourcesError;
+        
+        if (existingResources && existingResources.length > 0) {
+          // Resources exist
+          setResources(existingResources as unknown as ResourceRow[]);
+          
+          // Fetch user progress
+          const { data: progressData, error: progressError } = await supabase
+            .from('user_resource_progress')
+            .select('*')
+            .eq('user_id', user.id);
+          
+          if (!progressError && progressData) {
+            // Create a map of resource_id -> completed status
+            const progressMap: Record<string, boolean> = {};
+            (progressData as unknown as UserResourceProgressRow[]).forEach(item => {
+              progressMap[item.resource_id] = !!item.completed;
+            });
+            setUserProgress(progressMap);
+          }
+        } else {
+          // No resources, create mock data
+          await createMockResources();
+        }
+      } catch (error) {
+        console.error("Error fetching resources:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load learning resources. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
-      
-      // Map resources with user progress
-      const resourcesWithProgress = resourcesData.map(resource => {
-        const progressRecord = userProgress?.find(p => p.resource_id === resource.id);
-        return {
-          ...resource,
-          completed: progressRecord ? progressRecord.completed : false
-        };
-      });
-      
-      setResources(resourcesWithProgress);
-      setFilteredResources(resourcesWithProgress);
-      
-      // Calculate progress
-      if (resourcesWithProgress.length > 0) {
-        const completedCount = resourcesWithProgress.filter(r => r.completed).length;
-        const progressPercentage = Math.round((completedCount / resourcesWithProgress.length) * 100);
-        setProgress(progressPercentage);
-      }
-      
-    } catch (error) {
-      console.error("Error fetching resources:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load resources. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const applyFilters = () => {
-    let filtered = resources;
-    
-    // Apply type filter
-    if (activeFilter !== 'all') {
-      filtered = filtered.filter(resource => {
-        if (activeFilter === 'skills') return ['course', 'video', 'article'].includes(resource.type);
-        if (activeFilter === 'tools') return resource.type === 'tool';
-        if (activeFilter === 'books') return resource.type === 'book';
-        if (activeFilter === 'videos') return resource.type === 'video';
-        if (activeFilter === 'communities') return resource.type === 'community';
-        return true;
-      });
-    }
-    
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(resource => 
-        resource.title.toLowerCase().includes(query) || 
-        resource.description.toLowerCase().includes(query) ||
-        resource.skill_tag.toLowerCase().includes(query)
-      );
-    }
-    
-    setFilteredResources(filtered);
-  };
-  
-  const updateCounts = () => {
-    const counts = {
-      all: resources.length,
-      skills: resources.filter(r => ['course', 'video', 'article'].includes(r.type)).length,
-      tools: resources.filter(r => r.type === 'tool').length,
-      books: resources.filter(r => r.type === 'book').length,
-      videos: resources.filter(r => r.type === 'video').length,
-      communities: resources.filter(r => r.type === 'community').length
     };
     
-    setFilterCounts(counts);
-  };
+    fetchResources();
+  }, [user, toast]);
   
-  const handleMarkCompleted = async (resource: Resource) => {
+  // Create mock resources
+  const createMockResources = async () => {
+    const mockResources = [
+      {
+        type: "course",
+        title: "React Frontend Masterclass",
+        url: "https://example.com/react-course",
+        thumbnail: "/placeholder.svg",
+        skill_tag: "frontend",
+        description: "Learn modern React including hooks, context API, and advanced patterns."
+      },
+      {
+        type: "video",
+        title: "Docker for Beginners",
+        url: "https://example.com/docker-basics",
+        thumbnail: "/placeholder.svg",
+        skill_tag: "backend",
+        description: "Quick start guide to containerizing your applications with Docker."
+      },
+      {
+        type: "article",
+        title: "UI/UX Design Principles",
+        url: "https://example.com/ui-ux-article",
+        thumbnail: "/placeholder.svg",
+        skill_tag: "design",
+        description: "Core principles of effective user interface and experience design."
+      },
+      {
+        type: "tool",
+        title: "TensorFlow Tutorials",
+        url: "https://example.com/tensorflow",
+        thumbnail: "/placeholder.svg",
+        skill_tag: "ai",
+        description: "Hands-on tutorials for machine learning with TensorFlow."
+      },
+      {
+        type: "course",
+        title: "Communication for Tech Leaders",
+        url: "https://example.com/tech-communication",
+        thumbnail: "/placeholder.svg",
+        skill_tag: "soft",
+        description: "Improve your communication skills in technical environments."
+      },
+      {
+        type: "article",
+        title: "Data Visualization with D3",
+        url: "https://example.com/d3-visualization",
+        thumbnail: "/placeholder.svg",
+        skill_tag: "data",
+        description: "Create stunning data visualizations with D3.js library."
+      }
+    ];
+
+    try {
+      // Insert mock resources and get inserted data
+      const insertedResources: ResourceRow[] = [];
+      
+      for (const resource of mockResources) {
+        const { data, error } = await supabase
+          .from('resources')
+          .insert(resource)
+          .select();
+          
+        if (error) {
+          console.error("Error inserting resource:", error);
+        } else if (data && data.length > 0) {
+          insertedResources.push(data[0] as unknown as ResourceRow);
+        }
+      }
+      
+      setResources(insertedResources);
+    } catch (error) {
+      console.error("Error creating mock resources:", error);
+    }
+  };
+
+  // Mark resource as complete/incomplete
+  const toggleResourceCompletion = async (resourceId: string, currentStatus: boolean) => {
     if (!user) return;
     
     try {
-      const newCompletedState = !resource.completed;
+      const newStatus = !currentStatus;
       
-      // Update in Supabase
+      // Update user progress in database
       const { error } = await supabase
         .from('user_resource_progress')
         .upsert({
           user_id: user.id,
-          resource_id: resource.id,
-          completed: newCompletedState,
-          completed_at: newCompletedState ? new Date().toISOString() : null
-        });
+          resource_id: resourceId,
+          completed: newStatus,
+          completed_at: newStatus ? new Date().toISOString() : null
+        } as any); // Type assertion to bypass TS check temporarily
       
       if (error) throw error;
       
       // Update local state
-      const updatedResources = resources.map(r => 
-        r.id === resource.id ? { ...r, completed: newCompletedState } : r
-      );
+      setUserProgress(prev => ({
+        ...prev,
+        [resourceId]: newStatus
+      }));
       
-      setResources(updatedResources);
-      
-      // Calculate new progress
-      const completedCount = updatedResources.filter(r => r.completed).length;
-      const newProgress = Math.round((completedCount / updatedResources.length) * 100);
-      setProgress(newProgress);
-      
-      // Show success toast
       toast({
-        title: newCompletedState ? "Resource completed!" : "Resource marked as incomplete",
-        description: resource.title,
+        title: newStatus ? "Resource Completed!" : "Resource Marked as Incomplete",
+        description: newStatus 
+          ? "Your progress has been saved." 
+          : "Resource marked as not completed.",
       });
-      
-      // Trigger confetti if 100% complete
-      if (newProgress === 100 && completedCount > 0) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-      }
-      
     } catch (error) {
-      console.error("Error updating resource progress:", error);
+      console.error("Error updating resource status:", error);
       toast({
         title: "Error",
-        description: "Failed to update progress. Please try again.",
+        description: "Failed to update resource status. Please try again.",
         variant: "destructive"
       });
     }
   };
   
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video': return <Video className="h-5 w-5 text-purple-400" />;
-      case 'course': return <BookOpen className="h-5 w-5 text-blue-400" />;
-      case 'book': return <Book className="h-5 w-5 text-amber-400" />;
-      case 'tool': return <Briefcase className="h-5 w-5 text-green-400" />;
-      case 'community': return <Users className="h-5 w-5 text-pink-400" />;
-      default: return <File className="h-5 w-5 text-gray-400" />;
-    }
-  };
+  // Filter resources by type or show all
+  const filteredResources = selectedFilter === "all" 
+    ? resources 
+    : resources.filter(resource => resource.type === selectedFilter);
+
+  // Calculate completion percentage
+  const completedCount = resources.filter(r => userProgress[r.id]).length;
+  const completionPercentage = resources.length > 0 
+    ? Math.round((completedCount / resources.length) * 100) 
+    : 0;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-lg">Loading learning resources...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-1">Career Resources</h1>
-            <p className="text-white/70">Hand-picked courses, books & tools for your roadmap</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-2">Career Resources</h1>
+            <p className="text-white/70">Curated learning resources to help you succeed in your career path.</p>
           </div>
-          
-          <Card className="w-full md:w-auto mt-4 md:mt-0">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <div className="text-2xl font-bold">{progress}%</div>
-                <div className="text-sm text-muted-foreground">Resources completed</div>
-              </div>
-              <div className="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-purple-500 progress-bar-neon transition-all duration-1000 ease-out"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              <Badge 
-                variant={activeFilter === 'all' ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('all')}
-              >
-                All ({filterCounts.all})
-              </Badge>
-              <Badge 
-                variant={activeFilter === 'skills' ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('skills')}
-              >
-                Skills ({filterCounts.skills})
-              </Badge>
-              <Badge 
-                variant={activeFilter === 'tools' ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('tools')}
-              >
-                Tools ({filterCounts.tools})
-              </Badge>
-              <Badge 
-                variant={activeFilter === 'books' ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('books')}
-              >
-                Books ({filterCounts.books})
-              </Badge>
-              <Badge 
-                variant={activeFilter === 'videos' ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('videos')}
-              >
-                Videos ({filterCounts.videos})
-              </Badge>
-              <Badge 
-                variant={activeFilter === 'communities' ? "default" : "outline"} 
-                className="cursor-pointer"
-                onClick={() => setActiveFilter('communities')}
-              >
-                Communities ({filterCounts.communities})
-              </Badge>
-            </div>
-            
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-              <Input
-                placeholder="Search resources..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 glass-input w-full"
-              />
+          <div className="mt-4 md:mt-0 flex items-center">
+            <div className="flex items-center mr-4">
+              <div className="h-3 w-3 rounded-full bg-primary mr-2"></div>
+              <span className="text-sm text-white/70">Completed: {completedCount}/{resources.length} ({completionPercentage}%)</span>
             </div>
           </div>
         </div>
         
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="bg-white/5 animate-pulse h-[200px]">
-                <CardHeader className="pb-2">
-                  <div className="h-6 bg-white/10 rounded w-3/4"></div>
-                  <div className="h-4 bg-white/10 rounded w-1/2 mt-2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-4 bg-white/10 rounded w-full mt-2"></div>
-                  <div className="h-4 bg-white/10 rounded w-5/6 mt-2"></div>
-                </CardContent>
-                <CardFooter>
-                  <div className="h-8 bg-white/10 rounded w-1/4"></div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : filteredResources.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredResources.map((resource) => (
-              <Card 
-                key={resource.id} 
-                className={`card-hover glass-morphism relative ${resource.completed ? 'border-green-500/30' : ''}`}
-              >
-                {resource.completed && (
-                  <div className="absolute -top-2 -right-2 z-10">
-                    <CheckCircle className="h-6 w-6 text-green-500 bg-background rounded-full" />
-                  </div>
-                )}
-                
-                <div className="relative h-32 w-full overflow-hidden rounded-t-xl">
-                  {resource.thumbnail ? (
-                    <img 
-                      src={resource.thumbnail} 
-                      alt={resource.title} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex items-center justify-center">
-                      {getResourceIcon(resource.type)}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-                  <Badge 
-                    variant="outline" 
-                    className="absolute top-2 right-2 bg-background/50 backdrop-blur-sm"
-                  >
-                    {resource.type.toUpperCase()}
-                  </Badge>
-                </div>
-                
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-gradient-primary text-lg">{resource.title}</CardTitle>
-                  </div>
-                  <Badge variant="outline" className="mt-1 text-white/70">
+        {/* Filter buttons */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          <Button 
+            variant={selectedFilter === "all" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setSelectedFilter("all")}
+          >
+            All
+          </Button>
+          <Button 
+            variant={selectedFilter === "course" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFilter("course")}
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Courses
+          </Button>
+          <Button 
+            variant={selectedFilter === "video" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFilter("video")}
+          >
+            <Video className="h-4 w-4 mr-2" />
+            Videos
+          </Button>
+          <Button 
+            variant={selectedFilter === "article" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFilter("article")}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Articles
+          </Button>
+          <Button 
+            variant={selectedFilter === "tool" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedFilter("tool")}
+          >
+            <Code className="h-4 w-4 mr-2" />
+            Tools
+          </Button>
+        </div>
+
+        {/* Resources grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredResources.map((resource) => (
+            <Card key={resource.id} className="glass-morphism overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-center mb-2">
+                  <Badge className={`${getSkillTagColor(resource.skill_tag)}`}>
                     {resource.skill_tag}
                   </Badge>
-                </CardHeader>
-                
-                <CardContent>
-                  <p className="text-sm text-white/70 line-clamp-2">{resource.description}</p>
-                </CardContent>
-                
-                <CardFooter className="flex justify-between pt-0">
-                  <Button
-                    variant="outline"
+                  <div className="flex items-center text-white/50 text-sm">
+                    {resourceTypeIcons[resource.type] || <BookOpen className="h-5 w-5" />}
+                  </div>
+                </div>
+                <CardTitle className="text-lg text-gradient-primary">{resource.title}</CardTitle>
+                <CardDescription className="text-white/70">
+                  {resource.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
                     size="sm"
-                    className="gap-1"
-                    onClick={() => window.open(resource.url, "_blank")}
+                    className="flex-1"
+                    onClick={() => window.open(resource.url, '_blank')}
                   >
-                    <ExternalLink className="h-4 w-4" /> Open Resource
+                    <Link className="h-4 w-4 mr-2" />
+                    View Resource
                   </Button>
-                  
                   <Button
-                    variant={resource.completed ? "secondary" : "ghost"}
+                    variant={userProgress[resource.id] ? "default" : "secondary"}
                     size="sm"
-                    onClick={() => handleMarkCompleted(resource)}
+                    className="flex-1"
+                    onClick={() => toggleResourceCompletion(resource.id, !!userProgress[resource.id])}
                   >
-                    {resource.completed ? "Completed" : "Mark Complete"}
+                    <Check className="h-4 w-4 mr-1" />
+                    {userProgress[resource.id] ? "Completed" : "Mark Complete"}
                   </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="p-8 text-center">
-            <div className="flex flex-col items-center">
-              <BookOpen className="h-10 w-10 text-white/30 mb-4" />
-              <h3 className="text-xl font-medium">No resources found</h3>
-              <p className="text-muted-foreground mt-2">
-                {resources.length > 0 
-                  ? "No resources match your current search or filters." 
-                  : "Resources for your career path will appear here."}
-              </p>
-              {searchQuery && (
-                <Button 
-                  className="mt-4" 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setActiveFilter('all');
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          </Card>
-        )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </DashboardLayout>
   );

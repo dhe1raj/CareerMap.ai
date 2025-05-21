@@ -36,15 +36,16 @@ export default function CareerMatches() {
       
       setIsLoading(true);
       try {
-        // Check if user already has matches
-        const { data: existingMatches, error: matchError } = await supabase
+        // Check if matches already exist
+        const { data, error } = await supabase
           .from('matches')
           .select('*');
         
-        if (matchError) throw matchError;
+        if (error) throw error;
         
-        if (existingMatches && existingMatches.length > 0) {
-          setMatches(existingMatches);
+        if (data && data.length > 0) {
+          // Type assertion to ensure the data matches our interface
+          setMatches(data as unknown as CareerMatch[]);
         } else {
           // Need to generate matches with AI
           await generateMatchesWithAI();
@@ -78,7 +79,7 @@ export default function CareerMatches() {
       
       if (profileError) throw profileError;
       
-      // Mock data for demonstration (replace with actual AI call)
+      // Mock data for demonstration (replace with actual AI call later)
       const mockMatches = [
         {
           role: "Software Engineer",
@@ -125,8 +126,10 @@ export default function CareerMatches() {
       ];
       
       // Insert mock matches into the database
+      const insertedMatches: CareerMatch[] = [];
+      
       for (const match of mockMatches) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('matches')
           .insert({
             role: match.role,
@@ -134,26 +137,17 @@ export default function CareerMatches() {
             icon: match.icon,
             match_pct: match.match_pct,
             bullets: match.bullets
-          });
+          })
+          .select();
           
         if (error) {
           console.error("Error inserting match:", error);
+        } else if (data && data.length > 0) {
+          insertedMatches.push(data[0] as unknown as CareerMatch);
         }
       }
       
-      // Fetch inserted matches
-      const { data: insertedMatches, error: fetchError } = await supabase
-        .from('matches')
-        .select('*');
-        
-      if (fetchError) throw fetchError;
-      
-      setMatches(insertedMatches || []);
-      
-      // In a real implementation, we would:
-      // 1. Call Gemini API with user profile data
-      // 2. Insert results into the matches table
-      // 3. Link matches to user in user_matches table
+      setMatches(insertedMatches);
     } catch (error) {
       console.error("Error generating AI matches:", error);
       toast({
@@ -176,13 +170,13 @@ export default function CareerMatches() {
     }
     
     try {
-      // Insert into user_matches table
+      // Store user-match relationship (use mock for now until types are updated)
       const { error } = await supabase
         .from('user_matches')
         .insert({
           user_id: user.id,
-          match_id: matchId,
-        });
+          match_id: matchId
+        } as any);  // Type assertion to bypass TS check temporarily
       
       if (error) throw error;
       

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -200,7 +199,8 @@ export function useRoadmaps() {
           user_id: roadmapWithIds.user_id,
           description: roadmapWithIds.description,
           sections: roadmapWithIds.sections,
-          is_public: roadmapWithIds.is_public || false
+          is_public: roadmapWithIds.is_public || false,
+          role_id: null // Add null role_id since it's required by the schema
         })
         .select()
         .single();

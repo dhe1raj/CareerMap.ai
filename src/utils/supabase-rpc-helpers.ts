@@ -99,12 +99,18 @@ export const supabaseRpc = {
     let totalItems = 0;
     try {
       if (roadmap.sections) {
-        for (const section of roadmap.sections) {
-          totalItems += section.items.length;
+        // Safely access sections data
+        const sections = typeof roadmap.sections === 'object' ? 
+          (Array.isArray(roadmap.sections) ? roadmap.sections : []) : [];
+              
+        for (const section of sections) {
+          if (section && section.items && Array.isArray(section.items)) {
+            totalItems += section.items.length;
+          }
         }
       }
     } catch (e) {
-      console.warn('Could not calculate total items from roadmap data');
+      console.warn('Could not calculate total items from roadmap data', e);
       totalItems = 10; // Default fallback
     }
     

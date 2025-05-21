@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ export default function CareerDesignForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { generateRoadmap, isLoading } = useGenerateRoadmap();
+  const { generateRoadmap, isGenerating } = useGenerateRoadmap();
   
   // Get career title from location state if available (from CareerMatchCard)
   const initialCareer = location.state?.careerTitle || '';
@@ -172,9 +171,9 @@ export default function CareerDesignForm() {
           </div>
         </div>
         
-        <Button type="submit" className="glowing-purple w-full" disabled={isLoading}>
+        <Button type="submit" className="glowing-purple w-full" disabled={isGenerating}>
           <Sparkles className="mr-2 h-4 w-4" />
-          {isLoading ? 'Generating Roadmap...' : 'Generate Career Roadmap'}
+          {isGenerating ? 'Generating Roadmap...' : 'Generate Career Roadmap'}
         </Button>
       </form>
     </Card>

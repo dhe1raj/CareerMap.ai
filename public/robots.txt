@@ -2,7 +2,7 @@
 User-agent: *
 Allow: /
 Disallow: /preview*/
-Sitemap: https://careermap.ai/sitemap.xml
+Sitemap: https://careermapai.in/sitemap.xml
 
 User-agent: Googlebot
 Allow: /

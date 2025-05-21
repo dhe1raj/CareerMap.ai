@@ -20,8 +20,8 @@ export default function SEOMetadata({
   ogType = "website",
   jsonLd
 }: SEOProps) {
-  const siteUrl = "https://careermap.ai";
-  const fullTitle = title.includes("CareerMap") ? title : `${title} | CareerMap`;
+  const siteUrl = "https://careermapai.in";
+  const fullTitle = title.includes("CareerMapAI") ? title : `${title} | CareerMapAI`;
   
   return (
     <Helmet>

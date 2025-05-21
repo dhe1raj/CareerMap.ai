@@ -55,20 +55,20 @@ export default function Dashboard() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "CareerMap Dashboard",
+    "name": "CareerMapAI Dashboard",
     "description": "Your personal career development dashboard with AI-powered tools and insights.",
     "isPartOf": {
       "@type": "WebApplication",
-      "name": "CareerMap",
-      "url": "https://careermap.ai"
+      "name": "CareerMapAI",
+      "url": "https://careermapai.in"
     }
   };
   
   return (
     <DashboardLayout>
       <SEOMetadata
-        title="Dashboard | CareerMap"
-        description="Track your career progress, explore personalized roadmaps, and access AI-powered career guidance tools in your CareerMap dashboard."
+        title="Dashboard | CareerMapAI"
+        description="Track your career progress, explore personalized roadmaps, and access AI-powered career guidance tools in your CareerMapAI dashboard."
         keywords="career dashboard, career progress, roadmap tracking, AI career guidance, professional development"
         canonicalPath="/dashboard"
         jsonLd={jsonLd}

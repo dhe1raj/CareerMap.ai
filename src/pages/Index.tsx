@@ -7,6 +7,7 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import SEOMetadata from "@/components/SEOMetadata";
 
 export default function Index() {
   // Add scroll animation effect with improved threshold and behavior
@@ -33,6 +34,20 @@ export default function Index() {
     return () => observer.disconnect();
   }, []);
 
+  // JSON-LD schema for the homepage
+  const homeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CareerMapAI",
+    "url": "https://careermapai.in",
+    "description": "India's #1 AI-powered career planning and roadmap generator for your professional journey",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://careermapai.in/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -40,6 +55,14 @@ export default function Index() {
       transition={{ duration: 0.8 }}
       className="min-h-screen flex flex-col bg-gradient-to-b from-cyber-deeper via-brand-900 to-cyber-dark overflow-hidden noise-bg"
     >
+      <SEOMetadata 
+        title="CareerMapAI - India's #1 AI-Powered Career Roadmap Generator"
+        description="CareerMapAI is India's #1 AI-powered career roadmap builder, helping Gen Z design their future with AI precision. Create your personalized career path today."
+        keywords="careermapai, career map ai, ai roadmap builder, ai career planner, career progress tracker, india career planning"
+        canonicalPath="/"
+        jsonLd={homeJsonLd}
+      />
+      
       {/* Enhanced background elements with floating animations */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-brand-400/10 blur-[120px] animate-pulse-glow"></div>

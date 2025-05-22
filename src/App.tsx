@@ -5,8 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { GeminiProvider } from './context/GeminiContext';
 import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import CareerDesigner from './pages/CareerDesigner';
@@ -63,19 +62,18 @@ function AppContent() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-      <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
-      <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-      <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
-      <Route path="/career-designer" element={user ? <CareerDesigner /> : <Navigate to="/login" />} />
-      <Route path="/roadmap" element={user ? <Roadmap /> : <Navigate to="/login" />} />
-      <Route path="/roadmap/:roadmapId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
-      <Route path="/career-matches" element={user ? <CareerMatches /> : <Navigate to="/login" />} />
-      <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/login" />} />
-      <Route path="/career-progress" element={user ? <CareerProgressPage /> : <Navigate to="/login" />} />
-      <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
-      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
-      <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
+      <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
+      <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/auth" />} />
+      <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
+      <Route path="/career-designer" element={user ? <CareerDesigner /> : <Navigate to="/auth" />} />
+      <Route path="/roadmap" element={user ? <Roadmap /> : <Navigate to="/auth" />} />
+      <Route path="/roadmap/:roadmapId" element={user ? <Roadmap /> : <Navigate to="/auth" />} />
+      <Route path="/career-matches" element={user ? <CareerMatches /> : <Navigate to="/auth" />} />
+      <Route path="/resume-analysis" element={user ? <ResumeAnalysis /> : <Navigate to="/auth" />} />
+      <Route path="/career-progress" element={user ? <CareerProgressPage /> : <Navigate to="/auth" />} />
+      <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/auth" />} />
+      <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/auth" />} />
+      <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/auth" />} />
       <Route path="/" element={<Index />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -70,8 +70,11 @@ export default function DashboardSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/dashboard">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/dashboard')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -91,8 +94,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/career-designer">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/career-designer')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -113,8 +119,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/career-progress">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/career-progress')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -133,8 +142,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/genz-career-decider">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/genz-career-decider')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -156,8 +168,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/career-chat">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/career-chat')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -177,8 +192,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/resume-analysis">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/resume-analysis')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -201,8 +219,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/settings">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/settings')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -230,8 +251,11 @@ export default function DashboardSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/about">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/about')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -252,8 +276,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/features">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/features')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -272,8 +299,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/privacy">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/privacy')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"
@@ -294,8 +324,11 @@ export default function DashboardSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/terms">
+                <SidebarMenuButton 
+                  asChild 
+                  onClick={() => navigate('/terms')}
+                >
+                  <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="24"

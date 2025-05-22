@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ArrowRight, FileDown, Trash2, Calendar, Clock } from "lucide-react";
+import { ArrowRight, FileDown, Trash2, Calendar, Clock, RefreshCw } from "lucide-react";
 import { exportElementToPDF } from "@/utils/pdfExport";
 import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
 
@@ -18,6 +18,7 @@ interface RoadmapCardProps {
 
 export const RoadmapCard = ({ roadmap, onDelete, onProgressUpdate }: RoadmapCardProps) => {
   const navigate = useNavigate();
+  const [isResetting, setIsResetting] = useState(false);
   
   const handleExportPDF = (roadmap: any) => {
     try {
@@ -30,6 +31,20 @@ export const RoadmapCard = ({ roadmap, onDelete, onProgressUpdate }: RoadmapCard
     } catch (error) {
       console.error("Error exporting PDF:", error);
       toast.error("Failed to export PDF");
+    }
+  };
+
+  const handleResetProgress = async (roadmapId: string) => {
+    try {
+      setIsResetting(true);
+      // Reset progress in the RoadmapProgressTracker component
+      onProgressUpdate(roadmapId, 0);
+      toast.success("Progress has been reset");
+    } catch (error) {
+      console.error("Error resetting progress:", error);
+      toast.error("Failed to reset progress");
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -123,6 +138,17 @@ export const RoadmapCard = ({ roadmap, onDelete, onProgressUpdate }: RoadmapCard
           >
             <FileDown className="h-4 w-4" />
             <span className="sr-only">Export Roadmap</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => handleResetProgress(roadmap.id)}
+            className="flex-1 sm:flex-none"
+            disabled={isResetting}
+          >
+            <RefreshCw className={`h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
+            <span className="sr-only">Reset Progress</span>
           </Button>
           
           <Button 

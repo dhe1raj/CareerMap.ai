@@ -77,21 +77,47 @@ export function useRoadmaps() {
     }
   };
   
-  const handleProgressUpdate = (roadmapId: string, progress: number) => {
-    // Update local state if needed
-    setRoadmaps(prevRoadmaps => 
-      prevRoadmaps.map(roadmap => 
-        roadmap.id === roadmapId 
-          ? { ...roadmap, progress: progress }
-          : roadmap
-      )
-    );
-    
-    // Refresh user data to update dashboard
-    fetchUserData();
+  const handleProgressUpdate = async (roadmapId: string, progress: number) => {
+    if (user) {
+      try {
+        // Update progress in Supabase if the user is logged in
+        const { data, error } = await supabase
+          .from('users_roadmap_progress')
+          .upsert({
+            user_id: user.id,
+            roadmap_id: roadmapId,
+            progress_pct: progress,
+            updated_at: new Date().toISOString()
+          })
+          .select();
+          
+        if (error) throw error;
+        
+        // Refresh user data to update dashboard
+        fetchUserData();
+      } catch (error) {
+        console.error("Error updating roadmap progress:", error);
+      }
+    } else {
+      // Update local state if needed
+      setRoadmaps(prevRoadmaps => 
+        prevRoadmaps.map(roadmap => 
+          roadmap.id === roadmapId 
+            ? { ...roadmap, progress: progress }
+            : roadmap
+        )
+      );
+      
+      // Refresh user data to update dashboard
+      fetchUserData();
+    }
   };
   
   const handleDeleteRoadmap = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this roadmap?")) {
+      return;
+    }
+    
     if (user) {
       try {
         // Delete related data first

@@ -17,18 +17,22 @@ export default function CareerProgress() {
   
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Career Progress</h1>
           <p className="text-muted-foreground mt-2">Track your personalized roadmap progress in real time</p>
         </div>
         
         {isRoadmapsLoading ? (
-          <RoadmapLoader />
+          <div className="w-full">
+            <RoadmapLoader />
+          </div>
         ) : roadmaps.length === 0 ? (
-          <EmptyRoadmapState />
+          <div className="w-full min-h-[60vh] flex items-center justify-center">
+            <EmptyRoadmapState />
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8">
             {roadmaps.map((roadmap, index) => (
               <RoadmapCard
                 key={roadmap.id || index}

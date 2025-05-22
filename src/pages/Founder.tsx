@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Github, Linkedin, Twitter } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -8,25 +8,6 @@ import { Button } from "@/components/ui/button";
 import SEOMetadata from "@/components/SEOMetadata";
 
 export default function Founder() {
-  // Animation effect for elements
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-fade-in");
-        }
-      });
-    });
-
-    document.querySelectorAll(".animate-on-scroll").forEach((el) => {
-      observer.observe(el);
-      // Start with opacity 0
-      el.classList.add("opacity-0");
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <>
       <SEOMetadata
@@ -66,7 +47,7 @@ export default function Founder() {
             <div className="container mx-auto px-4">
               <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
                 {/* Founder Image */}
-                <div className="lg:w-[45%] flex justify-center animate-on-scroll">
+                <div className="lg:w-[45%] flex justify-center">
                   <div className="relative rounded-full overflow-hidden w-64 h-64 md:w-80 md:h-80 border-2 border-white/20 shadow-lg shadow-brand-400/30">
                     <img 
                       src="/lovable-uploads/a01ed682-7cde-4dbe-82c8-572345951c1d.png" 
@@ -78,7 +59,7 @@ export default function Founder() {
                 </div>
                 
                 {/* Hero Text */}
-                <div className="lg:w-[55%] text-center lg:text-left animate-on-scroll">
+                <div className="lg:w-[55%] text-center lg:text-left">
                   <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
                     Founder of CareerMapAI
                   </h1>
@@ -92,7 +73,7 @@ export default function Founder() {
 
           {/* Founder Snapshot Card */}
           <section className="py-16 container mx-auto px-4">
-            <div className="max-w-[480px] mx-auto glass-card rounded-xl p-8 backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12),0_0_15px_rgba(168,85,247,0.3)] hover:translate-y-[-5px] animate-on-scroll">
+            <div className="max-w-[480px] mx-auto glass-card rounded-xl p-8 backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12),0_0_15px_rgba(168,85,247,0.3)] hover:translate-y-[-5px]">
               <h2 className="text-2xl font-bold mb-4 text-center">Deeraj Dasari</h2>
               
               <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -137,7 +118,7 @@ export default function Founder() {
             <div className="container mx-auto px-4">
               <div className="flex flex-col lg:flex-row gap-12 items-center">
                 {/* Quote Column */}
-                <div className="lg:w-1/2 animate-on-scroll">
+                <div className="lg:w-1/2">
                   <blockquote className="text-2xl md:text-3xl font-serif italic bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent leading-relaxed">
                     "Most career tools are built by people who don't get us. 
                     I'm changing that with empathy and AI."
@@ -145,7 +126,7 @@ export default function Founder() {
                 </div>
                 
                 {/* Story Column */}
-                <div className="lg:w-1/2 space-y-8 animate-on-scroll">
+                <div className="lg:w-1/2 space-y-8">
                   <div>
                     <h3 className="text-xl font-bold mb-3 text-white">Why I Built CareerMap</h3>
                     <p className="text-white/80">
@@ -173,7 +154,7 @@ export default function Founder() {
                 </div>
               </div>
               
-              <div className="mt-10 text-center animate-on-scroll">
+              <div className="mt-10 text-center">
                 <h4 className="text-xl font-semibold bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent">
                   Backed by Purpose, Designed for Scale.
                 </h4>
@@ -185,7 +166,7 @@ export default function Founder() {
           </section>
 
           {/* Featured Badges Section (Optional) */}
-          <section className="py-12 animate-on-scroll">
+          <section className="py-12">
             <div className="container mx-auto px-4">
               <div className="max-w-4xl mx-auto glass-morphism rounded-xl p-6">
                 <div className="flex flex-wrap justify-center items-center gap-8">
@@ -207,7 +188,7 @@ export default function Founder() {
           </section>
 
           {/* Call-to-Action Footer */}
-          <section className="py-16 bg-gradient-to-br from-cyber-midnight to-cyber-deeper animate-on-scroll">
+          <section className="py-16 bg-gradient-to-br from-cyber-midnight to-cyber-deeper">
             <div className="container mx-auto px-4 text-center">
               <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent mb-8">
                 Join us in mapping the future of careers.

@@ -224,7 +224,7 @@ export default function CareerProgress() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Career Progress</h1>
-          <p className="text-muted-foreground mt-2">Track and manage your career roadmaps</p>
+          <p className="text-muted-foreground mt-2">Track your personalized roadmap progress in real time</p>
         </div>
         
         {isRoadmapsLoading ? (
@@ -249,7 +249,7 @@ export default function CareerProgress() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {roadmaps.map((roadmap, index) => (
               <Card 
                 key={roadmap.id || index} 
@@ -259,7 +259,7 @@ export default function CareerProgress() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{roadmap.title}</CardTitle>
+                      <CardTitle className="truncate">{roadmap.title}</CardTitle>
                       <div className="flex items-center space-x-2 mt-2">
                         <CardDescription className="flex items-center">
                           <Calendar className="h-3 w-3 mr-1" />
@@ -313,25 +313,34 @@ export default function CareerProgress() {
                   )}
                 </CardContent>
                 
-                <CardFooter className="flex justify-between border-t border-white/10 pt-4">
-                  <div>
+                <CardFooter className="flex flex-col sm:flex-row gap-2 border-t border-white/10 pt-4">
+                  <Button 
+                    onClick={() => navigate(`/roadmap/${roadmap.id}`)}
+                    className="flex-1 bg-gradient-to-r from-[#9F68F0] to-purple-600 hover:from-[#8A50DB] hover:to-purple-700"
+                  >
+                    Continue Roadmap
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button 
                       variant="outline" 
-                      size="sm" 
+                      size="icon"
                       onClick={() => handleExportPDF(roadmap)}
+                      className="flex-1 sm:flex-none"
                     >
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Export PDF
+                      <FileDown className="h-4 w-4" />
+                      <span className="sr-only">Export Roadmap</span>
                     </Button>
-                  </div>
-                  <div className="space-x-2">
+                    
                     <Button 
                       variant="destructive" 
-                      size="sm"
+                      size="icon"
                       onClick={() => handleDeleteRoadmap(roadmap.id)}
+                      className="flex-1 sm:flex-none"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete Roadmap</span>
                     </Button>
                   </div>
                 </CardFooter>

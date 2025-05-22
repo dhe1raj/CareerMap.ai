@@ -12,79 +12,108 @@ export default function Terms() {
           
           <div className="space-y-8">
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Agreement to Terms</h2>
+              <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
               <p className="text-gray-700">
-                By accessing or using CareerForge ("we," "our," or "us"), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+                Welcome to CareerMap. By accessing and using our website and services, you agree to be bound by these Terms of Service 
+                ("Terms"). If you do not agree to these Terms, please do not use our services.
+              </p>
+              <p className="text-gray-700 mt-3">
+                These Terms constitute a legally binding agreement between you (the "User") and CareerMap 
+                ("we," "us," or "our") regarding your use of our website and services.
               </p>
             </section>
             
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Use License</h2>
+              <h2 className="text-2xl font-semibold mb-4">2. Services Description</h2>
               <p className="text-gray-700">
-                Permission is granted to temporarily access the materials on CareerForge's website for personal, non-commercial use only. This is the grant of a license, not a transfer of title, and under this license you may not:
+                CareerMap provides AI-powered career planning tools, roadmap generation, career matching, 
+                resume analysis, and related career development services. Our services are designed to help 
+                users identify and pursue suitable career paths based on their preferences, skills, and goals.
+              </p>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">3. User Accounts</h2>
+              <p className="text-gray-700">
+                To access certain features of our service, you must register for an account. When registering, you agree to:
               </p>
               <ul className="list-disc pl-6 mt-3 space-y-2 text-gray-700">
-                <li>Modify or copy the materials;</li>
-                <li>Use the materials for any commercial purpose;</li>
-                <li>Attempt to decompile or reverse engineer any software contained on CareerForge;</li>
-                <li>Remove any copyright or other proprietary notations from the materials;</li>
-                <li>Transfer the materials to another person or "mirror" the materials on any other server.</li>
+                <li>Provide accurate, current, and complete information</li>
+                <li>Maintain and promptly update your account information</li>
+                <li>Keep your password secure and confidential</li>
+                <li>Be responsible for all activities that occur under your account</li>
+                <li>Notify us immediately of any unauthorized use of your account</li>
               </ul>
             </section>
             
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Disclaimer</h2>
+              <h2 className="text-2xl font-semibold mb-4">4. Acceptable Use Policy</h2>
               <p className="text-gray-700">
-                The materials on CareerForge's website are provided on an 'as is' basis. CareerForge makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+                You agree not to use our services to:
+              </p>
+              <ul className="list-disc pl-6 mt-3 space-y-2 text-gray-700">
+                <li>Violate any applicable laws or regulations</li>
+                <li>Infringe upon the rights of others</li>
+                <li>Distribute malicious software or harmful content</li>
+                <li>Attempt to gain unauthorized access to our systems or user accounts</li>
+                <li>Engage in any activity that interferes with or disrupts our services</li>
+                <li>Collect or harvest user data without permission</li>
+              </ul>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">5. Intellectual Property Rights</h2>
+              <p className="text-gray-700">
+                All content on our website, including but not limited to text, graphics, logos, icons, images, 
+                audio clips, digital downloads, data compilations, and software, is the property of CareerMap 
+                or its content suppliers and is protected by international copyright laws.
               </p>
               <p className="text-gray-700 mt-3">
-                Further, CareerForge does not warrant or make any representations concerning the accuracy, likely results, or reliability of the use of the materials on its website or otherwise relating to such materials or on any sites linked to this site.
+                The roadmaps, career plans, and other outputs generated through our services are provided for your personal use. 
+                You may not redistribute, sell, or otherwise commercialize these outputs without our permission.
               </p>
             </section>
             
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Limitations</h2>
+              <h2 className="text-2xl font-semibold mb-4">6. Privacy</h2>
               <p className="text-gray-700">
-                In no event shall CareerForge or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on CareerForge's website, even if CareerForge or a CareerForge authorized representative has been notified orally or in writing of the possibility of such damage.
+                Our Privacy Policy describes how we collect, use, and share information about you when you use our 
+                services. By using CareerMap, you agree to the collection and use of information in accordance with our Privacy Policy.
               </p>
             </section>
             
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Accuracy of Materials</h2>
+              <h2 className="text-2xl font-semibold mb-4">7. Limitation of Liability</h2>
               <p className="text-gray-700">
-                The materials appearing on CareerForge's website could include technical, typographical, or photographic errors. CareerForge does not warrant that any of the materials on its website are accurate, complete or current. CareerForge may make changes to the materials contained on its website at any time without notice. However, CareerForge does not make any commitment to update the materials.
+                To the maximum extent permitted by law, CareerMap shall not be liable for any indirect, incidental, 
+                special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly 
+                or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from:
+              </p>
+              <ul className="list-disc pl-6 mt-3 space-y-2 text-gray-700">
+                <li>Your use or inability to use our services</li>
+                <li>Any unauthorized access to or use of our servers and/or any personal information stored therein</li>
+                <li>Any errors or inaccuracies in our content or services</li>
+                <li>Any decision made or action taken by you in reliance upon our services</li>
+              </ul>
+            </section>
+            
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">8. Changes to Terms</h2>
+              <p className="text-gray-700">
+                We reserve the right to modify these Terms at any time. If we make material changes, we will notify 
+                you by email or by posting a notice on our website. Your continued use of our services after such 
+                modifications constitutes your acceptance of the revised Terms.
               </p>
             </section>
             
             <section>
-              <h2 className="text-2xl font-semibold mb-4">Links</h2>
+              <h2 className="text-2xl font-semibold mb-4">9. Contact Information</h2>
               <p className="text-gray-700">
-                CareerForge has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by CareerForge of the site. Use of any such linked website is at the user's own risk.
-              </p>
-            </section>
-            
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Modifications</h2>
-              <p className="text-gray-700">
-                CareerForge may revise these terms of service for its website at any time without notice. By using this website you are agreeing to be bound by the then current version of these terms of service.
-              </p>
-            </section>
-            
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Governing Law</h2>
-              <p className="text-gray-700">
-                These terms and conditions are governed by and construed in accordance with the laws and you irrevocably submit to the exclusive jurisdiction of the courts in that location.
-              </p>
-            </section>
-            
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
-              <p className="text-gray-700">
-                If you have any questions about these Terms of Service, please contact us at:
+                If you have any questions about these Terms, please contact us at:
               </p>
               <div className="mt-3 text-gray-700">
-                <p>Email: legal@careerforge.ai</p>
-                <p className="mt-2">Last Updated: May 20, 2025</p>
+                <p>Email: legal@careermap.ai</p>
+                <p className="mt-2">Last Updated: May 22, 2025</p>
               </div>
             </section>
           </div>

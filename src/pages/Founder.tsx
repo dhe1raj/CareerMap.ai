@@ -25,8 +25,8 @@ export default function Founder() {
           "description": "Gen-Z technologist transforming career planning with AI. Fuelled by code, creativity & community.",
           "image": "/lovable-uploads/a01ed682-7cde-4dbe-82c8-572345951c1d.png",
           "sameAs": [
-            "https://github.com/deerajdasari",
-            "https://linkedin.com/in/deerajdasari",
+            "https://github.com/dhe1raj",
+            "https://linkedin.com/in/dhe1raj",
             "https://twitter.com/deerajdasari"
           ],
           "alumniOf": "Computer Science and Engineering",
@@ -94,10 +94,10 @@ export default function Founder() {
               </p>
               
               <div className="flex justify-center gap-4 mb-6">
-                <a href="https://github.com/deerajdasari" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile" className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <a href="https://github.com/dhe1raj" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile" className="p-2 rounded-full hover:bg-white/10 transition-colors">
                   <Github className="h-6 w-6 text-white hover:text-brand-400 transition-colors" />
                 </a>
-                <a href="https://linkedin.com/in/deerajdasari" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Profile" className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <a href="https://linkedin.com/in/dhe1raj" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Profile" className="p-2 rounded-full hover:bg-white/10 transition-colors">
                   <Linkedin className="h-6 w-6 text-white hover:text-brand-400 transition-colors" />
                 </a>
                 <a href="https://twitter.com/deerajdasari" target="_blank" rel="noopener noreferrer" aria-label="Twitter Profile" className="p-2 rounded-full hover:bg-white/10 transition-colors">
@@ -107,7 +107,7 @@ export default function Founder() {
               
               <div className="text-center">
                 <Button className="glowing-purple" asChild>
-                  <a href="mailto:deeraj@careermapai.in">Connect with Deeraj</a>
+                  <a href="mailto:dasaridheerajdheeraj@gmail.com">Connect with Deeraj</a>
                 </Button>
               </div>
             </div>

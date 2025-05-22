@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -69,6 +68,12 @@ export default function Navbar() {
             className="text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             About
+          </Link>
+          <Link
+            to="/founder"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            Founder
           </Link>
           
           {user ? (
@@ -172,6 +177,13 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
+              </Link>
+              <Link
+                to="/founder"
+                className="text-sm font-medium hover:underline"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Founder
               </Link>
               
               {user ? (

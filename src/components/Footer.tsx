@@ -48,6 +48,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/founder" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Founder
+                </Link>
+              </li>
+              <li>
                 <Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
                   Blog
                 </Link>

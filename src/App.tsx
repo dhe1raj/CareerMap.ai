@@ -7,7 +7,6 @@ import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import CareerDesigner from './pages/CareerDesigner';
@@ -17,12 +16,6 @@ import ResumeAnalysis from './pages/ResumeAnalysis';
 import CareerProgressPage from './pages/CareerProgress';
 import CareerResources from './pages/CareerResources';
 import NotFound from './pages/NotFound';
-import About from './pages/About';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
-import Features from './pages/Features';
-import Founder from './pages/Founder';
-import GenZCareerDecider from './pages/GenZCareerDecider';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './integrations/supabase/client';
 import setupRoadmapTables from "./utils/supabase-setup";
@@ -33,8 +26,8 @@ function App() {
       <GeminiProvider>
         <Router>
           <AppContent />
-          <Toaster position="top-right" />
         </Router>
+        <Toaster position="top-right" />
       </GeminiProvider>
     </AuthProvider>
   );
@@ -70,21 +63,8 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Public routes that are accessible to everyone */}
-      <Route path="/" element={<Index />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/features" element={<Features />} />
-      <Route path="/founder" element={<Founder />} />
-      <Route path="/genz-career-decider" element={<GenZCareerDecider />} />
-      
-      {/* Authentication routes */}
       <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
-      <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <Auth />} />
-      
-      {/* Protected routes that require authentication */}
       <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
       <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       <Route path="/career-designer" element={user ? <CareerDesigner /> : <Navigate to="/login" />} />
@@ -96,8 +76,7 @@ function AppContent() {
       <Route path="/career-resources" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/career-resources/:roadmapId" element={user ? <CareerResources /> : <Navigate to="/login" />} />
       <Route path="/role-details/:roleId" element={user ? <Roadmap /> : <Navigate to="/login" />} />
-      
-      {/* Catch-all for 404 */}
+      <Route path="/" element={<Index />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

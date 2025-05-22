@@ -1,22 +1,24 @@
 
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-  
-  <!-- Home Page -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://careermapai.in/</loc>
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <image:image>
-      <image:loc>https://careermapai.in/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png</image:loc>
-      <image:title>CareerMapAI Logo</image:title>
-      <image:caption>India's #1 AI-Powered Career Roadmap Generator</image:caption>
-    </image:image>
   </url>
-
-  <!-- Main Functional Pages -->
+  <url>
+    <loc>https://careermapai.in/about</loc>
+    <lastmod>2025-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://careermapai.in/features</loc>
+    <lastmod>2025-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://careermapai.in/dashboard</loc>
     <lastmod>2025-05-21</lastmod>
@@ -28,31 +30,9 @@
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <image:image>
-      <image:loc>https://careermapai.in/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png</image:loc>
-      <image:title>Career Designer Tool</image:title>
-      <image:caption>Design your perfect career path with AI precision</image:caption>
-    </image:image>
   </url>
   <url>
-    <loc>https://careermapai.in/genz-career-decider</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-    <image:image>
-      <image:loc>https://careermapai.in/lovable-uploads/9769953f-da50-477d-9f36-89ed2dba060d.png</image:loc>
-      <image:title>GenZ Career Decider</image:title>
-      <image:caption>Find the perfect career path for Gen Z professionals</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://careermapai.in/career-progress</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/career-resources</loc>
+    <loc>https://careermapai.in/career-chat</loc>
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -68,67 +48,25 @@
     <lastmod>2025-05-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://careermapai.in/lovable-uploads/9ae4cbff-f439-40be-949e-407cd109074b.png</image:loc>
-      <image:title>Resume Analysis Tool</image:title>
-      <image:caption>AI-powered resume analysis to optimize your career documents</image:caption>
-    </image:image>
-  </url>
-
-  <!-- Auth Pages -->
-  <url>
-    <loc>https://careermapai.in/auth</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://careermapai.in/login</loc>
+    <loc>https://careermapai.in/career-resources</loc>
     <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/signup</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Company Pages -->
-  <url>
-    <loc>https://careermapai.in/about</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://careermapai.in/founder</loc>
+    <loc>https://careermapai.in/roadmap</loc>
     <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-    <image:image>
-      <image:loc>https://careermapai.in/lovable-uploads/fbfa90e3-d0b7-460d-b236-b92a802795ea.png</image:loc>
-      <image:title>Deeraj - Founder of CareerMapAI</image:title>
-      <image:caption>Founder & Builder of CareerMapAI</image:caption>
-    </image:image>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://careermapai.in/features</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- User Settings -->
   <url>
     <loc>https://careermapai.in/settings</loc>
     <lastmod>2025-05-21</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
   </url>
-
-  <!-- Info Pages -->
   <url>
     <loc>https://careermapai.in/privacy</loc>
     <lastmod>2025-05-21</lastmod>
@@ -140,67 +78,5 @@
     <lastmod>2025-05-21</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
-  </url>
-
-  <!-- Dynamic Roadmap Examples -->
-  <url>
-    <loc>https://careermapai.in/roadmap/software-engineer-2025</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/data-scientist-pathway</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/digital-marketing-career</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/product-management-101</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/ui-ux-designer-path</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/business-analyst-roadmap</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/cybersecurity-expert</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/ai-engineer-career</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/cloud-architect-journey</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://careermapai.in/roadmap/full-stack-developer</loc>
-    <lastmod>2025-05-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
   </url>
 </urlset>

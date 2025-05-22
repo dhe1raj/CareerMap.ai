@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 
 interface GeminiResponse {
@@ -103,21 +104,3 @@ export function useGemini() {
   
   return { callGemini };
 }
-
-// Export a simple wrapper function for use in other components
-export const geminiGenerate = async (prompt: string): Promise<string> => {
-  try {
-    // Using environment variable for API key if available, or fallback to empty string
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-    
-    if (!apiKey) {
-      console.warn("No Gemini API key found. Please add your API key to .env");
-      return "API key is missing. Please add your Gemini API key in settings.";
-    }
-    
-    return await askGemini(prompt, apiKey);
-  } catch (error) {
-    console.error("Error in geminiGenerate:", error);
-    throw error;
-  }
-};

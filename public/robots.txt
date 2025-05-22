@@ -1,26 +1,13 @@
 
-# CareerMapAI Robots.txt
 User-agent: *
 Allow: /
-Disallow: /settings
-Disallow: /api/
-Disallow: /auth/
 Disallow: /preview*/
+Sitemap: https://careermapai.in/sitemap.xml
 
-# Allow primary bots with full access
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
 Allow: /
 
 User-agent: Twitterbot
@@ -28,6 +15,3 @@ Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
-
-# Specify the sitemap location
-Sitemap: https://careermapai.in/sitemap.xml

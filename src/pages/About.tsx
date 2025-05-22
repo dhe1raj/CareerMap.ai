@@ -1,31 +1,33 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, HelpCircle, Contact } from "lucide-react";
-import SEOMetadata from "@/components/SEOMetadata";
+import { Helmet } from 'react-helmet-async';
 
 export default function About() {
-  // JSON-LD schema for the About page
-  const aboutJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "CareerMapAI",
-    "url": "https://careermapai.in",
-    "logo": "https://careermapai.in/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png",
-    "description": "AI-powered career planning and roadmap generator.",
-    "foundingDate": "2023",
-    "email": "contact@careermapai.in"
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyber-deeper via-brand-900 to-cyber-dark">
-      <SEOMetadata 
-        title="About CareerMapAI | AI-Powered Career Planning Platform"
-        description="Learn about CareerMapAI's mission to help people discover their ideal career paths through AI-powered guidance and personalized roadmaps."
-        keywords="career guidance, AI career planning, about CareerMapAI, career path platform, professional development"
-        canonicalPath="/about"
-        jsonLd={aboutJsonLd}
-      />
+      <Helmet>
+        <title>About CareerMap | AI-Powered Career Planning Platform</title>
+        <meta name="description" content="Learn about CareerMap's mission to help people discover their ideal career paths through AI-powered guidance and personalized roadmaps." />
+        <meta name="keywords" content="career guidance, AI career planning, about CareerMap, career path platform, professional development" />
+        <link rel="canonical" href="https://careermap.ai/about" />
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "CareerMap",
+              "url": "https://careermap.ai",
+              "logo": "https://careermap.ai/lovable-uploads/6dada9e0-7c2b-4be1-8795-cb8580fec628.png",
+              "description": "AI-powered career planning and roadmap generator.",
+              "foundingDate": "2023",
+              "email": "contact@careermap.ai"
+            }
+          `}
+        </script>
+      </Helmet>
       
       {/* Animated background elements */}
       <div className="fixed inset-0 -z-10">

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Type to represent the RoadmapProgress structure expected from the database
@@ -110,21 +109,18 @@ export const supabaseRpc = {
     let totalItems = 0;
     try {
       if (roadmap.sections) {
-        // Safely access sections data by ensuring it's a properly typed array
+        // Safely access sections data
         const sectionsData = Array.isArray(roadmap.sections) ? roadmap.sections : [];
         
-        // Properly map the JSON data to our RoadmapSection type with validation
-        const sections: RoadmapSection[] = sectionsData.filter((section): section is RoadmapSection => {
-          // Ensure each section has an items property that's an array
-          return typeof section === 'object' && 
-                 section !== null && 
-                 'items' in section && 
-                 Array.isArray(section.items);
-        });
-        
-        // Now we can safely iterate through properly typed sections
-        for (const section of sections) {
-          totalItems += section.items.length;
+        // Process each section individually to ensure type safety
+        for (const sectionData of sectionsData) {
+          // Skip invalid sections
+          if (typeof sectionData !== 'object' || sectionData === null) continue;
+          
+          // Check if the section has items property as an array
+          if ('items' in sectionData && Array.isArray(sectionData.items)) {
+            totalItems += sectionData.items.length;
+          }
         }
       }
     } catch (e) {

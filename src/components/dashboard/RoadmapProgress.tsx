@@ -8,11 +8,9 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import ProfileWizard from "@/components/ProfileWizard";
 import CustomCareerBuilder from "@/components/CustomCareerBuilder";
-import { FileDown, RefreshCw, Sparkles, ArrowRight, Book } from "lucide-react";
+import { FileDown, RefreshCcw, Sparkles, ArrowRight, Book } from "lucide-react";
 import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function RoadmapProgress() {
   const { userData, saveField } = useUserData();
@@ -21,7 +19,6 @@ export function RoadmapProgress() {
   const navigate = useNavigate();
   const [userRoadmaps, setUserRoadmaps] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("skills");
   
   useEffect(() => {
     const fetchUserRoadmaps = async () => {
@@ -135,7 +132,7 @@ export function RoadmapProgress() {
             <p className="text-muted-foreground">Create a personalized step-by-step plan to achieve your career goals.</p>
           </div>
           <div className="space-y-4">
-            <Button onClick={openWizard} className="w-full bg-gradient-to-r from-[#9F68F0] to-[#8B5CF6] text-white hover:shadow-[0_0_20px_rgba(159,104,240,0.5)]">
+            <Button onClick={openWizard} className="glowing-purple w-full">
               Design My Career Path
             </Button>
             <Button 
@@ -169,42 +166,20 @@ export function RoadmapProgress() {
     return (
       <>
         <Card className="glass-morphism">
-          <CardHeader className="pb-3">
-            <div className="space-y-1">
-              <CardTitle className="text-lg line-clamp-1" title={latestRoadmap.title}>
-                {latestRoadmap.title}
-              </CardTitle>
-              <CardDescription>Your step-by-step career plan</CardDescription>
-            </div>
+          <CardHeader>
+            <CardTitle>{latestRoadmap.title} Roadmap</CardTitle>
+            <CardDescription>Your step-by-step career plan</CardDescription>
           </CardHeader>
-          
-          <CardContent className="pb-3">
+          <CardContent>
             <RoadmapProgressTracker 
               roadmapId={latestRoadmap.id} 
               title={latestRoadmap.title}
               onProgressUpdate={handleProgressUpdate}
             />
           </CardContent>
-          
-          <div className="px-6">
-            <Tabs defaultValue="skills" className="w-full" onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 mb-4 bg-purple-500/10">
-                <TabsTrigger value="skills" className="data-[state=active]:bg-purple-500/30">Skills</TabsTrigger>
-                <TabsTrigger value="tools" className="data-[state=active]:bg-purple-500/30">Tools</TabsTrigger>
-                <TabsTrigger value="resources" className="data-[state=active]:bg-purple-500/30">Resources</TabsTrigger>
-                <TabsTrigger value="timeline" className="data-[state=active]:bg-purple-500/30">Timeline</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
           <CardFooter className="flex flex-wrap justify-between border-t border-white/10 pt-4 gap-2">
             <div className="flex flex-wrap gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleExportPDF}
-                className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30"
-              >
+              <Button variant="outline" size="sm" onClick={handleExportPDF}>
                 <FileDown className="h-4 w-4 mr-2" />
                 Export PDF
               </Button>
@@ -212,10 +187,17 @@ export function RoadmapProgress() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => viewResources(latestRoadmap.id)}
-                className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30"
               >
                 <Book className="h-4 w-4 mr-2" />
-                Resources
+                Learning Resources
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={viewAllRoadmaps}
+              >
+                All Roadmaps
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -223,34 +205,17 @@ export function RoadmapProgress() {
                 variant="outline"
                 size="sm"
                 onClick={openCustomCareerBuilder}
-                className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30"
               >
                 <Sparkles className="h-4 w-4 mr-2 text-purple-300" />
-                Custom
+                Create Custom
               </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={handleResetRoadmap}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reset
+              <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Reset Progress
               </Button>
             </div>
           </CardFooter>
         </Card>
-        
-        <div className="mt-3 flex justify-end">
-          <Button 
-            onClick={viewAllRoadmaps} 
-            variant="link" 
-            size="sm" 
-            className="text-purple-300 hover:text-purple-200"
-          >
-            View all roadmaps
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
         
         <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
         <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
@@ -263,23 +228,24 @@ export function RoadmapProgress() {
     <>
       <Card className="glass-morphism">
         <CardHeader>
-          <div>
-            <CardTitle className="line-clamp-1" title={userData.userRoadmap?.title}>
-              {userData.userRoadmap?.title}
-            </CardTitle>
-            <CardDescription>Your step-by-step career plan</CardDescription>
-          </div>
-          <div className="mt-2">
-            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Progress</span>
-              <span>{userData.career.progress}%</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>{userData.userRoadmap?.title} Roadmap</CardTitle>
+              <CardDescription>Your step-by-step career plan</CardDescription>
             </div>
-            <Progress value={userData.career.progress} className="h-2" />
+            <div className="text-right">
+              <div className="text-2xl font-bold">{userData.career.progress}%</div>
+              <div className="text-xs text-muted-foreground">Complete</div>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-5 max-h-[300px] overflow-y-auto scrollbar-none">
+        <CardContent className="space-y-5">
+          {/* Use the system from local storage for now */}
+          {/* Add the new component here when Supabase integration is fully complete */}
+          {/* For now displaying legacy content */}
+          
           {userData.userRoadmap && userData.userRoadmap.steps && userData.userRoadmap.steps.length > 0 && (
-            <div className="space-y-2">
+            <div>
               {userData.userRoadmap.steps.map((step, index) => (
                 <div 
                   key={index} 
@@ -296,7 +262,7 @@ export function RoadmapProgress() {
                       if (!userData.userRoadmap) return;
                       
                       const newCompleted = !step.completed;
-                      saveField(`userRoadmap.steps.${index}`, { ...step, completed: newCompleted });
+                      saveField(`userRoadmap.steps.${index}`, { completed: newCompleted });
                       
                       if (newCompleted) {
                         toast.success("Progress updated! Keep going!");
@@ -305,7 +271,7 @@ export function RoadmapProgress() {
                     className={step.completed ? "text-brand-500" : ""}
                   />
                   <div className="flex-1">
-                    <div className="font-medium line-clamp-2">{step.label}</div>
+                    <div className="font-medium">{step.label}</div>
                     <div className="flex items-center text-xs text-muted-foreground mt-1">
                       {step.estTime}
                     </div>
@@ -317,12 +283,7 @@ export function RoadmapProgress() {
         </CardContent>
         <CardFooter className="flex flex-wrap justify-between border-t border-white/10 pt-4 gap-2">
           <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleExportPDF}
-              className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30"
-            >
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
               <FileDown className="h-4 w-4 mr-2" />
               Export PDF
             </Button>
@@ -330,10 +291,17 @@ export function RoadmapProgress() {
               variant="outline" 
               size="sm" 
               onClick={() => viewResources()}
-              className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30"
             >
               <Book className="h-4 w-4 mr-2" />
-              Resources
+              Learning Resources
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={viewAllRoadmaps}
+            >
+              All Roadmaps
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -341,34 +309,17 @@ export function RoadmapProgress() {
               variant="outline"
               size="sm"
               onClick={openCustomCareerBuilder}
-              className="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30"
             >
               <Sparkles className="h-4 w-4 mr-2 text-purple-300" />
-              Custom
+              Create Custom
             </Button>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleResetRoadmap}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Reset
+            <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Reset Progress
             </Button>
           </div>
         </CardFooter>
       </Card>
-      
-      <div className="mt-3 flex justify-end">
-        <Button 
-          onClick={viewAllRoadmaps} 
-          variant="link" 
-          size="sm" 
-          className="text-purple-300 hover:text-purple-200"
-        >
-          View all roadmaps
-          <ArrowRight className="ml-1 h-4 w-4" />
-        </Button>
-      </div>
       
       <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
       <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />

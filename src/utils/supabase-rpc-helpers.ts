@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Type to represent the RoadmapProgress structure expected from the database
@@ -9,17 +10,6 @@ export interface SupabaseRoadmapProgress {
   completed_items: string[];
   started_at: string;
   updated_at: string;
-}
-
-// Define a proper type for roadmap sections
-interface RoadmapSection {
-  title?: string;
-  items: Array<{
-    id: string;
-    title: string;
-    description?: string;
-    completed?: boolean;
-  }>;
 }
 
 /**
@@ -110,16 +100,12 @@ export const supabaseRpc = {
     try {
       if (roadmap.sections) {
         // Safely access sections data
-        const sectionsData = Array.isArray(roadmap.sections) ? roadmap.sections : [];
-        
-        // Process each section individually to ensure type safety
-        for (const sectionData of sectionsData) {
-          // Skip invalid sections
-          if (typeof sectionData !== 'object' || sectionData === null) continue;
-          
-          // Check if the section has items property as an array
-          if ('items' in sectionData && Array.isArray(sectionData.items)) {
-            totalItems += sectionData.items.length;
+        const sections = typeof roadmap.sections === 'object' ? 
+          (Array.isArray(roadmap.sections) ? roadmap.sections : []) : [];
+              
+        for (const section of sections) {
+          if (section && section.items && Array.isArray(section.items)) {
+            totalItems += section.items.length;
           }
         }
       }

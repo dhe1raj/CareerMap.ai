@@ -10,17 +10,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-[#9F68F0] to-[#8B5CF6] text-white hover:shadow-[0_0_20px_rgba(159,104,240,0.5)] hover:from-[#9F68F0]/90 hover:to-[#8B5CF6]/90",
+        default: "bg-gradient-to-r from-brand-400 to-brand-500 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:from-brand-400/90 hover:to-brand-500/90",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-[0_0_15px_rgba(255,86,86,0.4)]",
         outline:
-          "border border-white/20 bg-black/10 backdrop-blur-md text-foreground hover:bg-white/10 hover:border-[#9F68F0]/50 hover:shadow-[0_0_15px_rgba(159,104,240,0.3)]",
+          "border border-white/20 bg-black/10 backdrop-blur-md text-foreground hover:bg-white/10 hover:border-brand-400/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]",
         secondary:
-          "bg-white/5 backdrop-blur-md border border-white/10 text-foreground hover:bg-white/10 hover:shadow-[0_0_15px_rgba(159,104,240,0.3)]",
+          "bg-white/5 backdrop-blur-md border border-white/10 text-foreground hover:bg-white/10 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]",
         ghost: "hover:bg-white/10 hover:text-accent-foreground",
-        link: "text-[#9F68F0] underline-offset-4 hover:underline hover:text-[#8B5CF6]",
-        glass: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:shadow-[0_0_20px_rgba(159,104,240,0.4)] transition-all duration-300",
-        neon: "relative bg-black/30 backdrop-blur-md border border-[#9F68F0]/50 text-white shadow-[0_0_10px_rgba(159,104,240,0.5)] hover:shadow-[0_0_20px_rgba(159,104,240,0.7)] transition-all duration-300",
+        link: "text-brand-400 underline-offset-4 hover:underline hover:text-brand-300",
+        glass: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300",
+        neon: "relative bg-black/30 backdrop-blur-md border border-brand-400/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)] hover:shadow-[0_0_20px_rgba(168,85,247,0.7)] transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",

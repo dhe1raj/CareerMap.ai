@@ -37,9 +37,7 @@ export function RoadmapCard({ roadmap, progress = 0, onDelete, onTogglePublic }:
     <Card className="glass-morphism h-full flex flex-col">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg truncate max-w-[80%]" title={roadmap.title}>
-            {roadmap.title}
-          </CardTitle>
+          <CardTitle className="text-lg">{roadmap.title}</CardTitle>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -95,12 +93,12 @@ export function RoadmapCard({ roadmap, progress = 0, onDelete, onTogglePublic }:
         </div>
       </CardContent>
       
-      <CardFooter className="flex gap-2">
+      <CardFooter>
         <Button 
-          className="w-full bg-gradient-to-r from-purple-500 to-purple-700 hover:shadow-[0_0_20px_rgba(159,104,240,0.5)]"
+          className="w-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-white"
           asChild
         >
-          <Link to={`/roadmap/${roadmap.id}`}>Continue</Link>
+          <Link to={`/roadmap/${roadmap.id}`}>View Roadmap</Link>
         </Button>
       </CardFooter>
     </Card>

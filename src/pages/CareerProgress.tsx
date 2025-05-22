@@ -1,9 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import SEOMetadata from '@/components/SEOMetadata';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { RoadmapCard } from '@/components/roadmap/RoadmapCard';
 import { useRoadmaps } from '@/hooks/use-roadmaps';
 import { useAuth } from '@/context/AuthContext';
@@ -15,18 +15,13 @@ import { PlusCircle } from 'lucide-react';
 export default function CareerProgress() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { roadmaps, userProgress, fetchRoadmaps, deleteRoadmap, toggleRoadmapPublic, resetProgress, isLoading } = useRoadmaps();
+  const { roadmaps, userProgress, fetchRoadmaps, deleteRoadmap, toggleRoadmapPublic, isLoading } = useRoadmaps();
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
     }
   }, [user, navigate]);
-
-  useEffect(() => {
-    // Fetch roadmaps when component mounts
-    fetchRoadmaps();
-  }, [fetchRoadmaps]);
 
   const handleDeleteRoadmap = (id: string) => {
     toast("Are you sure you want to delete this roadmap?", {
@@ -35,22 +30,6 @@ export default function CareerProgress() {
         onClick: () => {
           deleteRoadmap(id);
           toast.success("Roadmap deleted successfully");
-        }
-      },
-      cancel: {
-        label: "Cancel",
-        onClick: () => {}
-      }
-    });
-  };
-
-  const handleResetRoadmap = (id: string) => {
-    toast("Are you sure you want to reset progress for this roadmap?", {
-      action: {
-        label: "Reset",
-        onClick: () => {
-          resetProgress(id);
-          toast.success("Progress reset successfully");
         }
       },
       cancel: {
@@ -81,12 +60,11 @@ export default function CareerProgress() {
       <div className="container py-8 max-w-7xl">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Your Career Progress</h1>
-            <p className="text-muted-foreground">Track and manage your active roadmaps</p>
+            <h1 className="text-3xl font-bold mb-1">Career Progress</h1>
+            <p className="text-muted-foreground">Track your progress across all your roadmaps</p>
           </div>
           
-          <Button onClick={() => navigate('/career-designer')} 
-            className="bg-gradient-to-r from-[#9F68F0] to-[#8B5CF6] text-white hover:shadow-[0_0_20px_rgba(159,104,240,0.5)]">
+          <Button onClick={() => navigate('/career-designer')} className="glowing-purple">
             <PlusCircle className="mr-2 h-4 w-4" />
             Create New Roadmap
           </Button>
@@ -110,22 +88,13 @@ export default function CareerProgress() {
         ) : userRoadmaps.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {userRoadmaps.map((roadmap) => (
-              <div key={roadmap.id} className="flex flex-col">
-                <RoadmapCard
-                  roadmap={roadmap}
-                  progress={getProgress(roadmap.id!)}
-                  onDelete={handleDeleteRoadmap}
-                  onTogglePublic={toggleRoadmapPublic}
-                />
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={() => handleResetRoadmap(roadmap.id!)} 
-                  className="mt-2"
-                >
-                  Reset Progress
-                </Button>
-              </div>
+              <RoadmapCard
+                key={roadmap.id}
+                roadmap={roadmap}
+                progress={getProgress(roadmap.id!)}
+                onDelete={handleDeleteRoadmap}
+                onTogglePublic={toggleRoadmapPublic}
+              />
             ))}
           </div>
         ) : (
@@ -137,8 +106,7 @@ export default function CareerProgress() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-6">
-              <Button onClick={() => navigate('/career-designer')} 
-                className="bg-gradient-to-r from-[#9F68F0] to-[#8B5CF6] text-white hover:shadow-[0_0_20px_rgba(159,104,240,0.5)]">
+              <Button onClick={() => navigate('/career-designer')} className="glowing-purple">
                 Design My Career Path
               </Button>
             </CardContent>

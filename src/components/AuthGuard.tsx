@@ -1,9 +1,13 @@
 
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
-const AuthGuard = () => {
+interface AuthGuardProps {
+  children: React.ReactNode;
+}
+
+const AuthGuard = ({ children }: AuthGuardProps) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
@@ -11,7 +15,7 @@ const AuthGuard = () => {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        navigate("/signin");
+        navigate("/login");
       }
       setIsChecking(false);
     }
@@ -28,7 +32,7 @@ const AuthGuard = () => {
     );
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 };
 
 export default AuthGuard;

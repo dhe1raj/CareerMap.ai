@@ -1,343 +1,116 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useUserData } from "@/hooks/use-user-data";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { exportElementToPDF } from "@/utils/pdfExport";
-import { toast } from "sonner";
-import { ArrowRight, FileDown, Trash2, Calendar, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
-import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
+import React, { useEffect } from 'react';
+import SEOMetadata from '@/components/SEOMetadata';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { RoadmapCard } from '@/components/roadmap/RoadmapCard';
+import { useRoadmaps } from '@/hooks/use-roadmaps';
+import { useAuth } from '@/context/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { PlusCircle } from 'lucide-react';
 
 export default function CareerProgress() {
-  const navigate = useNavigate();
-  const { userData, isLoading, fetchUserData } = useUserData();
   const { user } = useAuth();
-  const [roadmaps, setRoadmaps] = useState<any[]>([]);
-  const [isRoadmapsLoading, setIsRoadmapsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>('main');
-  
+  const navigate = useNavigate();
+  const { roadmaps, userProgress, fetchRoadmaps, deleteRoadmap, toggleRoadmapPublic, isLoading } = useRoadmaps();
+
   useEffect(() => {
-    // First try to get roadmaps from Supabase if the user is logged in
-    const fetchRoadmaps = async () => {
-      setIsRoadmapsLoading(true);
-      
-      if (user) {
-        try {
-          // Fetch all user roadmaps with their steps
-          const { data, error } = await supabase
-            .from('user_roadmaps')
-            .select('*, user_roadmap_steps(*)')
-            .eq('user_id', user.id)
-            .order('updated_at', { ascending: false });
-          
-          if (error) {
-            console.error("Error fetching roadmaps from Supabase:", error);
-            loadFromLocalStorage();
-          } else if (data && data.length > 0) {
-            // Transform the data to match our expected format
-            const formattedRoadmaps = data.map(roadmap => ({
-              id: roadmap.id,
-              title: roadmap.title,
-              lastUpdated: roadmap.updated_at,
-              category: roadmap.category,
-              steps: roadmap.user_roadmap_steps.map((step: any) => ({
-                order: step.order_number,
-                label: step.label,
-                estTime: step.est_time,
-                completed: step.completed
-              }))
-            }));
-            
-            setRoadmaps(formattedRoadmaps);
-          } else {
-            loadFromLocalStorage();
-          }
-        } catch (error) {
-          console.error("Failed to fetch roadmaps:", error);
-          loadFromLocalStorage();
-        } finally {
-          setIsRoadmapsLoading(false);
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  const handleDeleteRoadmap = (id: string) => {
+    toast("Are you sure you want to delete this roadmap?", {
+      action: {
+        label: "Delete",
+        onClick: () => {
+          deleteRoadmap(id);
+          toast.success("Roadmap deleted successfully");
         }
-      } else {
-        // If not logged in, fall back to localStorage
-        loadFromLocalStorage();
-        setIsRoadmapsLoading(false);
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {}
       }
-    };
-    
-    // Fallback to localStorage if Supabase fails or user is not logged in
-    const loadFromLocalStorage = () => {
-      // Get saved roadmaps from localStorage for now
-      const storedData = localStorage.getItem('userData');
-      if (storedData) {
-        try {
-          const parsedData = JSON.parse(storedData);
-          if (parsedData.userRoadmaps && Array.isArray(parsedData.userRoadmaps)) {
-            setRoadmaps(parsedData.userRoadmaps);
-          } else if (parsedData.userRoadmap) {
-            // Handle single roadmap case
-            setRoadmaps([parsedData.userRoadmap]);
-          }
-        } catch (error) {
-          console.error("Failed to parse saved roadmaps:", error);
-        }
-      }
-    };
-    
-    fetchRoadmaps();
-    
-    // Set up realtime subscription for roadmap updates
-    if (user) {
-      const channel = supabase
-        .channel('roadmap-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'user_roadmap_steps',
-          },
-          () => {
-            // When steps change, refetch the roadmaps
-            fetchRoadmaps();
-          }
-        )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [user]);
-  
-  const calculateProgress = (roadmap: any) => {
-    if (!roadmap?.steps || roadmap.steps.length === 0) return 0;
-    const completed = roadmap.steps.filter((step: any) => step.completed).length;
-    return Math.round((completed / roadmap.steps.length) * 100);
+    });
   };
-  
-  const handleProgressUpdate = (roadmapId: string, progress: number) => {
-    // Update local state if needed
-    setRoadmaps(prevRoadmaps => 
-      prevRoadmaps.map(roadmap => 
-        roadmap.id === roadmapId 
-          ? { ...roadmap, progress: progress }
-          : roadmap
-      )
-    );
-    
-    // Refresh user data to update dashboard
-    fetchUserData();
+
+  // Find the progress for a particular roadmap
+  const getProgress = (roadmapId: string) => {
+    const progress = userProgress.find((p) => p.roadmap_id === roadmapId);
+    return progress ? progress.progress_pct : 0;
   };
-  
-  const handleExportPDF = (roadmap: any) => {
-    try {
-      const element = document.getElementById(`roadmap-${roadmap.id}`);
-      if (!element) return;
-      
-      exportElementToPDF(element, `${roadmap.title}-roadmap.pdf`)
-        .then(() => toast.success("PDF exported successfully"))
-        .catch(() => toast.error("Failed to export PDF"));
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      toast.error("Failed to export PDF");
-    }
-  };
-  
-  const handleDeleteRoadmap = async (id: string) => {
-    if (user) {
-      try {
-        // Delete related data first
-        await Promise.all([
-          supabase.from('roadmap_resources').delete().eq('roadmap_id', id),
-          supabase.from('roadmap_skills').delete().eq('roadmap_id', id),
-          supabase.from('roadmap_tools').delete().eq('roadmap_id', id),
-          supabase.from('roadmap_timeline').delete().eq('roadmap_id', id),
-          supabase.from('user_roadmap_steps').delete().eq('roadmap_id', id)
-        ]);
-        
-        // Then delete the main roadmap
-        const { error } = await supabase
-          .from('user_roadmaps')
-          .delete()
-          .eq('id', id);
-        
-        if (error) throw error;
-        
-        // Update local state
-        setRoadmaps(prevRoadmaps => prevRoadmaps.filter(roadmap => roadmap.id !== id));
-        toast.success("Roadmap deleted");
-        
-        // Refresh user data to update dashboard
-        fetchUserData();
-      } catch (error) {
-        console.error("Error deleting roadmap:", error);
-        toast.error("Failed to delete roadmap");
-      }
-    } else {
-      // Fallback to localStorage for non-logged in users
-      const updatedRoadmaps = roadmaps.filter(roadmap => roadmap.id !== id);
-      setRoadmaps(updatedRoadmaps);
-      
-      // Update localStorage
-      const storedData = localStorage.getItem('userData');
-      if (storedData) {
-        try {
-          const parsedData = JSON.parse(storedData);
-          parsedData.userRoadmaps = updatedRoadmaps;
-          localStorage.setItem('userData', JSON.stringify(parsedData));
-          toast.success("Roadmap deleted");
-          
-          // Refresh user data to update dashboard
-          fetchUserData();
-        } catch (error) {
-          console.error("Failed to update localStorage:", error);
-          toast.error("Failed to delete roadmap");
-        }
-      }
-    }
-  };
-  
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    } catch (e) {
-      return 'Unknown date';
-    }
-  };
-  
+
+  // Filter roadmaps to only show the user's roadmaps
+  const userRoadmaps = roadmaps.filter((roadmap) => roadmap.user_id === user?.id);
+
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Career Progress</h1>
-          <p className="text-muted-foreground mt-2">Track and manage your career roadmaps</p>
+      <SEOMetadata 
+        title="Career Progress | CareerMap"
+        description="Track your learning progress across all your career roadmaps and skills."
+        keywords="career progress, roadmaps, learning progress"
+        canonicalPath="/career-progress"
+      />
+      
+      <div className="container py-8 max-w-7xl">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Career Progress</h1>
+            <p className="text-muted-foreground">Track your progress across all your roadmaps</p>
+          </div>
+          
+          <Button onClick={() => navigate('/career-designer')} className="glowing-purple">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create New Roadmap
+          </Button>
         </div>
         
-        {isRoadmapsLoading ? (
-          <div className="flex items-center justify-center h-[60vh]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-lg">Loading your roadmaps...</p>
-            </div>
-          </div>
-        ) : roadmaps.length === 0 ? (
-          <Card className="glass-morphism">
-            <CardHeader>
-              <CardTitle>No Roadmaps Found</CardTitle>
-              <CardDescription>
-                You haven't created any roadmaps yet. Start one from the Career Design page!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center py-8">
-              <Button onClick={() => navigate("/career-designer")} className="glowing-purple">
-                Create Your First Roadmap
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 gap-8">
-            {roadmaps.map((roadmap, index) => (
-              <Card 
-                key={roadmap.id || index} 
-                className="glass-morphism transition-all duration-300 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]" 
-                id={`roadmap-${roadmap.id}`}
-              >
+        {isLoading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="glass-morphism">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{roadmap.title}</CardTitle>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <CardDescription className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {roadmap.lastUpdated ? formatDate(roadmap.lastUpdated) : 'No date available'}
-                        </CardDescription>
-                        {roadmap.category && (
-                          <Badge className="bg-white/10 text-white border-white/20 backdrop-blur-sm">
-                            {roadmap.category}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
                 </CardHeader>
-                
-                <CardContent className="space-y-6">
-                  {/* Use our new component */}
-                  <RoadmapProgressTracker 
-                    roadmapId={roadmap.id}
-                    title=""
-                    onProgressUpdate={(progress) => handleProgressUpdate(roadmap.id, progress)}
-                  />
-                  
-                  {/* Legacy content for fallback */}
-                  {(!roadmap.id || !user) && roadmap.steps && (
-                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                      {roadmap.steps.map((step: any, stepIndex: number) => (
-                        <div 
-                          key={stepIndex} 
-                          className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                            step.completed 
-                              ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
-                              : "bg-white/5"
-                          }`}
-                        >
-                          <Checkbox 
-                            checked={step.completed} 
-                            className={step.completed ? "text-brand-500" : ""}
-                          />
-                          <div className="flex-1">
-                            <div className="font-medium">{step.label}</div>
-                            {step.estTime && (
-                              <div className="flex items-center text-xs text-muted-foreground mt-1">
-                                <Clock className="h-3 w-3 mr-1" /> {step.estTime}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <CardContent>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-5/6" />
                 </CardContent>
-                
-                <CardFooter className="flex justify-between border-t border-white/10 pt-4">
-                  <div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleExportPDF(roadmap)}
-                    >
-                      <FileDown className="h-4 w-4 mr-2" />
-                      Export PDF
-                    </Button>
-                  </div>
-                  <div className="space-x-2">
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => handleDeleteRoadmap(roadmap.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </div>
-                </CardFooter>
               </Card>
             ))}
           </div>
+        ) : userRoadmaps.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {userRoadmaps.map((roadmap) => (
+              <RoadmapCard
+                key={roadmap.id}
+                roadmap={roadmap}
+                progress={getProgress(roadmap.id!)}
+                onDelete={handleDeleteRoadmap}
+                onTogglePublic={toggleRoadmapPublic}
+              />
+            ))}
+          </div>
+        ) : (
+          <Card className="glass-morphism text-center">
+            <CardHeader>
+              <CardTitle>No Roadmaps Found</CardTitle>
+              <CardDescription>
+                You don't have any career roadmaps yet. Create one to start tracking your progress.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <Button onClick={() => navigate('/career-designer')} className="glowing-purple">
+                Design My Career Path
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </div>
     </DashboardLayout>

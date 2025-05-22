@@ -28,15 +28,13 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Set active tab based on URL path
+  // Set active tab based on URL query param
   useEffect(() => {
-    const path = location.pathname;
-    if (path === "/signin") {
-      setActiveTab("login");
-    } else if (path === "/signup") {
-      setActiveTab("signup");
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab === "login" || tab === "signup") {
+      setActiveTab(tab);
     }
-    // Default to login tab for /auth path
   }, [location]);
 
   // If user is already logged in, redirect to dashboard

@@ -1,433 +1,328 @@
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SuggestionChip } from "./SuggestionChip";
-import { useNavigate } from "react-router-dom";
-import { ProgressBar } from "./ProgressBar";
-import { ArrowRight, FileText, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useGeminiCareer } from "@/hooks/use-gemini-career";
-import { UserData } from "@/hooks/use-user-data";
-import { exportElementToPDF } from "@/utils/pdfExport";
+import { useUserData } from "@/hooks/use-user-data";
+import { jsPDF } from "jspdf";
+import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
+import ProfileWizard from "@/components/ProfileWizard";
+import CustomCareerBuilder from "@/components/CustomCareerBuilder";
+import { FileDown, RefreshCcw, Sparkles, ArrowRight, Book } from "lucide-react";
+import { RoadmapProgressTracker } from "@/components/roadmap/RoadmapProgressTracker";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 
-interface CareerProgressProps {
-  userData: UserData;
-  onUpdateField: (path: string, value: any) => void;
-  isLoadingSuggestions?: boolean;
-}
-
-interface RoadmapSummary {
-  id: string;
-  title: string;
-  skills: string[];
-  tools: string[];
-  resources: { label: string; url?: string }[];
-}
-
-export function CareerProgress({ 
-  userData, 
-  onUpdateField,
-  isLoadingSuggestions = false
-}: CareerProgressProps) {
+export function RoadmapProgress() {
+  const { userData, saveField } = useUserData();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [customCareerBuilderOpen, setCustomCareerBuilderOpen] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { generateSuggestions, isProcessing } = useGeminiCareer();
-  const [roadmapRef, setRoadmapRef] = useState<HTMLDivElement | null>(null);
-  const [progress, setProgress] = useState(userData.career.progress);
-  const { user } = useAuth();
-  const [latestRoadmap, setLatestRoadmap] = useState<RoadmapSummary | null>(null);
-  const [isLoadingRoadmap, setIsLoadingRoadmap] = useState(true);
+  const [userRoadmaps, setUserRoadmaps] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Get progress from the roadmaps and fetch the latest roadmap data
   useEffect(() => {
-    const fetchProgress = async () => {
-      // First try to get progress from Supabase if the user is logged in
-      if (user) {
-        try {
+    const fetchUserRoadmaps = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch user's roadmaps from Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
           const { data, error } = await supabase
             .from('user_roadmaps')
-            .select('*, user_roadmap_steps(*)')
+            .select('*')
             .eq('user_id', user.id)
-            .order('updated_at', { ascending: false });
+            .order('updated_at', { ascending: false })
+            .limit(1);
           
-          if (error) {
-            console.error("Error fetching roadmaps from Supabase:", error);
-            fallbackToLocalStorage();
-          } else if (data && data.length > 0) {
-            // Calculate combined progress from all roadmaps
-            const averageProgress = data.reduce((sum: number, roadmap: any) => {
-              if (roadmap.user_roadmap_steps && roadmap.user_roadmap_steps.length > 0) {
-                const completed = roadmap.user_roadmap_steps.filter((step: any) => step.completed).length;
-                return sum + (completed / roadmap.user_roadmap_steps.length * 100);
-              }
-              return sum;
-            }, 0) / data.length;
-            
-            const roundedProgress = Math.round(averageProgress);
-            setProgress(roundedProgress);
-            onUpdateField('career.progress', roundedProgress);
-            
-            // Fetch the most recent roadmap's detailed data
-            if (data[0]) {
-              fetchLatestRoadmapDetails(data[0].id);
-            }
-          } else {
-            fallbackToLocalStorage();
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            setUserRoadmaps(data);
           }
-        } catch (error) {
-          console.error("Failed to fetch roadmaps progress:", error);
-          fallbackToLocalStorage();
-        } finally {
-          setIsLoadingRoadmap(false);
         }
-      } else {
-        // If not logged in, fall back to localStorage
-        fallbackToLocalStorage();
-        setIsLoadingRoadmap(false);
-      }
-    };
-    
-    const fetchLatestRoadmapDetails = async (roadmapId: string) => {
-      try {
-        // Fetch skills
-        const { data: skills, error: skillsError } = await supabase
-          .from('roadmap_skills')
-          .select('label')
-          .eq('roadmap_id', roadmapId);
-          
-        if (skillsError) throw skillsError;
-        
-        // Fetch tools
-        const { data: tools, error: toolsError } = await supabase
-          .from('roadmap_tools')
-          .select('label')
-          .eq('roadmap_id', roadmapId);
-          
-        if (toolsError) throw toolsError;
-        
-        // Fetch resources
-        const { data: resources, error: resourcesError } = await supabase
-          .from('roadmap_resources')
-          .select('label, url')
-          .eq('roadmap_id', roadmapId);
-          
-        if (resourcesError) throw resourcesError;
-        
-        // Fetch the roadmap title
-        const { data: roadmap, error: roadmapError } = await supabase
-          .from('user_roadmaps')
-          .select('title')
-          .eq('id', roadmapId)
-          .single();
-          
-        if (roadmapError) throw roadmapError;
-        
-        setLatestRoadmap({
-          id: roadmapId,
-          title: roadmap.title,
-          skills: skills.map((s: any) => s.label),
-          tools: tools.map((t: any) => t.label),
-          resources: resources.map((r: any) => ({ label: r.label, url: r.url }))
-        });
       } catch (error) {
-        console.error("Error fetching latest roadmap details:", error);
+        console.error("Error fetching user roadmaps:", error);
+        toast.error("Failed to load roadmap data");
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    // Fallback to localStorage if Supabase fails or user is not logged in
-    const fallbackToLocalStorage = () => {
-      // Load progress data from localStorage
-      const storedData = localStorage.getItem('userData');
-      if (storedData) {
-        try {
-          const parsedData = JSON.parse(storedData);
-          if (parsedData.userRoadmaps && Array.isArray(parsedData.userRoadmaps)) {
-            // Calculate combined progress from all roadmaps
-            if (parsedData.userRoadmaps.length > 0) {
-              const averageProgress = parsedData.userRoadmaps.reduce((sum: number, roadmap: any) => {
-                if (roadmap.steps && roadmap.steps.length > 0) {
-                  const completed = roadmap.steps.filter((step: any) => step.completed).length;
-                  return sum + (completed / roadmap.steps.length * 100);
-                }
-                return sum;
-              }, 0) / parsedData.userRoadmaps.length;
-              
-              setProgress(Math.round(averageProgress));
-              onUpdateField('career.progress', Math.round(averageProgress));
-              
-              // Set latest roadmap from local storage (simplified)
-              const latestRoadmap = parsedData.userRoadmaps[0];
-              if (latestRoadmap) {
-                // Extract skills, tools, resources from the steps if available
-                const skills: string[] = [];
-                const tools: string[] = [];
-                const resources: {label: string, url?: string}[] = [];
-                
-                latestRoadmap.steps.forEach((step: any) => {
-                  const label = step.label.toLowerCase();
-                  if (label.includes('skill')) skills.push(step.label);
-                  else if (label.includes('tool')) tools.push(step.label);
-                  else if (label.includes('resource') || label.includes('http')) {
-                    let url;
-                    const urlMatch = step.label.match(/\((https?:\/\/[^\s)]+)\)/);
-                    if (urlMatch) url = urlMatch[1];
-                    resources.push({ label: step.label, url });
-                  }
-                });
-                
-                setLatestRoadmap({
-                  id: latestRoadmap.id,
-                  title: latestRoadmap.title,
-                  skills,
-                  tools,
-                  resources
-                });
-              }
-            } else {
-              setProgress(userData.career.progress);
-            }
-          } else if (parsedData.userRoadmap) {
-            // Handle single roadmap case
-            if (parsedData.userRoadmap.steps && parsedData.userRoadmap.steps.length > 0) {
-              const completed = parsedData.userRoadmap.steps.filter((step: any) => step.completed).length;
-              const roadmapProgress = Math.round((completed / parsedData.userRoadmap.steps.length) * 100);
-              
-              setProgress(roadmapProgress);
-              onUpdateField('career.progress', roadmapProgress);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to parse saved roadmaps:", error);
-        }
-      }
-    };
-    
-    fetchProgress();
-    
-    // Set up Supabase realtime subscription for user_roadmaps changes
-    if (user) {
-      const channel = supabase
-        .channel('roadmap-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'user_roadmap_steps',
-          },
-          () => {
-            // When steps change, refetch the progress data
-            fetchProgress();
-          }
-        )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [userData, onUpdateField, user]);
+    fetchUserRoadmaps();
+  }, []);
   
-  useEffect(() => {
-    // Generate suggestions if none exist
-    const fetchSuggestions = async () => {
-      if (userData.career.suggestions.length === 0 && !isProcessing && !isLoadingSuggestions) {
-        const suggestions = await generateSuggestions(userData);
-        if (suggestions.length > 0) {
-          onUpdateField('career.suggestions', suggestions);
-        }
-      }
-    };
-    
-    fetchSuggestions();
-  }, [userData, generateSuggestions, onUpdateField, isProcessing, isLoadingSuggestions]);
-  
-  const handleDesignCareer = () => {
-    navigate('/career-designer');
-  };
-  
-  const handleViewProgress = () => {
-    navigate('/career-progress');
-  };
-  
-  const handleExportRoadmap = async () => {
-    if (!userData.career.roadmap) {
-      toast({
-        title: "No roadmap available",
-        description: "Complete your career design first to generate a roadmap.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!roadmapRef) {
-      toast({
-        title: "Error",
-        description: "Cannot export roadmap at this time.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  const handleExportPDF = () => {
     try {
-      await exportElementToPDF(roadmapRef, 'CareerForge-Roadmap.pdf');
-      toast({
-        title: "PDF Downloaded",
-        description: "Your career roadmap has been downloaded."
+      if (!userData.userRoadmap) return;
+      
+      const doc = new jsPDF();
+      doc.setFontSize(20);
+      doc.text(`Career Roadmap: ${userData.userRoadmap.title}`, 20, 20);
+      
+      doc.setFontSize(12);
+      doc.text(`Progress: ${userData.career.progress}%`, 20, 30);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 40);
+      
+      doc.setFontSize(14);
+      doc.text("Steps:", 20, 55);
+      
+      let y = 65;
+      userData.userRoadmap.steps.forEach((step, index) => {
+        const checkmark = step.completed ? "✓" : "□";
+        doc.setFontSize(12);
+        doc.text(`${checkmark} ${step.label}`, 25, y);
+        doc.setFontSize(10);
+        doc.text(`Estimated time: ${step.estTime}`, 30, y + 7);
+        y += 20;
+        
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
       });
+      
+      doc.save(`${userData.userRoadmap.title.toLowerCase().replace(/\s+/g, '-')}-roadmap.pdf`);
+      
+      toast.success("PDF exported successfully");
     } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "There was an error exporting your roadmap.",
-        variant: "destructive"
-      });
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
     }
   };
   
-  return (
-    <Card className="glass-morphism shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-      <CardHeader>
-        <CardTitle className="text-gradient">Career Progress</CardTitle>
-        <CardDescription>Your progress toward career goals</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <ProgressBar progress={progress} />
-        
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-white/70">Suggested Roles</h4>
-          
-          {isProcessing || isLoadingSuggestions ? (
-            <div className="flex justify-center py-2">
-              <div className="w-6 h-6 border-2 border-t-brand-400 border-white/20 rounded-full animate-spin"></div>
-            </div>
-          ) : userData.career.suggestions.length > 0 ? (
+  const handleResetRoadmap = () => {
+    saveField("userRoadmap.reset", true);
+    toast.success("Roadmap progress has been reset");
+  };
+  
+  const openWizard = () => {
+    setWizardOpen(true);
+  };
+  
+  const openCustomCareerBuilder = () => {
+    setCustomCareerBuilderOpen(true);
+  };
+
+  const viewAllRoadmaps = () => {
+    navigate("/career-progress");
+  };
+
+  const viewResources = (roadmapId?: string) => {
+    if (roadmapId) {
+      navigate(`/career-resources/${roadmapId}`);
+    } else {
+      navigate("/career-resources");
+    }
+  };
+  
+  const handleProgressUpdate = (progress: number) => {
+    saveField("career.progress", progress);
+  };
+  
+  if (!userData.userRoadmap && userRoadmaps.length === 0) {
+    return (
+      <Card className="glass-morphism">
+        <CardHeader>
+          <CardTitle>Career Roadmap</CardTitle>
+          <CardDescription>Design your personalized career roadmap</CardDescription>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <div className="mb-5">
+            <p>You haven't set up your career roadmap yet.</p>
+            <p className="text-muted-foreground">Create a personalized step-by-step plan to achieve your career goals.</p>
+          </div>
+          <div className="space-y-4">
+            <Button onClick={openWizard} className="glowing-purple w-full">
+              Design My Career Path
+            </Button>
+            <Button 
+              onClick={openCustomCareerBuilder} 
+              variant="outline" 
+              className="w-full border border-purple-400/30 bg-purple-500/10 hover:bg-purple-500/20"
+            >
+              <Sparkles className="mr-2 h-4 w-4 text-purple-300" />
+              Design Your Own Career Role (AI)
+            </Button>
+            <Button 
+              onClick={viewAllRoadmaps}
+              variant="outline" 
+              className="w-full border border-purple-400/30 bg-purple-500/10 hover:bg-purple-500/20"
+            >
+              <ArrowRight className="mr-2 h-4 w-4 text-purple-300" />
+              View Career Progress
+            </Button>
+          </div>
+        </CardContent>
+        <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
+        <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
+      </Card>
+    );
+  }
+  
+  // Display the first roadmap from Supabase if available
+  if (userRoadmaps.length > 0) {
+    const latestRoadmap = userRoadmaps[0];
+    
+    return (
+      <>
+        <Card className="glass-morphism">
+          <CardHeader>
+            <CardTitle>{latestRoadmap.title} Roadmap</CardTitle>
+            <CardDescription>Your step-by-step career plan</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RoadmapProgressTracker 
+              roadmapId={latestRoadmap.id} 
+              title={latestRoadmap.title}
+              onProgressUpdate={handleProgressUpdate}
+            />
+          </CardContent>
+          <CardFooter className="flex flex-wrap justify-between border-t border-white/10 pt-4 gap-2">
             <div className="flex flex-wrap gap-2">
-              {userData.career.suggestions.map((suggestion, index) => (
-                <SuggestionChip key={index} label={suggestion} />
+              <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => viewResources(latestRoadmap.id)}
+              >
+                <Book className="h-4 w-4 mr-2" />
+                Learning Resources
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={viewAllRoadmaps}
+              >
+                All Roadmaps
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openCustomCareerBuilder}
+              >
+                <Sparkles className="h-4 w-4 mr-2 text-purple-300" />
+                Create Custom
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Reset Progress
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+        
+        <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
+        <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
+      </>
+    );
+  }
+  
+  // Fallback to local storage data if needed
+  return (
+    <>
+      <Card className="glass-morphism">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle>{userData.userRoadmap?.title} Roadmap</CardTitle>
+              <CardDescription>Your step-by-step career plan</CardDescription>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold">{userData.career.progress}%</div>
+              <div className="text-xs text-muted-foreground">Complete</div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Use the system from local storage for now */}
+          {/* Add the new component here when Supabase integration is fully complete */}
+          {/* For now displaying legacy content */}
+          
+          {userData.userRoadmap && userData.userRoadmap.steps && userData.userRoadmap.steps.length > 0 && (
+            <div>
+              {userData.userRoadmap.steps.map((step, index) => (
+                <div 
+                  key={index} 
+                  className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
+                    step.completed 
+                      ? "bg-brand-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)]" 
+                      : "bg-white/5"
+                  }`}
+                >
+                  <input 
+                    type="checkbox"
+                    checked={step.completed}
+                    onChange={() => {
+                      if (!userData.userRoadmap) return;
+                      
+                      const newCompleted = !step.completed;
+                      saveField(`userRoadmap.steps.${index}`, { ...step, completed: newCompleted });
+                      
+                      if (newCompleted) {
+                        toast.success("Progress updated! Keep going!");
+                      }
+                    }}
+                    className={step.completed ? "text-brand-500" : ""}
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium">{step.label}</div>
+                    <div className="flex items-center text-xs text-muted-foreground mt-1">
+                      {step.estTime}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-white/60 italic">
-              Complete your career design to get personalized suggestions
-            </p>
           )}
-        </div>
-        
-        {isLoadingRoadmap ? (
-          <div className="flex justify-center py-2">
-            <div className="w-6 h-6 border-2 border-t-brand-400 border-white/20 rounded-full animate-spin"></div>
-          </div>
-        ) : latestRoadmap ? (
-          <div 
-            className="mt-4 p-4 rounded-lg bg-white/5 border border-white/10"
-            ref={(ref) => setRoadmapRef(ref)}
-          >
-            <h4 className="text-sm font-semibold text-gradient mb-2">
-              Latest Roadmap: {latestRoadmap.title}
-            </h4>
-            
-            <Tabs defaultValue="skills" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 mb-2">
-                <TabsTrigger value="skills">Skills</TabsTrigger>
-                <TabsTrigger value="tools">Tools</TabsTrigger>
-                <TabsTrigger value="resources">Resources</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="skills" className="mt-2 space-y-2">
-                {latestRoadmap.skills.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {latestRoadmap.skills.map((skill, index) => (
-                      <Badge key={index} className="bg-purple-800/50 hover:bg-purple-700/60 text-white">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-white/60 italic">No skills defined in this roadmap</p>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="tools" className="mt-2 space-y-2">
-                {latestRoadmap.tools.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {latestRoadmap.tools.map((tool, index) => (
-                      <Badge key={index} className="bg-blue-800/50 hover:bg-blue-700/60 text-white">
-                        {tool}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-white/60 italic">No tools defined in this roadmap</p>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="resources" className="mt-2 space-y-2">
-                {latestRoadmap.resources.length > 0 ? (
-                  <div className="space-y-2">
-                    {latestRoadmap.resources.map((resource, index) => (
-                      <div key={index} className="text-xs">
-                        {resource.url ? (
-                          <a 
-                            href={resource.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="text-blue-400 hover:text-blue-300 underline"
-                          >
-                            {resource.label}
-                          </a>
-                        ) : (
-                          <span>{resource.label}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-white/60 italic">No resources defined in this roadmap</p>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-        ) : userData.career.roadmap && (
-          <div 
-            className="mt-4 p-4 rounded-lg bg-white/5 border border-white/10"
-            ref={(ref) => setRoadmapRef(ref)}
-          >
-            <h4 className="text-sm font-medium text-gradient mb-2">Your Career Roadmap</h4>
-            <div className="text-xs text-white/70">
-              {userData.career.roadmap}
-            </div>
-          </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button onClick={handleDesignCareer} className="flex-1 mr-2">
-          {userData.career.roadmap ? "Update Career Design" : "Design My Career"}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-        
-        <Button 
-          onClick={handleViewProgress} 
-          variant="outline" 
-          className="ml-2"
-        >
-          {latestRoadmap ? (
-            <>
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Track Progress
-            </>
-          ) : (
-            <>
-              View Progress
+        </CardContent>
+        <CardFooter className="flex flex-wrap justify-between border-t border-white/10 pt-4 gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPDF}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => viewResources()}
+            >
+              <Book className="h-4 w-4 mr-2" />
+              Learning Resources
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={viewAllRoadmaps}
+            >
+              All Roadmaps
               <ArrowRight className="ml-2 h-4 w-4" />
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openCustomCareerBuilder}
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-purple-300" />
+              Create Custom
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleResetRoadmap}>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Reset Progress
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+      
+      <ProfileWizard isOpen={wizardOpen} onClose={() => setWizardOpen(false)} />
+      <CustomCareerBuilder isOpen={customCareerBuilderOpen} onClose={() => setCustomCareerBuilderOpen(false)} />
+    </>
   );
 }

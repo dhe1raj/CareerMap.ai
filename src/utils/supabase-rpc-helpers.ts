@@ -12,6 +12,17 @@ export interface SupabaseRoadmapProgress {
   updated_at: string;
 }
 
+// Define a proper type for roadmap sections
+interface RoadmapSection {
+  title?: string;
+  items: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    completed?: boolean;
+  }>;
+}
+
 /**
  * Helper functions for working with Supabase
  */
@@ -99,12 +110,14 @@ export const supabaseRpc = {
     let totalItems = 0;
     try {
       if (roadmap.sections) {
-        // Safely access sections data
-        const sections = typeof roadmap.sections === 'object' ? 
-          (Array.isArray(roadmap.sections) ? roadmap.sections : []) : [];
-              
+        // Safely access sections data by ensuring it's a properly typed array
+        const sections: RoadmapSection[] = Array.isArray(roadmap.sections) 
+          ? roadmap.sections 
+          : [];
+        
+        // Now we can safely iterate through properly typed sections
         for (const section of sections) {
-          if (section && section.items && Array.isArray(section.items)) {
+          if (section && Array.isArray(section.items)) {
             totalItems += section.items.length;
           }
         }

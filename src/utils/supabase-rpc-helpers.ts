@@ -111,15 +111,20 @@ export const supabaseRpc = {
     try {
       if (roadmap.sections) {
         // Safely access sections data by ensuring it's a properly typed array
-        const sections: RoadmapSection[] = Array.isArray(roadmap.sections) 
-          ? roadmap.sections 
-          : [];
+        const sectionsData = Array.isArray(roadmap.sections) ? roadmap.sections : [];
+        
+        // Properly map the JSON data to our RoadmapSection type with validation
+        const sections: RoadmapSection[] = sectionsData.filter((section): section is RoadmapSection => {
+          // Ensure each section has an items property that's an array
+          return typeof section === 'object' && 
+                 section !== null && 
+                 'items' in section && 
+                 Array.isArray(section.items);
+        });
         
         // Now we can safely iterate through properly typed sections
         for (const section of sections) {
-          if (section && Array.isArray(section.items)) {
-            totalItems += section.items.length;
-          }
+          totalItems += section.items.length;
         }
       }
     } catch (e) {

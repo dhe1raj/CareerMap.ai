@@ -89,8 +89,9 @@ export default function Founder() {
               </div>
               
               <p className="text-center mb-6 text-white/80">
-                Gen-Z technologist transforming career planning with AI.<br />
-                Fuelled by code, creativity & community.
+                Crafting clean, scalable, and AI-first platforms to make career planning frictionless for millions. 
+                I founded CareerMapAI with a mission to modernize the way individuals discover, design, and pursue career paths — combining intelligent automation,
+                real-time progress tracking, and human-centered design to empower students, professionals, and institutions alike..
               </p>
               
               <div className="flex justify-center gap-4 mb-6">
